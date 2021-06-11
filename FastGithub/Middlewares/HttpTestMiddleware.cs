@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Threading;
@@ -8,11 +9,14 @@ namespace FastGithub.Middlewares
 {
     sealed class HttpTestMiddleware : IGithubMiddleware
     {
-        private readonly TimeSpan timeout = TimeSpan.FromSeconds(5d);
+        private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<HttpTestMiddleware> logger;
 
-        public HttpTestMiddleware(ILogger<HttpTestMiddleware> logger)
+        public HttpTestMiddleware(
+            IOptionsMonitor<GithubOptions> options,
+            ILogger<HttpTestMiddleware> logger)
         {
+            this.options = options;
             this.logger = logger;
         }
 
@@ -33,11 +37,11 @@ namespace FastGithub.Middlewares
                 });
 
                 var startTime = DateTime.Now;
-                using var cancellationTokenSource = new CancellationTokenSource(this.timeout);
+                using var cancellationTokenSource = new CancellationTokenSource(this.options.CurrentValue.HttpTestTimeout);
                 var response = await httpClient.SendAsync(request, cancellationTokenSource.Token);
                 var media = response.EnsureSuccessStatusCode().Content.Headers.ContentType?.MediaType;
 
-                if (string.Equals(media, "application/manifest+json"))
+                if (string.Equals(media, "application/manifest+json", StringComparison.OrdinalIgnoreCase))
                 {
                     context.HttpElapsed = DateTime.Now.Subtract(startTime);
                     await next();

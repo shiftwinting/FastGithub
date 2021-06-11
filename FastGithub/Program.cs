@@ -27,6 +27,9 @@ namespace FastGithub
                 .ConfigureServices((ctx, services) =>
                 {
                     services
+                        .Configure<GithubOptions>(ctx.Configuration.GetSection("Github"))
+                        .AddHttpClient()
+                        .AddTransient<MetaService>()
                         .AddSingleton<PortScanMiddleware>()
                         .AddSingleton<HttpTestMiddleware>()
                         .AddSingleton<ConcurrentMiddleware>()

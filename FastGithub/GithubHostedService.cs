@@ -1,11 +1,10 @@
 ﻿using FastGithub.Middlewares;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,10 +13,12 @@ namespace FastGithub
     sealed class GithubHostedService : BackgroundService
     {
         private readonly GithubDelegate githubDelegate;
+        private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<GithubHostedService> logger;
 
         public GithubHostedService(
             IServiceProvider appServiceProvider,
+            IServiceScopeFactory serviceScopeFactory,
             ILogger<GithubHostedService> logger)
         {
             this.githubDelegate = new GithubBuilder(appServiceProvider, ctx => Task.CompletedTask)
@@ -26,13 +27,16 @@ namespace FastGithub
                 .Use<HttpTestMiddleware>()
                 .Build();
 
+            this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var stream = File.OpenRead("meta.json");
-            var meta = await JsonSerializer.DeserializeAsync<Meta>(stream, cancellationToken: stoppingToken);
+            using var scope = this.serviceScopeFactory.CreateScope();
+            var metaService = scope.ServiceProvider.GetRequiredService<MetaService>();
+
+            var meta = await metaService.GetMetaAsync();
 
             if (meta != null)
             {
@@ -49,8 +53,10 @@ namespace FastGithub
                     this.logger.LogInformation($"{context.Address} {context.HttpElapsed}");
                 }
             }
+
             this.logger.LogInformation("扫描结束");
-        }
+        } 
+
 
         private IEnumerable<Task> GetScanTasks(Meta meta, IList<GithubContext> contexts)
         {
