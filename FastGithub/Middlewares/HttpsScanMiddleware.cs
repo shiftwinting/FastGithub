@@ -46,8 +46,6 @@ namespace FastGithub.Middlewares
                 if (server.Any(s => string.Equals("GitHub.com", s.Product?.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     context.HttpElapsed = DateTime.Now.Subtract(startTime);
-                    this.logger.LogWarning(context.ToString());
-
                     await next();
                 }
             }

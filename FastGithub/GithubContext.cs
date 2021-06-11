@@ -16,7 +16,7 @@ namespace FastGithub
 
         public override string ToString()
         {
-            return $"{Address}\t{Domain}\t#{HttpElapsed}";
+            return $"{Address}\t{Domain}\t# {HttpElapsed}";
         }
     }
 }
