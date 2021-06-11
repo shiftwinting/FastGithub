@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,9 +36,14 @@ namespace FastGithub
                     .Where(item => item.HttpElapsed != null)
                     .OrderBy(item => item.HttpElapsed);
 
+                using var fileStream = File.OpenWrite("github.txt");
+                using var fileWriter = new StreamWriter(fileStream);
+
                 foreach (var context in sortedContexts)
                 {
-                    this.logger.LogInformation($"{context.Address} {context.HttpElapsed}");
+                    var content = $"{context.Address}\t{context.HttpElapsed}";
+                    this.logger.LogInformation(content);
+                    await fileWriter.WriteLineAsync(content);
                 }
             }
 
