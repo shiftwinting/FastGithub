@@ -19,7 +19,7 @@ namespace FastGithub
         {
             this.IPAddress = ipAddress;
             this.Mask = mask;
-            this.Size = (int)(uint.MaxValue << mask >> mask);
+            this.Size = Math.Abs((int)(uint.MaxValue << mask >> mask));
         }
 
         public IEnumerable<IPAddress> GetAllIPAddress()
@@ -43,6 +43,17 @@ namespace FastGithub
             var hostValue = BinaryPrimitives.ReadInt32BigEndian(span);
             BinaryPrimitives.WriteInt32BigEndian(span, hostValue + value);
             return new IPAddress(span);
+        }
+
+        public static IEnumerable<IPv4CIDR> From(IEnumerable<string> cidrs)
+        {
+            foreach (var item in cidrs)
+            {
+                if (TryParse(item, out var value))
+                {
+                    yield return value;
+                }
+            }
         }
 
         public static bool TryParse(ReadOnlySpan<char> cidr, [MaybeNullWhen(false)] out IPv4CIDR value)

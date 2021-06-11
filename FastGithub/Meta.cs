@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.Json.Serialization;
 
@@ -37,25 +38,19 @@ namespace FastGithub
 
         public IEnumerable<DomainAddress> ToDomainAddress()
         {
-            foreach (var item in this.Web)
+            foreach (var cidr in IPv4CIDR.From(this.Web).OrderBy(item => item.Size))
             {
-                if (IPv4CIDR.TryParse(item, out var cidr))
+                foreach (var address in cidr.GetAllIPAddress())
                 {
-                    foreach (var address in cidr.GetAllIPAddress())
-                    {
-                        yield return new DomainAddress("github.com", address);
-                    }
+                    yield return new DomainAddress("github.com", address);
                 }
             }
 
-            foreach (var item in this.Api)
+            foreach (var cidr in IPv4CIDR.From(this.Api).OrderBy(item => item.Size))
             {
-                if (IPv4CIDR.TryParse(item, out var cidr))
+                foreach (var address in cidr.GetAllIPAddress())
                 {
-                    foreach (var address in cidr.GetAllIPAddress())
-                    {
-                        yield return new DomainAddress("api.github.com", address);
-                    }
+                    yield return new DomainAddress("api.github.com", address);
                 }
             }
         }

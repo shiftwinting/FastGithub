@@ -34,14 +34,14 @@ namespace FastGithub
                         .AddTransient<GithubService>()
 
                         .AddSingleton<PortScanMiddleware>()
-                        .AddSingleton<HttpTestMiddleware>()
+                        .AddSingleton<HttpsScanMiddleware>()
                         .AddSingleton<ConcurrentMiddleware>()
                         .AddSingleton(serviceProvider =>
                         {
                             return new GithubBuilder(serviceProvider, ctx => Task.CompletedTask)
                                 .Use<ConcurrentMiddleware>()
                                 .Use<PortScanMiddleware>()
-                                .Use<HttpTestMiddleware>()
+                                .Use<HttpsScanMiddleware>()
                                 .Build();
                         })
                         .AddHostedService<GithubHostedService>()

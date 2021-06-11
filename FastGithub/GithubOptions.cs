@@ -8,6 +8,6 @@ namespace FastGithub
          
         public TimeSpan PortScanTimeout { get; set; } = TimeSpan.FromSeconds(1d);
 
-        public TimeSpan HttpTestTimeout { get; set; } = TimeSpan.FromSeconds(5d);
+        public TimeSpan HttpsScanTimeout { get; set; } = TimeSpan.FromSeconds(5d);
     }
 }
