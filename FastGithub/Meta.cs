@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text.Json.Serialization;
 
@@ -36,19 +35,31 @@ namespace FastGithub
         public string[] Dependabot { get; set; } = Array.Empty<string>();
 
 
-        public IEnumerable<IPAddress> ToIPv4Address()
+        public IEnumerable<DomainAddress> ToDomainAddress()
         {
-            var cidrs = this.Web.Concat(this.Api);
-            foreach (var cidr in cidrs)
+            foreach (var item in this.Web)
             {
-                if (IPv4CIDR.TryParse(cidr, out var value))
+                if (IPv4CIDR.TryParse(item, out var cidr))
                 {
-                    foreach (var ip in value.GetAllIPAddress())
+                    foreach (var address in cidr.GetAllIPAddress())
                     {
-                        yield return ip;
+                        yield return new DomainAddress("github.com", address);
+                    }
+                }
+            }
+
+            foreach (var item in this.Api)
+            {
+                if (IPv4CIDR.TryParse(item, out var cidr))
+                {
+                    foreach (var address in cidr.GetAllIPAddress())
+                    {
+                        yield return new DomainAddress("api.github.com", address);
                     }
                 }
             }
         }
+
+        public record DomainAddress(string Domain, IPAddress Address);
     }
 }

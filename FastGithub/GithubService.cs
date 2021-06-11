@@ -41,9 +41,9 @@ namespace FastGithub
 
                 foreach (var context in sortedContexts)
                 {
-                    var content = $"{context.Address}\t{context.HttpElapsed}";
-                    this.logger.LogInformation(content);
-                    await fileWriter.WriteLineAsync(content);
+                    var message = context.ToString();
+                    this.logger.LogInformation(message);
+                    await fileWriter.WriteLineAsync(message);
                 }
             }
 
@@ -53,11 +53,12 @@ namespace FastGithub
 
         private IEnumerable<Task> GetMetaScanTasks(Meta meta, IList<GithubContext> contexts)
         {
-            foreach (var address in meta.ToIPv4Address())
+            foreach (var item in meta.ToDomainAddress())
             {
                 var context = new GithubContext
                 {
-                    Address = address,
+                    Domain = item.Domain,
+                    Address = item.Address,
                 };
                 contexts.Add(context);
                 yield return this.githubDelegate(context);

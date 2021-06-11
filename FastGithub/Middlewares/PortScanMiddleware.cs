@@ -33,7 +33,7 @@ namespace FastGithub.Middlewares
             }
             catch (Exception)
             {
-                this.logger.LogInformation($"{context.Address}的{PORT}端口未开放");
+                this.logger.LogInformation($"{context.Domain} {context.Address}的{PORT}端口未开放");
             }
         }
     }

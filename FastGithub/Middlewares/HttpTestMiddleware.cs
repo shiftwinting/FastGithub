@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,9 +28,9 @@ namespace FastGithub.Middlewares
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri($"https://{context.Address}/manifest.json"),
+                    RequestUri = new Uri($"https://{context.Address}/"),
                 };
-                request.Headers.Host = "github.com";
+                request.Headers.Host = context.Domain;
 
                 using var httpClient = new HttpClient(new HttpClientHandler
                 {
@@ -38,18 +39,19 @@ namespace FastGithub.Middlewares
 
                 var startTime = DateTime.Now;
                 using var cancellationTokenSource = new CancellationTokenSource(this.options.CurrentValue.HttpTestTimeout);
-                var response = await httpClient.SendAsync(request, cancellationTokenSource.Token);
-                var media = response.EnsureSuccessStatusCode().Content.Headers.ContentType?.MediaType;
-
-                if (string.Equals(media, "application/manifest+json", StringComparison.OrdinalIgnoreCase))
+                var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
+                var server = response.EnsureSuccessStatusCode().Headers.Server;
+                if (server.Any(s => string.Equals("GitHub.com", s.Product?.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     context.HttpElapsed = DateTime.Now.Subtract(startTime);
+                    this.logger.LogWarning(context.ToString());
+
                     await next();
                 }
             }
             catch (Exception ex)
             {
-                this.logger.LogInformation($"{context.Address} {ex.Message}");
+                this.logger.LogInformation($"{context.Domain} {context.Address} {ex.Message}");
             }
         }
     }
