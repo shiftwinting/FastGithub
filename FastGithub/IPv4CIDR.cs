@@ -26,7 +26,8 @@ namespace FastGithub
         {
             for (var i = 0; i < this.Size; i++)
             {
-                yield return Add(this.IPAddress, i);
+                var value = i;
+                yield return Add(this.IPAddress, value);
             }
         }
 
