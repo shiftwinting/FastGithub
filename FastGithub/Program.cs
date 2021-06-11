@@ -1,6 +1,7 @@
 ﻿using FastGithub.Middlewares;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -29,10 +30,20 @@ namespace FastGithub
                     services
                         .Configure<GithubOptions>(ctx.Configuration.GetSection("Github"))
                         .AddHttpClient()
-                        .AddTransient<MetaService>()
+                        .AddTransient<GithubMetaService>()
+                        .AddTransient<GithubService>()
+
                         .AddSingleton<PortScanMiddleware>()
                         .AddSingleton<HttpTestMiddleware>()
                         .AddSingleton<ConcurrentMiddleware>()
+                        .AddSingleton(serviceProvider =>
+                        {
+                            return new GithubBuilder(serviceProvider, ctx => Task.CompletedTask)
+                                .Use<ConcurrentMiddleware>()
+                                .Use<PortScanMiddleware>()
+                                .Use<HttpTestMiddleware>()
+                                .Build();
+                        })
                         .AddHostedService<GithubHostedService>()
                         ;
                 });

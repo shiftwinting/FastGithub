@@ -3,32 +3,33 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub
 {
-    sealed class MetaService
+    sealed class GithubMetaService
     {
         private readonly IHttpClientFactory httpClientFactory;
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly ILogger<MetaService> logger;
+        private readonly ILogger<GithubMetaService> logger;
 
-        public MetaService(
+        public GithubMetaService(
             IHttpClientFactory httpClientFactory,
             IOptionsMonitor<GithubOptions> options,
-            ILogger<MetaService> logger)
+            ILogger<GithubMetaService> logger)
         {
             this.httpClientFactory = httpClientFactory;
             this.options = options;
             this.logger = logger;
         }
 
-        public async Task<Meta?> GetMetaAsync()
+        public async Task<Meta?> GetMetaAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 var httpClient = this.httpClientFactory.CreateClient();
-                return await httpClient.GetFromJsonAsync<Meta>(this.options.CurrentValue.MetaUri);
+                return await httpClient.GetFromJsonAsync<Meta>(this.options.CurrentValue.MetaUri, cancellationToken);
             }
             catch (Exception ex)
             {
