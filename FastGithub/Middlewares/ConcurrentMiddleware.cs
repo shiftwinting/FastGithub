@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Middlewares
 {
-    sealed class ConcurrentMiddleware : IGithubMiddleware
+    sealed class ConcurrentMiddleware : IGithubScanMiddleware
     {
         private readonly SemaphoreSlim semaphoreSlim = new(Environment.ProcessorCount * 4);
 

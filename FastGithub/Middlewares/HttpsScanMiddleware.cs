@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Middlewares
 {
-    sealed class HttpsScanMiddleware : IGithubMiddleware
+    sealed class HttpsScanMiddleware : IGithubScanMiddleware
     {
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<HttpsScanMiddleware> logger;
@@ -50,11 +50,11 @@ namespace FastGithub.Middlewares
             }
             catch (TaskCanceledException)
             {
-                this.logger.LogInformation($"{context.Domain} {context.Address}连接超时");
+                this.logger.LogTrace($"{context.Domain} {context.Address}连接超时");
             }
             catch (Exception ex)
             {
-                this.logger.LogInformation($"{context.Domain} {context.Address} {ex.Message}");
+                this.logger.LogTrace($"{context.Domain} {context.Address} {ex.Message}");
             }
         }
     }

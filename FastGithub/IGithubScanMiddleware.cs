@@ -6,7 +6,7 @@ namespace FastGithub
     /// <summary>
     /// 定义中间件的接口
     /// </summary> 
-    interface IGithubMiddleware
+    interface IGithubScanMiddleware
     {
         /// <summary>
         /// 执行中间件

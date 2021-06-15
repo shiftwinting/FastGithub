@@ -7,5 +7,5 @@ namespace FastGithub
     /// </summary> 
     /// <param name="context">中间件上下文</param>
     /// <returns></returns>
-    delegate Task GithubDelegate(GithubContext context);
+    delegate Task GithubScanDelegate(GithubContext context);
 }

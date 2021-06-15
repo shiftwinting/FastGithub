@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Middlewares
 {
-    sealed class ScanOkLogMiddleware : IGithubMiddleware
+    sealed class ScanOkLogMiddleware : IGithubScanMiddleware
     {
         private readonly ILogger<ScanOkLogMiddleware> logger;
 
@@ -17,7 +17,7 @@ namespace FastGithub.Middlewares
         {
             if (context.HttpElapsed != null)
             {
-                this.logger.LogWarning(context.ToString());
+                this.logger.LogInformation(context.ToString());
             }
 
             return next();

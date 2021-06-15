@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Middlewares
 {
-    sealed class PortScanMiddleware : IGithubMiddleware
+    sealed class PortScanMiddleware : IGithubScanMiddleware
     {
         private const int PORT = 443;
         private readonly IOptionsMonitor<GithubOptions> options;
@@ -33,7 +33,7 @@ namespace FastGithub.Middlewares
             }
             catch (Exception)
             {
-                this.logger.LogInformation($"{context.Domain} {context.Address}的{PORT}端口未开放");
+                this.logger.LogTrace($"{context.Domain} {context.Address}的{PORT}端口未开放");
             }
         }
     }

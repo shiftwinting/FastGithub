@@ -28,10 +28,11 @@ namespace FastGithub
                 .ConfigureServices((ctx, services) =>
                 {
                     services
+                        .Configure<DnsOptions>(ctx.Configuration.GetSection("Dns"))
                         .Configure<GithubOptions>(ctx.Configuration.GetSection("Github"))
                         .AddHttpClient()
-                        .AddTransient<GithubMetaService>()
-                        .AddTransient<GithubService>()
+                        .AddSingleton<GithubMetaService>()
+                        .AddSingleton<GithubScanService>()
 
                         .AddSingleton<PortScanMiddleware>()
                         .AddSingleton<HttpsScanMiddleware>()
@@ -39,14 +40,16 @@ namespace FastGithub
                         .AddSingleton<ScanOkLogMiddleware>()
                         .AddSingleton(serviceProvider =>
                         {
-                            return new GithubBuilder(serviceProvider, ctx => Task.CompletedTask)
+                            return new GithubScanBuilder(serviceProvider, ctx => Task.CompletedTask)
                                 .Use<ConcurrentMiddleware>()
                                 .Use<PortScanMiddleware>()
                                 .Use<HttpsScanMiddleware>()
                                 .Use<ScanOkLogMiddleware>()
                                 .Build();
                         })
-                        .AddHostedService<GithubHostedService>()
+                        .AddHostedService<DnsHostedService>()
+                        .AddHostedService<GithubScanAllHostedService>()
+                        .AddHostedService<GithubScanResultHostedService>()
                         ;
                 });
 

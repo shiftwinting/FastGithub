@@ -7,10 +7,10 @@ namespace FastGithub
     /// <summary>
     /// 表示中间件创建者
     /// </summary>
-    sealed class GithubBuilder : IGithubBuilder
+    sealed class GithubScanBuilder : IGithubScanBuilder
     {
-        private readonly GithubDelegate completedHandler;
-        private readonly List<Func<GithubDelegate, GithubDelegate>> middlewares = new();
+        private readonly GithubScanDelegate completedHandler;
+        private readonly List<Func<GithubScanDelegate, GithubScanDelegate>> middlewares = new();
 
         /// <summary>
         /// 获取服务提供者
@@ -21,7 +21,7 @@ namespace FastGithub
         /// 中间件创建者
         /// </summary>
         /// <param name="appServices"></param>
-        public GithubBuilder(IServiceProvider appServices)
+        public GithubScanBuilder(IServiceProvider appServices)
             : this(appServices, context => Task.CompletedTask)
         {
         }
@@ -31,7 +31,7 @@ namespace FastGithub
         /// </summary>
         /// <param name="appServices"></param>
         /// <param name="completedHandler">完成执行内容处理者</param>
-        public GithubBuilder(IServiceProvider appServices, GithubDelegate completedHandler)
+        public GithubScanBuilder(IServiceProvider appServices, GithubScanDelegate completedHandler)
         {
             this.AppServices = appServices;
             this.completedHandler = completedHandler;
@@ -42,7 +42,7 @@ namespace FastGithub
         /// </summary>
         /// <param name="middleware"></param>
         /// <returns></returns>
-        public IGithubBuilder Use(Func<GithubDelegate, GithubDelegate> middleware)
+        public IGithubScanBuilder Use(Func<GithubScanDelegate, GithubScanDelegate> middleware)
         {
             this.middlewares.Add(middleware);
             return this;
@@ -53,7 +53,7 @@ namespace FastGithub
         /// 创建所有中间件执行处理者
         /// </summary>
         /// <returns></returns>
-        public GithubDelegate Build()
+        public GithubScanDelegate Build()
         {
             var handler = this.completedHandler;
             for (var i = this.middlewares.Count - 1; i >= 0; i--)

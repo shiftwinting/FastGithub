@@ -1,18 +1,21 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace FastGithub
 {
     class GithubContext
     {
-        [AllowNull]
-        public string Domain { get; set; }
+        public string Domain { get;  }
 
-        [AllowNull]
-        public IPAddress Address { get; set; }
+        public IPAddress Address { get;  }
 
         public TimeSpan? HttpElapsed { get; set; }
+
+        public GithubContext(string domain,IPAddress address)
+        {
+            this.Domain = domain;
+            this.Address = address;
+        }
 
         public override string ToString()
         {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Text.Json.Serialization;
 
@@ -37,7 +36,7 @@ namespace FastGithub
         public string[] Dependabot { get; set; } = Array.Empty<string>();
 
 
-        public IEnumerable<DomainAddress> ToDomainAddress()
+        public IEnumerable<GithubContext> ToGithubContexts()
         {
             foreach (var range in IPRange.From(this.Web).OrderBy(item => item.Size))
             {
@@ -45,7 +44,7 @@ namespace FastGithub
                 {
                     foreach (var address in range)
                     {
-                        yield return new DomainAddress("github.com", address);
+                        yield return new GithubContext("github.com", address);
                     }
                 }
             }
@@ -56,12 +55,10 @@ namespace FastGithub
                 {
                     foreach (var address in range)
                     {
-                        yield return new DomainAddress("api.github.com", address);
+                        yield return new GithubContext("api.github.com", address);
                     }
                 }
             }
-        }
-
-        public record DomainAddress(string Domain, IPAddress Address);
+        } 
     }
 }
