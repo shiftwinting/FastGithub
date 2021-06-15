@@ -36,7 +36,6 @@ namespace FastGithub.Middlewares
                 {
                     Proxy = null,
                     UseProxy = false,
-                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
                 });
 
                 var startTime = DateTime.Now;
