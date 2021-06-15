@@ -1,6 +1,8 @@
 # FastGithub
-检测github最快的上网ip
+github定制版的dns服务，能解析最快访问github的ip
 
 
-### 应用下载
-[FastGtihub_windows](https://gitee.com/jiulang/fast-github/attach_files/737065/download/publish.zip)
+### 原理
+* 使用github公开的ip范围，扫描所有可用的ip；
+* 轮休检测与记录扫描到的ip的访问耗时；
+* 拦截dns，访问github时，返回最快的ip；
