@@ -73,17 +73,17 @@ namespace FastGithub.Scanner
         {
             if (domain.Contains("github", StringComparison.OrdinalIgnoreCase))
             {
-                return default;
+                lock (this.results.SyncRoot)
+                {
+                    return this.results
+                        .Where(item => item.Domain == domain && item.HttpElapsed != null)
+                        .OrderBy(item => item.HttpElapsed)
+                        .Select(item => item.Address)
+                        .FirstOrDefault();
+                }
             }
 
-            lock (this.results.SyncRoot)
-            {
-                return this.results
-                    .Where(item => item.Domain == domain && item.HttpElapsed != null)
-                    .OrderBy(item => item.HttpElapsed)
-                    .Select(item => item.Address)
-                    .FirstOrDefault();
-            }
+            return default;
         }
     }
 }

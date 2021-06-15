@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace FastGithub.Scanner
 {
-    class Meta
+    sealed class Meta
     {
         [JsonPropertyName("hooks")]
         public string[] Hooks { get; set; } = Array.Empty<string>();
@@ -59,6 +59,6 @@ namespace FastGithub.Scanner
                     }
                 }
             }
-        } 
+        }
     }
 }

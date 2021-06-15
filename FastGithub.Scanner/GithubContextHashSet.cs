@@ -2,7 +2,7 @@
 
 namespace FastGithub.Scanner
 {
-    class GithubContextHashSet : HashSet<GithubContext>
+    sealed class GithubContextHashSet : HashSet<GithubContext>
     {
         public readonly object SyncRoot = new();
     }

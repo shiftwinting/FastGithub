@@ -3,7 +3,7 @@
 namespace FastGithub.Scanner
 {
     [Options("Github")]
-    class GithubOptions
+    sealed class GithubOptions
     {
         public TimeSpan ScanAllInterval { get; set; } = TimeSpan.FromHours(12d);
 
