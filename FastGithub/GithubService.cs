@@ -28,13 +28,13 @@ namespace FastGithub
             var meta = await this.githubMetaService.GetMetaAsync(cancellationToken);
             if (meta != null)
             {
-                var contexts = new List<GithubContext>();
-                var scanTasks = this.GetMetaScanTasks(meta, contexts);
-                await Task.WhenAll(scanTasks);
+                var scanTasks = this.GetMetaScanTasks(meta);
+                var contexts = await Task.WhenAll(scanTasks);
 
                 var sortedContexts = contexts
                     .Where(item => item.HttpElapsed != null)
-                    .OrderBy(item => item.HttpElapsed);
+                    .OrderBy(item => item.Domain)
+                    .ThenBy(item => item.HttpElapsed);
 
                 using var fileStream = File.OpenWrite("github.txt");
                 using var fileWriter = new StreamWriter(fileStream);
@@ -42,7 +42,6 @@ namespace FastGithub
                 foreach (var context in sortedContexts)
                 {
                     var message = context.ToString();
-                    this.logger.LogInformation(message);
                     await fileWriter.WriteLineAsync(message);
                 }
             }
@@ -51,7 +50,7 @@ namespace FastGithub
         }
 
 
-        private IEnumerable<Task> GetMetaScanTasks(Meta meta, IList<GithubContext> contexts)
+        private IEnumerable<Task<GithubContext>> GetMetaScanTasks(Meta meta)
         {
             foreach (var item in meta.ToDomainAddress())
             {
@@ -60,8 +59,14 @@ namespace FastGithub
                     Domain = item.Domain,
                     Address = item.Address,
                 };
-                contexts.Add(context);
-                yield return this.githubDelegate(context);
+                yield return InvokeAsync(context);
+            }
+
+
+            async Task<GithubContext> InvokeAsync(GithubContext context)
+            {
+                await this.githubDelegate(context);
+                return context;
             }
         }
     }

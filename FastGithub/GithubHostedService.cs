@@ -8,17 +8,23 @@ namespace FastGithub
     sealed class GithubHostedService : IHostedService
     {
         private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly IHostApplicationLifetime hostApplicationLifetime;
 
-        public GithubHostedService(IServiceScopeFactory serviceScopeFactory)
+        public GithubHostedService(
+            IServiceScopeFactory serviceScopeFactory,
+            IHostApplicationLifetime hostApplicationLifetime)
         {
             this.serviceScopeFactory = serviceScopeFactory;
+            this.hostApplicationLifetime = hostApplicationLifetime;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             var scope = this.serviceScopeFactory.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<GithubService>();
-            return service.ScanAddressAsync(cancellationToken);
+            await service.ScanAddressAsync(cancellationToken);
+            this.hostApplicationLifetime.StopApplication();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
