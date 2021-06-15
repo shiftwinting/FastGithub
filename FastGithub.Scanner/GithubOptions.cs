@@ -1,7 +1,8 @@
 ﻿using System;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
+    [Options("Github")]
     class GithubOptions
     {
         public TimeSpan ScanAllInterval { get; set; } = TimeSpan.FromHours(12d);

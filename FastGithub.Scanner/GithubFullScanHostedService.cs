@@ -1,17 +1,18 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using FastGithub.Scanner;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub
 {
-    sealed class GithubScanAllHostedService : BackgroundService
+    sealed class GithubFullScanHostedService : BackgroundService
     {
-        private readonly GithubScanService githubScanService;
+        private readonly IGithubScanService githubScanService;
         private readonly IOptionsMonitor<GithubOptions> options;
 
-        public GithubScanAllHostedService(
-            GithubScanService githubScanService,
+        public GithubFullScanHostedService(
+            IGithubScanService githubScanService,
             IOptionsMonitor<GithubOptions> options)
         {
             this.githubScanService = githubScanService;

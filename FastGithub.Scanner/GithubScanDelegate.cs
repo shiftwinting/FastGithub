@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     /// <summary>
     /// 表示所有中间件执行委托

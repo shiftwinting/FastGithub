@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     /// <summary>
     /// 表示中间件创建者

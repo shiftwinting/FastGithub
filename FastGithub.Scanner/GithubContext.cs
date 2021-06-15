@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
-    class GithubContext : IEquatable<GithubContext>
+    sealed class GithubContext : IEquatable<GithubContext>
     {
         public string Domain { get; }
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     /// <summary>
     /// 定义中间件管道创建者的接口

@@ -1,8 +1,9 @@
 ﻿using System.Net;
 
-namespace FastGithub
+namespace FastGithub.Dns
 {
-    class DnsOptions
+    [Options("Dns")]
+    sealed class DnsOptions
     {
         public IPAddress UpStream { get; set; } = IPAddress.Parse("114.114.114.114");
     }

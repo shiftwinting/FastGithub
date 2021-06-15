@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Middlewares
+namespace FastGithub.Scanner.Middlewares
 {
+    [Service(ServiceLifetime.Singleton)]
     sealed class ConcurrentMiddleware : IGithubScanMiddleware
     {
         private readonly SemaphoreSlim semaphoreSlim = new(Environment.ProcessorCount * 4);

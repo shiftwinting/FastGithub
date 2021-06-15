@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     /// <summary>
     /// 定义中间件的接口

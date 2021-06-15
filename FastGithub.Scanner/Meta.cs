@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text.Json.Serialization;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     class Meta
     {

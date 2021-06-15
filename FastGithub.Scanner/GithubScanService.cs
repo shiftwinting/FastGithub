@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
-    sealed class GithubScanService
+    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IGithubScanService))]
+    sealed class GithubScanService : IGithubScanService
     {
         private readonly GithubMetaService metaService;
         private readonly GithubScanDelegate scanDelegate;
@@ -25,6 +28,7 @@ namespace FastGithub
 
         public async Task ScanAllAsync(CancellationToken cancellationToken = default)
         {
+            this.logger.LogInformation("完整扫描开始");
             var meta = await this.metaService.GetMetaAsync(cancellationToken);
             if (meta != null)
             {
@@ -32,7 +36,7 @@ namespace FastGithub
                 await Task.WhenAll(scanTasks);
             }
 
-            this.logger.LogInformation("完全扫描完成");
+            this.logger.LogInformation("完整扫描结束");
 
             async Task ScanAsync(GithubContext context)
             {
@@ -49,6 +53,7 @@ namespace FastGithub
 
         public async Task ScanResultAsync()
         {
+            this.logger.LogInformation("结果扫描开始");
             GithubContext[] contexts;
             lock (this.results.SyncRoot)
             {
@@ -61,18 +66,23 @@ namespace FastGithub
                 await this.scanDelegate(context);
             }
 
-            this.logger.LogInformation("结果扫描完成");
+            this.logger.LogInformation("结果扫描结束");
         }
 
-        public IPAddress[] FindAddress(string domain)
+        public IPAddress? FindFastAddress(string domain)
         {
+            if (domain.Contains("github", StringComparison.OrdinalIgnoreCase))
+            {
+                return default;
+            }
+
             lock (this.results.SyncRoot)
             {
                 return this.results
                     .Where(item => item.Domain == domain && item.HttpElapsed != null)
                     .OrderBy(item => item.HttpElapsed)
                     .Select(item => item.Address)
-                    .ToArray();
+                    .FirstOrDefault();
             }
         }
     }

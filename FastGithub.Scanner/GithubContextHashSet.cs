@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     class GithubContextHashSet : HashSet<GithubContext>
     {

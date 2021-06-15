@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace FastGithub.Middlewares
+namespace FastGithub.Scanner.Middlewares
 {
+    [Service(ServiceLifetime.Singleton)]
     sealed class ScanOkLogMiddleware : IGithubScanMiddleware
     {
         private readonly ILogger<ScanOkLogMiddleware> logger;

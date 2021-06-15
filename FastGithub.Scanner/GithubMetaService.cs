@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
@@ -6,8 +7,9 @@ using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
+    [Service(ServiceLifetime.Singleton)]
     sealed class GithubMetaService
     {
         private readonly IHttpClientFactory httpClientFactory;

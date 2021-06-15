@@ -1,12 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Middlewares
+namespace FastGithub.Scanner.Middlewares
 {
+    [Service(ServiceLifetime.Singleton)]
     sealed class PortScanMiddleware : IGithubScanMiddleware
     {
         private const int PORT = 443;

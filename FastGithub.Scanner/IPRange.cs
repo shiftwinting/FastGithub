@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     sealed class IPRange : IEnumerable<IPAddress>
     {

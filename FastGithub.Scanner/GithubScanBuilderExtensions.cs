@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace FastGithub
+namespace FastGithub.Scanner
 {
     /// <summary>
     /// 中间件创建者扩展
