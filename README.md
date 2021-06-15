@@ -3,4 +3,4 @@
 
 
 ### 应用下载
-[FastGtihub1.0_win_x86](https://gitee.com/jiulang/fast-github/attach_files/735214/download/publish.zip)
+[FastGtihub_windows](https://gitee.com/jiulang/fast-github/attach_files/737065/download/publish.zip)
