@@ -1,5 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Logging;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,15 +10,17 @@ namespace FastGithub
     {
         private readonly GithubMetaService metaService;
         private readonly GithubScanDelegate scanDelegate;
-
-        public ConcurrentQueue<GithubContext> Result { get; } = new();
+        private readonly ILogger<GithubScanService> logger;
+        private readonly GithubContextHashSet results = new();
 
         public GithubScanService(
             GithubMetaService metaService,
-            GithubScanDelegate scanDelegate)
+            GithubScanDelegate scanDelegate,
+            ILogger<GithubScanService> logger)
         {
             this.metaService = metaService;
             this.scanDelegate = scanDelegate;
+            this.logger = logger;
         }
 
         public async Task ScanAllAsync(CancellationToken cancellationToken = default)
@@ -25,26 +28,50 @@ namespace FastGithub
             var meta = await this.metaService.GetMetaAsync(cancellationToken);
             if (meta != null)
             {
-                this.Result.Clear();
                 var scanTasks = meta.ToGithubContexts().Select(ctx => ScanAsync(ctx));
                 await Task.WhenAll(scanTasks);
+            }
+
+            this.logger.LogInformation("完全扫描完成");
+
+            async Task ScanAsync(GithubContext context)
+            {
+                await this.scanDelegate(context);
+                if (context.HttpElapsed != null)
+                {
+                    lock (this.results.SyncRoot)
+                    {
+                        this.results.Add(context);
+                    }
+                }
             }
         }
 
         public async Task ScanResultAsync()
         {
-            while (this.Result.TryDequeue(out var context))
+            GithubContext[] contexts;
+            lock (this.results.SyncRoot)
             {
-                await this.ScanAsync(context);
+                contexts = this.results.ToArray();
             }
+
+            foreach (var context in contexts)
+            {
+                await this.scanDelegate(context);
+            }
+
+            this.logger.LogInformation("结果扫描完成");
         }
 
-        private async Task ScanAsync(GithubContext context)
+        public IPAddress[] FindAddress(string domain)
         {
-            await this.scanDelegate(context);
-            if (context.HttpElapsed != null)
+            lock (this.results.SyncRoot)
             {
-                this.Result.Enqueue(context);
+                return this.results
+                    .Where(item => item.Domain == domain && item.HttpElapsed != null)
+                    .OrderBy(item => item.HttpElapsed)
+                    .Select(item => item.Address)
+                    .ToArray();
             }
         }
     }
