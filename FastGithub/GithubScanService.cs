@@ -57,6 +57,7 @@ namespace FastGithub
 
             foreach (var context in contexts)
             {
+                context.HttpElapsed = null;
                 await this.scanDelegate(context);
             }
 

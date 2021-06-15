@@ -44,11 +44,10 @@ namespace FastGithub
                 var domain = question.Name.ToString();
                 if (domain.Contains("github", StringComparison.OrdinalIgnoreCase))
                 {
-                    var ttl = TimeSpan.FromMinutes(2d);
                     var addressArray = this.githubScanService.FindAddress(domain);
                     foreach (var address in addressArray)
                     {
-                        var record = new IPAddressResourceRecord(question.Name, address, ttl);
+                        var record = new IPAddressResourceRecord(question.Name, address);
                         response.AnswerRecords.Add(record);
                     }
 
