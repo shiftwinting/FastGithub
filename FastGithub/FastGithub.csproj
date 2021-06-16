@@ -1,21 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<Nullable>enable</Nullable>
-		<TargetFramework>net5.0</TargetFramework>
-		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-		<Version>1.0.2</Version>
-	</PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <Version>1.0.2</Version>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
-	</ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<None Update="appsettings.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>
