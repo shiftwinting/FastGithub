@@ -5,11 +5,26 @@ namespace FastGithub.Scanner
 {
     sealed class GithubContext : IEquatable<GithubContext>
     {
+        /// <summary>
+        /// 获取域名
+        /// </summary>
         public string Domain { get; }
 
+        /// <summary>
+        /// 获取ip
+        /// </summary>
         public IPAddress Address { get; }
 
-        public TimeSpan? HttpElapsed { get; set; }
+        /// <summary>
+        /// 获取或设置是否可用
+        /// </summary>
+        public bool Available { get; set; } = false;
+
+        /// <summary>
+        /// 获取或设置扫描总耗时
+        /// </summary>
+        public TimeSpan Elapsed { get; set; } = TimeSpan.MaxValue;
+
 
         public GithubContext(string domain, IPAddress address)
         {
@@ -19,7 +34,7 @@ namespace FastGithub.Scanner
 
         public override string ToString()
         {
-            return $"{Address}\t{Domain}\t# {HttpElapsed}";
+            return $"{Address}\t{Domain}\t# {Elapsed}";
         }
 
         public override bool Equals(object? obj)

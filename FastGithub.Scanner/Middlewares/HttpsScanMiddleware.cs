@@ -27,6 +27,8 @@ namespace FastGithub.Scanner.Middlewares
         {
             try
             {
+                context.Available = false;
+
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
@@ -40,13 +42,12 @@ namespace FastGithub.Scanner.Middlewares
                     UseProxy = false,
                 });
 
-                var startTime = DateTime.Now;
                 using var cancellationTokenSource = new CancellationTokenSource(this.options.CurrentValue.HttpsScanTimeout);
                 var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
                 var server = response.EnsureSuccessStatusCode().Headers.Server;
                 if (server.Any(s => string.Equals("GitHub.com", s.Product?.Name, StringComparison.OrdinalIgnoreCase)))
                 {
-                    context.HttpElapsed = DateTime.Now.Subtract(startTime);
+                    context.Available = true;
                     await next();
                 }
             }

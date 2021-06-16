@@ -17,7 +17,7 @@ namespace FastGithub.Scanner.Middlewares
 
         public Task InvokeAsync(GithubContext context, Func<Task> next)
         {
-            if (context.HttpElapsed != null)
+            if (context.Available)
             {
                 this.logger.LogInformation(context.ToString());
             }

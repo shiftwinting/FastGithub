@@ -14,7 +14,7 @@ namespace FastGithub.Scanner
     {
         private readonly GithubMetaService metaService;
         private readonly ILogger<GithubScanService> logger;
-        private readonly GithubContextHashSet results = new();
+        private readonly GithubContextCollection results = new();
 
         private readonly InvokeDelegate<GithubContext> fullScanDelegate;
         private readonly InvokeDelegate<GithubContext> resultScanDelegate;
@@ -30,6 +30,7 @@ namespace FastGithub.Scanner
             this.fullScanDelegate = pipelineBuilder
                 .New()
                 .Use<ConcurrentMiddleware>()
+                .Use<ScanElapsedMiddleware>()
                 .Use<PortScanMiddleware>()
                 .Use<HttpsScanMiddleware>()
                 .Use<ScanOkLogMiddleware>()
@@ -37,6 +38,7 @@ namespace FastGithub.Scanner
 
             this.resultScanDelegate = pipelineBuilder
                 .New()
+                .Use<ScanElapsedMiddleware>()
                 .Use<PortScanMiddleware>()
                 .Use<HttpsScanMiddleware>()
                 .Use<ScanOkLogMiddleware>()
@@ -58,12 +60,9 @@ namespace FastGithub.Scanner
             async Task ScanAsync(GithubContext context)
             {
                 await this.fullScanDelegate(context);
-                if (context.HttpElapsed != null)
+                if (context.Available == true)
                 {
-                    lock (this.results.SyncRoot)
-                    {
-                        this.results.Add(context);
-                    }
+                    this.results.Add(context);
                 }
             }
         }
@@ -71,15 +70,10 @@ namespace FastGithub.Scanner
         public async Task ScanResultAsync()
         {
             this.logger.LogInformation("结果扫描开始");
-            GithubContext[] contexts;
-            lock (this.results.SyncRoot)
-            {
-                contexts = this.results.ToArray();
-            }
 
+            var contexts = this.results.ToArray();
             foreach (var context in contexts)
             {
-                context.HttpElapsed = null;
                 await this.resultScanDelegate(context);
             }
 
@@ -88,19 +82,9 @@ namespace FastGithub.Scanner
 
         public IPAddress? FindFastAddress(string domain)
         {
-            if (domain.Contains("github", StringComparison.OrdinalIgnoreCase))
-            {
-                lock (this.results.SyncRoot)
-                {
-                    return this.results
-                        .Where(item => item.Domain == domain && item.HttpElapsed != null)
-                        .OrderBy(item => item.HttpElapsed)
-                        .Select(item => item.Address)
-                        .FirstOrDefault();
-                }
-            }
-
-            return default;
+            return domain.Contains("github", StringComparison.OrdinalIgnoreCase)
+                ? this.results.FindFastAddress(domain)
+                : default;
         }
     }
 }
