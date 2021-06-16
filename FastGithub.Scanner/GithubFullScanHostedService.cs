@@ -8,11 +8,11 @@ namespace FastGithub
 {
     sealed class GithubFullScanHostedService : BackgroundService
     {
-        private readonly IGithubScanService githubScanService;
+        private readonly GithubScanService githubScanService;
         private readonly IOptionsMonitor<GithubOptions> options;
 
         public GithubFullScanHostedService(
-            IGithubScanService githubScanService,
+            GithubScanService githubScanService,
             IOptionsMonitor<GithubOptions> options)
         {
             this.githubScanService = githubScanService;

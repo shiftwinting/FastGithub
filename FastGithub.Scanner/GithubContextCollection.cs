@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 
 namespace FastGithub.Scanner
 {
-    sealed class GithubContextCollection
+    [Service(ServiceLifetime.Singleton)]
+    sealed class GithubContextCollection : IGithubScanResults
     {
         private readonly object syncRoot = new();
         private readonly List<GithubContext> contextList = new();
@@ -24,21 +25,22 @@ namespace FastGithub.Scanner
         }
 
 
-        public bool TryGet(string domain, IPAddress address, [MaybeNullWhen(false)] out GithubContext context)
-        {
-            lock (this.syncRoot)
-            {
-                var target = new GithubContext(domain, address);
-                context = this.contextList.Find(item => item.Equals(target));
-                return context != null;
-            }
-        }
-
         public GithubContext[] ToArray()
         {
             lock (this.syncRoot)
             {
                 return this.contextList.ToArray();
+            }
+        }
+
+
+        public bool IsAvailable(string domain, IPAddress address)
+        {
+            lock (this.syncRoot)
+            {
+                var target = new GithubContext(domain, address);
+                var context = this.contextList.Find(item => item.Equals(target));
+                return context != null && context.Available;
             }
         }
 

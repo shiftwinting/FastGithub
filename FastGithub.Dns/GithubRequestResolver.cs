@@ -16,17 +16,17 @@ namespace FastGithub.Dns
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubRequestResolver : IRequestResolver
     {
-        private readonly IGithubScanService githubScanService;
+        private readonly IGithubScanResults githubScanResults;
         private readonly IMemoryCache memoryCache;
         private readonly ILogger<GithubRequestResolver> logger;
         private readonly TimeSpan TTL = TimeSpan.FromMinutes(10d);
 
         public GithubRequestResolver(
-            IGithubScanService githubScanService,
+            IGithubScanResults githubScanResults,
             IMemoryCache memoryCache,
             ILogger<GithubRequestResolver> logger)
         {
-            this.githubScanService = githubScanService;
+            this.githubScanResults = githubScanResults;
             this.memoryCache = memoryCache;
             this.logger = logger;
         }
@@ -69,14 +69,14 @@ namespace FastGithub.Dns
             var key = $"ttl:{domain}";
             if (this.memoryCache.TryGetValue<IPAddress>(key, out var address))
             {
-                if (this.githubScanService.IsAvailable(domain, address))
+                if (this.githubScanResults.IsAvailable(domain, address))
                 {
                     return address;
                 }
                 this.memoryCache.Remove(key);
             }
 
-            address = this.githubScanService.FindBestAddress(domain);
+            address = this.githubScanResults.FindBestAddress(domain);
             if (address != null)
             {
                 this.memoryCache.Set(key, address, ttl);

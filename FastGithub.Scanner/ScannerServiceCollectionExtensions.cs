@@ -1,7 +1,6 @@
 ﻿using FastGithub.Scanner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -24,11 +23,8 @@ namespace FastGithub
                 .AddServiceAndOptions(assembly, configuration)
                 .AddHostedService<GithubFullScanHostedService>()
                 .AddHostedService<GithubResultScanHostedService>()
-                .AddSingleton<IPipelineBuilder<GithubContext>>(appService =>
-                {
-                    return new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask);
-                })
-                ;
+                .AddSingleton<IGithubScanResults>(appService => appService.GetRequiredService<GithubContextCollection>());
+            ;
         }
     }
 }

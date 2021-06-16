@@ -1,33 +1,34 @@
 ﻿using FastGithub.Scanner.Middlewares;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner
 {
-    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IGithubScanService))]
-    sealed class GithubScanService : IGithubScanService
+    [Service(ServiceLifetime.Singleton)]
+    sealed class GithubScanService
     {
         private readonly GithubMetaService metaService;
         private readonly ILogger<GithubScanService> logger;
-        private readonly GithubContextCollection results = new();
+        private readonly GithubContextCollection contextCollection;
 
         private readonly InvokeDelegate<GithubContext> fullScanDelegate;
         private readonly InvokeDelegate<GithubContext> resultScanDelegate;
 
         public GithubScanService(
             GithubMetaService metaService,
-            ILogger<GithubScanService> logger,
-            IPipelineBuilder<GithubContext> pipelineBuilder)
+            GithubContextCollection contextCollection,
+            IServiceProvider appService,
+            ILogger<GithubScanService> logger)
         {
             this.metaService = metaService;
+            this.contextCollection = contextCollection;
             this.logger = logger;
-
-            this.fullScanDelegate = pipelineBuilder
-                .New()
+             ;
+            this.fullScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
                 .Use<ConcurrentMiddleware>()
                 .Use<ScanOkLogMiddleware>()
                 .Use<StatisticsMiddleware>()
@@ -35,8 +36,7 @@ namespace FastGithub.Scanner
                 .Use<HttpsScanMiddleware>()
                 .Build();
 
-            this.resultScanDelegate = pipelineBuilder
-                .New()
+            this.resultScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
                 .Use<ScanOkLogMiddleware>()
                 .Use<StatisticsMiddleware>()
                 .Use<PortScanMiddleware>()
@@ -61,7 +61,7 @@ namespace FastGithub.Scanner
                 await this.fullScanDelegate(context);
                 if (context.Available == true)
                 {
-                    this.results.Add(context);
+                    this.contextCollection.Add(context);
                 }
             }
         }
@@ -70,24 +70,13 @@ namespace FastGithub.Scanner
         {
             this.logger.LogInformation("结果扫描开始");
 
-            var contexts = this.results.ToArray();
+            var contexts = this.contextCollection.ToArray();
             foreach (var context in contexts)
             {
                 await this.resultScanDelegate(context);
             }
 
             this.logger.LogInformation("结果扫描结束");
-        }
-
-        public IPAddress? FindBestAddress(string domain)
-        {
-            return this.results.FindBestAddress(domain);
-        }
-
-
-        public bool IsAvailable(string domain, IPAddress address)
-        {
-            return this.results.TryGet(domain, address, out var context) && context.Available;
         }
     }
 }
