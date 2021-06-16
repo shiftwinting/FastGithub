@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FastGithub.Scanner.Middlewares;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -12,18 +13,34 @@ namespace FastGithub.Scanner
     sealed class GithubScanService : IGithubScanService
     {
         private readonly GithubMetaService metaService;
-        private readonly GithubScanDelegate scanDelegate;
         private readonly ILogger<GithubScanService> logger;
         private readonly GithubContextHashSet results = new();
 
+        private readonly InvokeDelegate<GithubContext> fullScanDelegate;
+        private readonly InvokeDelegate<GithubContext> resultScanDelegate;
+
         public GithubScanService(
             GithubMetaService metaService,
-            GithubScanDelegate scanDelegate,
-            ILogger<GithubScanService> logger)
+            ILogger<GithubScanService> logger,
+            IPipelineBuilder<GithubContext> pipelineBuilder)
         {
             this.metaService = metaService;
-            this.scanDelegate = scanDelegate;
             this.logger = logger;
+
+            this.fullScanDelegate = pipelineBuilder
+                .New()
+                .Use<ConcurrentMiddleware>()
+                .Use<PortScanMiddleware>()
+                .Use<HttpsScanMiddleware>()
+                .Use<ScanOkLogMiddleware>()
+                .Build();
+
+            this.resultScanDelegate = pipelineBuilder
+                .New()
+                .Use<PortScanMiddleware>()
+                .Use<HttpsScanMiddleware>()
+                .Use<ScanOkLogMiddleware>()
+                .Build();
         }
 
         public async Task ScanAllAsync(CancellationToken cancellationToken = default)
@@ -40,7 +57,7 @@ namespace FastGithub.Scanner
 
             async Task ScanAsync(GithubContext context)
             {
-                await this.scanDelegate(context);
+                await this.fullScanDelegate(context);
                 if (context.HttpElapsed != null)
                 {
                     lock (this.results.SyncRoot)
@@ -63,7 +80,7 @@ namespace FastGithub.Scanner
             foreach (var context in contexts)
             {
                 context.HttpElapsed = null;
-                await this.scanDelegate(context);
+                await this.resultScanDelegate(context);
             }
 
             this.logger.LogInformation("结果扫描结束");

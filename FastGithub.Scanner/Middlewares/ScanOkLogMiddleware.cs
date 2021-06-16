@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.Middlewares
 {
     [Service(ServiceLifetime.Singleton)]
-    sealed class ScanOkLogMiddleware : IGithubScanMiddleware
+    sealed class ScanOkLogMiddleware : IMiddleware<GithubContext>
     {
         private readonly ILogger<ScanOkLogMiddleware> logger;
 

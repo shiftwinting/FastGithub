@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.Middlewares
 {
     [Service(ServiceLifetime.Singleton)]
-    sealed class ConcurrentMiddleware : IGithubScanMiddleware
+    sealed class ConcurrentMiddleware : IMiddleware<GithubContext>
     {
         private readonly SemaphoreSlim semaphoreSlim = new(Environment.ProcessorCount * 4);
 

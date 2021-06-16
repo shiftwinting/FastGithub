@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.Middlewares
 {
     [Service(ServiceLifetime.Singleton)]
-    sealed class PortScanMiddleware : IGithubScanMiddleware
+    sealed class PortScanMiddleware : IMiddleware<GithubContext>
     {
         private const int PORT = 443;
         private readonly IOptionsMonitor<GithubOptions> options;

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.Middlewares
 {
     [Service(ServiceLifetime.Singleton)]
-    sealed class HttpsScanMiddleware : IGithubScanMiddleware
+    sealed class HttpsScanMiddleware : IMiddleware<GithubContext>
     {
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<HttpsScanMiddleware> logger;

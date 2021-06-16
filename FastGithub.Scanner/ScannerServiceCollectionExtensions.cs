@@ -1,5 +1,4 @@
 ﻿using FastGithub.Scanner;
-using FastGithub.Scanner.Middlewares;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
@@ -22,18 +21,13 @@ namespace FastGithub
             var assembly = typeof(ScannerServiceCollectionExtensions).Assembly;
             return services
                 .AddHttpClient()
-                .AddSingleton(serviceProvider =>
-                {
-                    return new GithubScanBuilder(serviceProvider, ctx => Task.CompletedTask)
-                        .Use<ConcurrentMiddleware>()
-                        .Use<PortScanMiddleware>()
-                        .Use<HttpsScanMiddleware>()
-                        .Use<ScanOkLogMiddleware>()
-                        .Build();
-                })
                 .AddServiceAndOptions(assembly, configuration)
                 .AddHostedService<GithubFullScanHostedService>()
                 .AddHostedService<GithubResultScanHostedService>()
+                .AddSingleton<IPipelineBuilder<GithubContext>>(appService =>
+                {
+                    return new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask);
+                })
                 ;
         }
     }
