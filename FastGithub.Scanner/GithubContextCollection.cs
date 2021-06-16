@@ -8,21 +8,12 @@ namespace FastGithub.Scanner
     {
         private readonly object syncRoot = new();
         private readonly HashSet<GithubContext> contextHashSet = new();
-        private readonly Dictionary<string, IPAddress> domainAdressCache = new();
 
-        public void AddOrUpdate(GithubContext context)
+        public bool Add(GithubContext context)
         {
             lock (this.syncRoot)
             {
-                if (this.contextHashSet.TryGetValue(context, out var value))
-                {
-                    value.Elapsed = context.Elapsed;
-                    value.Available = context.Available;
-                }
-                else
-                {
-                    this.contextHashSet.Add(context);
-                }
+                return this.contextHashSet.Add(context);
             }
         }
 
@@ -39,35 +30,16 @@ namespace FastGithub.Scanner
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
-        public IPAddress? FindFastAddress(string domain)
+        public IPAddress? FindBestAddress(string domain)
         {
             lock (this.syncRoot)
             {
-                // 如果上一次的ip可以使用，就返回上一次的ip
-                if (this.domainAdressCache.TryGetValue(domain, out var address))
-                {
-                    var key = new GithubContext(domain, address);
-                    if (this.contextHashSet.TryGetValue(key, out var context) && context.Available)
-                    {
-                        return address;
-                    }
-                }
-
-                var fastAddress = this.contextHashSet
+                return this.contextHashSet
                     .Where(item => item.Available && item.Domain == domain)
-                    .OrderBy(item => item.Elapsed)
+                    .OrderByDescending(item => item.Statistics.GetSuccessRate())
+                    .ThenBy(item => item.Statistics.GetAvgElapsed())
                     .Select(item => item.Address)
                     .FirstOrDefault();
-
-                if (fastAddress != null)
-                {
-                    this.domainAdressCache[domain] = fastAddress;
-                }
-                else
-                {
-                    this.domainAdressCache.Remove(domain);
-                }
-                return fastAddress;
             }
         }
     }

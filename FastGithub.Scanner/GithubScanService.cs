@@ -30,18 +30,18 @@ namespace FastGithub.Scanner
             this.fullScanDelegate = pipelineBuilder
                 .New()
                 .Use<ConcurrentMiddleware>()
-                .Use<ScanElapsedMiddleware>()
-                .Use<PortScanMiddleware>()
-                .Use<HttpsScanMiddleware>()
                 .Use<ScanOkLogMiddleware>()
+                .Use<StatisticsMiddleware>()
+                .Use<PortScanMiddleware>()
+                .Use<HttpsScanMiddleware>() 
                 .Build();
 
             this.resultScanDelegate = pipelineBuilder
                 .New()
-                .Use<ScanElapsedMiddleware>()
-                .Use<PortScanMiddleware>()
-                .Use<HttpsScanMiddleware>()
                 .Use<ScanOkLogMiddleware>()
+                .Use<StatisticsMiddleware>()
+                .Use<PortScanMiddleware>()
+                .Use<HttpsScanMiddleware>() 
                 .Build();
         }
 
@@ -62,7 +62,7 @@ namespace FastGithub.Scanner
                 await this.fullScanDelegate(context);
                 if (context.Available == true)
                 {
-                    this.results.AddOrUpdate(context);
+                    this.results.Add(context);
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace FastGithub.Scanner
         public IPAddress? FindFastAddress(string domain)
         {
             return domain.Contains("github", StringComparison.OrdinalIgnoreCase)
-                ? this.results.FindFastAddress(domain)
+                ? this.results.FindBestAddress(domain)
                 : default;
         }
     }

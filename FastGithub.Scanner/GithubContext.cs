@@ -18,24 +18,19 @@ namespace FastGithub.Scanner
         /// <summary>
         /// 获取或设置是否可用
         /// </summary>
-        public bool Available { get; set; } = false;
+        public bool Available { get; set; }
 
         /// <summary>
-        /// 获取或设置扫描总耗时
+        /// 获取统计信息
         /// </summary>
-        public TimeSpan Elapsed { get; set; } = TimeSpan.MaxValue;
+        public GithubContextStatistics Statistics { get; } = new();
 
 
         public GithubContext(string domain, IPAddress address)
         {
             this.Domain = domain;
             this.Address = address;
-        }
-
-        public override string ToString()
-        {
-            return $"{Address}\t{Domain}\t# {Elapsed}";
-        }
+        } 
 
         public override bool Equals(object? obj)
         {

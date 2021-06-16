@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.Middlewares
 {
     [Service(ServiceLifetime.Singleton)]
-    sealed class ScanElapsedMiddleware : IMiddleware<GithubContext>
+    sealed class StatisticsMiddleware : IMiddleware<GithubContext>
     {
         public async Task InvokeAsync(GithubContext context, Func<Task> next)
         {
@@ -14,12 +14,16 @@ namespace FastGithub.Scanner.Middlewares
             try
             {
                 stopwatch.Start();
+                context.Statistics.SetScan();
                 await next();
             }
             finally
             {
                 stopwatch.Stop();
-                context.Elapsed = stopwatch.Elapsed;
+                if (context.Available == true)
+                {
+                    context.Statistics.SetScanSuccess(stopwatch.Elapsed);
+                }
             }
         }
     }
