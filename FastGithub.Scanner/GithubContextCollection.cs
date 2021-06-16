@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 
@@ -19,6 +20,17 @@ namespace FastGithub.Scanner
                 }
                 this.contextList.Add(context);
                 return true;
+            }
+        }
+
+
+        public bool TryGet(string domain, IPAddress address, [MaybeNullWhen(false)] out GithubContext context)
+        {
+            lock (this.syncRoot)
+            {
+                var target = new GithubContext(domain, address);
+                context = this.contextList.Find(item => item.Equals(target));
+                return context != null;
             }
         }
 

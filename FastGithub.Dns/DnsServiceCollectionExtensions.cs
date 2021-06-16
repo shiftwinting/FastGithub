@@ -18,7 +18,8 @@ namespace FastGithub
         public static IServiceCollection AddGithubDns(this IServiceCollection services, IConfiguration configuration)
         {
             var assembly = typeof(DnsServiceCollectionExtensions).Assembly;
-            return services               
+            return services         
+                .AddMemoryCache()
                 .AddServiceAndOptions(assembly, configuration)
                 .AddHostedService<DnsHostedService>()
                 .AddGithubScanner(configuration);

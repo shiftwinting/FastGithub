@@ -1,7 +1,6 @@
 ﻿using FastGithub.Scanner.Middlewares;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -33,7 +32,7 @@ namespace FastGithub.Scanner
                 .Use<ScanOkLogMiddleware>()
                 .Use<StatisticsMiddleware>()
                 .Use<PortScanMiddleware>()
-                .Use<HttpsScanMiddleware>() 
+                .Use<HttpsScanMiddleware>()
                 .Build();
 
             this.resultScanDelegate = pipelineBuilder
@@ -41,7 +40,7 @@ namespace FastGithub.Scanner
                 .Use<ScanOkLogMiddleware>()
                 .Use<StatisticsMiddleware>()
                 .Use<PortScanMiddleware>()
-                .Use<HttpsScanMiddleware>() 
+                .Use<HttpsScanMiddleware>()
                 .Build();
         }
 
@@ -80,11 +79,15 @@ namespace FastGithub.Scanner
             this.logger.LogInformation("结果扫描结束");
         }
 
-        public IPAddress? FindFastAddress(string domain)
+        public IPAddress? FindBestAddress(string domain)
         {
-            return domain.Contains("github", StringComparison.OrdinalIgnoreCase)
-                ? this.results.FindBestAddress(domain)
-                : default;
+            return this.results.FindBestAddress(domain);
+        }
+
+
+        public bool IsAvailable(string domain, IPAddress address)
+        {
+            return this.results.TryGet(domain, address, out var context) && context.Available;
         }
     }
 }

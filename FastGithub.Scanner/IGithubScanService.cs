@@ -6,8 +6,12 @@ namespace FastGithub.Scanner
 {
     public interface IGithubScanService
     {
-        Task ScanAllAsync(CancellationToken cancellationToken = default);
-        Task ScanResultAsync(); 
-        IPAddress? FindFastAddress(string domain);
+        Task ScanAllAsync(CancellationToken cancellationToken);
+
+        Task ScanResultAsync();
+
+        bool IsAvailable(string domain, IPAddress address);
+
+        IPAddress? FindBestAddress(string domain);
     }
 }
