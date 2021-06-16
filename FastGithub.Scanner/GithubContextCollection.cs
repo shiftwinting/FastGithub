@@ -7,13 +7,18 @@ namespace FastGithub.Scanner
     sealed class GithubContextCollection
     {
         private readonly object syncRoot = new();
-        private readonly HashSet<GithubContext> contextHashSet = new();
+        private readonly List<GithubContext> contextList = new();
 
         public bool Add(GithubContext context)
         {
             lock (this.syncRoot)
             {
-                return this.contextHashSet.Add(context);
+                if (this.contextList.Contains(context))
+                {
+                    return false;
+                }
+                this.contextList.Add(context);
+                return true;
             }
         }
 
@@ -21,7 +26,7 @@ namespace FastGithub.Scanner
         {
             lock (this.syncRoot)
             {
-                return this.contextHashSet.ToArray();
+                return this.contextList.ToArray();
             }
         }
 
@@ -34,7 +39,7 @@ namespace FastGithub.Scanner
         {
             lock (this.syncRoot)
             {
-                return this.contextHashSet
+                return this.contextList
                     .Where(item => item.Available && item.Domain == domain)
                     .OrderByDescending(item => item.Statistics.GetSuccessRate())
                     .ThenBy(item => item.Statistics.GetAvgElapsed())
