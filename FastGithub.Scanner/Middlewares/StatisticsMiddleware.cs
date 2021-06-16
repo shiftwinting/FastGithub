@@ -14,15 +14,18 @@ namespace FastGithub.Scanner.Middlewares
             try
             {
                 stopwatch.Start();
-                context.Statistics.SetScan();
                 await next();
             }
             finally
             {
                 stopwatch.Stop();
-                if (context.Available == true)
+                if (context.Available)
                 {
                     context.Statistics.SetScanSuccess(stopwatch.Elapsed);
+                }
+                else
+                {
+                    context.Statistics.SetScanFailure();
                 }
             }
         }

@@ -21,13 +21,14 @@ namespace FastGithub.Scanner
         public TimeSpan TotalSuccessElapsed { get; private set; }
 
 
-        public void SetScan()
+        public void SetScanFailure()
         {
             this.TotalScanCount += 1;
         }
 
         public void SetScanSuccess(TimeSpan elapsed)
         {
+            this.TotalScanCount += 1;
             this.TotalSuccessCount += 1;
             this.TotalSuccessElapsed = this.TotalSuccessElapsed.Add(elapsed);
         }
