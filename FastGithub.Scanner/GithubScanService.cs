@@ -27,7 +27,7 @@ namespace FastGithub.Scanner
             this.metaService = metaService;
             this.contextCollection = contextCollection;
             this.logger = logger;
-             ;
+            ;
             this.fullScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
                 .Use<ConcurrentMiddleware>()
                 .Use<ScanOkLogMiddleware>()
@@ -46,29 +46,30 @@ namespace FastGithub.Scanner
 
         public async Task ScanAllAsync(CancellationToken cancellationToken = default)
         {
-            this.logger.LogInformation("完整扫描开始");
+            this.logger.LogInformation("完整扫描开始..");
             var meta = await this.metaService.GetMetaAsync(cancellationToken);
             if (meta != null)
             {
                 var scanTasks = meta.ToGithubContexts().Select(ctx => ScanAsync(ctx));
-                await Task.WhenAll(scanTasks);
+                var results = await Task.WhenAll(scanTasks);
+                var successCount = results.Count(item => item);
+                this.logger.LogInformation($"完整扫描结束，成功{successCount}条共{results.Length}条");
             }
 
-            this.logger.LogInformation("完整扫描结束");
-
-            async Task ScanAsync(GithubContext context)
+            async Task<bool> ScanAsync(GithubContext context)
             {
                 await this.fullScanDelegate(context);
                 if (context.Available == true)
                 {
                     this.contextCollection.Add(context);
                 }
+                return context.Available;
             }
         }
 
         public async Task ScanResultAsync()
         {
-            this.logger.LogInformation("结果扫描开始");
+            this.logger.LogInformation("结果扫描开始..");
 
             var contexts = this.contextCollection.ToArray();
             foreach (var context in contexts)
@@ -76,7 +77,7 @@ namespace FastGithub.Scanner
                 await this.resultScanDelegate(context);
             }
 
-            this.logger.LogInformation("结果扫描结束");
+            this.logger.LogInformation($"结果扫描结束，共扫描{contexts.Length}条记录");
         }
     }
 }

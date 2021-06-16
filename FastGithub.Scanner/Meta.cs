@@ -47,18 +47,7 @@ namespace FastGithub.Scanner
                         yield return new GithubContext("github.com", address);
                     }
                 }
-            }
-
-            foreach (var range in IPRange.From(this.Api).OrderBy(item => item.Size))
-            {
-                if (range.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    foreach (var address in range)
-                    {
-                        yield return new GithubContext("api.github.com", address);
-                    }
-                }
-            }
+            } 
         }
     }
 }

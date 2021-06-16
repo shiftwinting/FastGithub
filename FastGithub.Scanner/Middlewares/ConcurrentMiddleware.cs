@@ -12,8 +12,8 @@ namespace FastGithub.Scanner.Middlewares
 
         public ConcurrentMiddleware()
         {
-            var initialCount = Environment.ProcessorCount;
-            this.semaphoreSlim = new SemaphoreSlim(initialCount, initialCount * 4);
+            var currentCount = Environment.ProcessorCount * 4;
+            this.semaphoreSlim = new SemaphoreSlim(currentCount, currentCount);
         }
 
         public async Task InvokeAsync(GithubContext context, Func<Task> next)

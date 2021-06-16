@@ -57,8 +57,18 @@ namespace FastGithub.Scanner.Middlewares
             }
             catch (Exception ex)
             {
-                this.logger.LogTrace($"{context.Domain} {context.Address} {ex.Message}");
+                var message = GetInnerMessage(ex);
+                this.logger.LogTrace($"{context.Domain} {context.Address} {message}");
             }
+        }
+
+        private string GetInnerMessage(Exception ex)
+        {
+            while (ex.InnerException != null)
+            {
+                return GetInnerMessage(ex.InnerException);
+            }
+            return ex.Message;
         }
     }
 }
