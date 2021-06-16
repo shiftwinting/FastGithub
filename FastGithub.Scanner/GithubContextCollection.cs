@@ -10,11 +10,19 @@ namespace FastGithub.Scanner
         private readonly HashSet<GithubContext> contextHashSet = new();
         private readonly Dictionary<string, IPAddress> domainAdressCache = new();
 
-        public bool Add(GithubContext context)
+        public void AddOrUpdate(GithubContext context)
         {
             lock (this.syncRoot)
             {
-                return this.contextHashSet.Add(context);
+                if (this.contextHashSet.TryGetValue(context, out var value))
+                {
+                    value.Elapsed = context.Elapsed;
+                    value.Available = context.Available;
+                }
+                else
+                {
+                    this.contextHashSet.Add(context);
+                }
             }
         }
 

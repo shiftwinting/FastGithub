@@ -62,7 +62,7 @@ namespace FastGithub.Scanner
                 await this.fullScanDelegate(context);
                 if (context.Available == true)
                 {
-                    this.results.Add(context);
+                    this.results.AddOrUpdate(context);
                 }
             }
         }
