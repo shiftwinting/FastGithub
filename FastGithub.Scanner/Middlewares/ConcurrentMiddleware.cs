@@ -8,7 +8,13 @@ namespace FastGithub.Scanner.Middlewares
     [Service(ServiceLifetime.Singleton)]
     sealed class ConcurrentMiddleware : IMiddleware<GithubContext>
     {
-        private readonly SemaphoreSlim semaphoreSlim = new(Environment.ProcessorCount * 4);
+        private readonly SemaphoreSlim semaphoreSlim;
+
+        public ConcurrentMiddleware()
+        {
+            var initialCount = Environment.ProcessorCount;
+            this.semaphoreSlim = new SemaphoreSlim(initialCount, initialCount * 4);
+        }
 
         public async Task InvokeAsync(GithubContext context, Func<Task> next)
         {
