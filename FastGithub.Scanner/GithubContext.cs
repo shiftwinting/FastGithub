@@ -5,6 +5,12 @@ namespace FastGithub.Scanner
 {
     sealed class GithubContext : IEquatable<GithubContext>
     {
+        private record Github(
+            string Domain,
+            IPAddress Address,
+            double SuccessRate,
+            TimeSpan AvgElapsed);
+
         /// <summary>
         /// 获取域名
         /// </summary>
@@ -21,16 +27,16 @@ namespace FastGithub.Scanner
         public bool Available { get; set; }
 
         /// <summary>
-        /// 获取统计信息
+        /// 获取扫描历史信息
         /// </summary>
-        public GithubContextStatistics Statistics { get; } = new();
+        public GithubContextHistory History { get; } = new();
 
 
         public GithubContext(string domain, IPAddress address)
         {
             this.Domain = domain;
             this.Address = address;
-        } 
+        }
 
         public override bool Equals(object? obj)
         {
@@ -45,6 +51,16 @@ namespace FastGithub.Scanner
         public override int GetHashCode()
         {
             return HashCode.Combine(this.Domain, this.Address);
+        }
+
+        public override string ToString()
+        {
+            return new Github(
+                this.Domain,
+                this.Address,
+                this.History.GetSuccessRate(),
+                this.History.GetAvgElapsed()
+                ).ToString();
         }
     }
 }

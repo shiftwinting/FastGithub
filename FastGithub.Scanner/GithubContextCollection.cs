@@ -55,8 +55,8 @@ namespace FastGithub.Scanner
             {
                 return this.contextList
                     .Where(item => item.Available && item.Domain == domain)
-                    .OrderByDescending(item => item.Statistics.GetSuccessRate())
-                    .ThenBy(item => item.Statistics.GetAvgElapsed())
+                    .OrderByDescending(item => item.History.GetSuccessRate())
+                    .ThenBy(item => item.History.GetAvgElapsed())
                     .Select(item => item.Address)
                     .FirstOrDefault();
             }

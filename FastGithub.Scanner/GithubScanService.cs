@@ -30,14 +30,12 @@ namespace FastGithub.Scanner
             ;
             this.fullScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
                 .Use<ConcurrentMiddleware>()
-                .Use<ScanOkLogMiddleware>()
                 .Use<StatisticsMiddleware>()
                 .Use<PortScanMiddleware>()
                 .Use<HttpsScanMiddleware>()
                 .Build();
 
             this.resultScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
-                .Use<ScanOkLogMiddleware>()
                 .Use<StatisticsMiddleware>()
                 .Use<PortScanMiddleware>()
                 .Use<HttpsScanMiddleware>()
