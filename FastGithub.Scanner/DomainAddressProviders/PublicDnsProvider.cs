@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.DomainMiddlewares
 {
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class DnsDomainAddressProvider : IDomainAddressProvider
+    sealed class PublicDnsProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly ILogger<DnsDomainAddressProvider> logger;
+        private readonly ILogger<PublicDnsProvider> logger;
 
-        public DnsDomainAddressProvider(
+        public PublicDnsProvider(
             IOptionsMonitor<GithubOptions> options,
-            ILogger<DnsDomainAddressProvider> logger)
+            ILogger<PublicDnsProvider> logger)
         {
             this.options = options;
             this.logger = logger;
@@ -26,17 +26,20 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
-            var setting = this.options.CurrentValue.DominAddressProvider.DnsDomainAddress;
+            var setting = this.options.CurrentValue.DominAddressProviders.PublicDnsProvider;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
             }
 
-            var result = new List<DomainAddress>();
+            var result = new HashSet<DomainAddress>();
             foreach (var dns in setting.Dnss)
             {
                 var domainAddresses = await this.LookupAsync(dns, setting.Domains);
-                result.AddRange(domainAddresses);
+                foreach (var item in domainAddresses)
+                {
+                    result.Add(item);
+                }
             }
 
             return result;

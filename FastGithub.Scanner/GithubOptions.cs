@@ -7,7 +7,7 @@ namespace FastGithub.Scanner
     {
         public ScanSetting Scan { get; set; } = new ScanSetting();
 
-        public DomainAddressProviderSetting DominAddressProvider { get; set; } = new DomainAddressProviderSetting();
+        public DomainAddressProvidersSetting DominAddressProviders { get; set; } = new DomainAddressProvidersSetting();
 
         public class ScanSetting
         {
@@ -20,31 +20,30 @@ namespace FastGithub.Scanner
             public TimeSpan HttpsScanTimeout { get; set; } = TimeSpan.FromSeconds(2d);
         }
 
-        public class DomainAddressProviderSetting
+        public class DomainAddressProvidersSetting
         {
-            public DnsDomainAddressSetting DnsDomainAddress { get; set; } = new DnsDomainAddressSetting();
-            public MetaDoaminAddressSetting MetaDomainAddress { get; set; } = new MetaDoaminAddressSetting();
-            public IPAddressComDomainAddressSetting IPAddressComDomainAddress { get; set; } = new IPAddressComDomainAddressSetting();
+            public GithubMetaProviderSetting GithubMetaProvider { get; set; } = new GithubMetaProviderSetting();
+            public IPAddressComProviderSetting IPAddressComProvider { get; set; } = new IPAddressComProviderSetting();
+            public PublicDnsProviderSetting PublicDnsProvider { get; set; } = new PublicDnsProviderSetting();
 
-            public class DnsDomainAddressSetting
-            {
-                public bool Enable { get; set; } = true;
-
-                public string[] Dnss { get; set; } = Array.Empty<string>();
-
-                public string[] Domains { get; set; } = Array.Empty<string>();
-            }
-
-            public class MetaDoaminAddressSetting
+            public class GithubMetaProviderSetting
             {
                 public bool Enable { get; set; } = true;
 
                 public Uri MetaUri { get; set; } = new Uri("https://gitee.com/jiulang/fast-github/raw/master/FastGithub/meta.json");
             }
 
-            public class IPAddressComDomainAddressSetting
+            public class IPAddressComProviderSetting
             {
                 public bool Enable { get; set; } = true;
+
+                public string[] Domains { get; set; } = Array.Empty<string>();
+            }
+            public class PublicDnsProviderSetting
+            {
+                public bool Enable { get; set; } = true;
+
+                public string[] Dnss { get; set; } = Array.Empty<string>();
 
                 public string[] Domains { get; set; } = Array.Empty<string>();
             }

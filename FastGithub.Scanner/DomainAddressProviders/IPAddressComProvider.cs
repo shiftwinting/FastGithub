@@ -12,15 +12,15 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.DomainMiddlewares
 {
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class IPAddressComDomainAddressProvider : IDomainAddressProvider
+    sealed class IPAddressComProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly ILogger<IPAddressComDomainAddressProvider> logger;
+        private readonly ILogger<IPAddressComProvider> logger;
         private readonly Uri lookupUri = new("https://www.ipaddress.com/ip-lookup");
 
-        public IPAddressComDomainAddressProvider(
-             IOptionsMonitor<GithubOptions> options,
-            ILogger<IPAddressComDomainAddressProvider> logger)
+        public IPAddressComProvider(
+            IOptionsMonitor<GithubOptions> options,
+            ILogger<IPAddressComProvider> logger)
         {
             this.options = options;
             this.logger = logger;
@@ -28,14 +28,14 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
-            var setting = this.options.CurrentValue.DominAddressProvider.IPAddressComDomainAddress;
+            var setting = this.options.CurrentValue.DominAddressProviders.IPAddressComProvider;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
             }
 
             using var httpClient = new HttpClient();
-            var result = new List<DomainAddress>();
+            var result = new HashSet<DomainAddress>();
             foreach (var domain in setting.Domains)
             {
                 try
@@ -58,14 +58,14 @@ namespace FastGithub.Scanner.DomainMiddlewares
         {
             var keyValue = new KeyValuePair<string?, string?>("host", domain);
             var content = new FormUrlEncodedContent(Enumerable.Repeat(keyValue, 1));
-            var request = new HttpRequestMessage
+            using var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
                 RequestUri = lookupUri,
                 Content = content
             };
 
-            var response = await httpClient.SendAsync(request);
+            using var response = await httpClient.SendAsync(request);
             var html = await response.Content.ReadAsStringAsync();
             var match = Regex.Match(html, @"(?<=<h1>IP Lookup : )\d+\.\d+\.\d+\.\d+", RegexOptions.IgnoreCase);
 

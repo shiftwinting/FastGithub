@@ -13,14 +13,14 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.DomainMiddlewares
 {
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class MetaDomainAddressProvider : IDomainAddressProvider
+    sealed class GithubMetaProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly ILogger<MetaDomainAddressProvider> logger;
+        private readonly ILogger<GithubMetaProvider> logger;
 
-        public MetaDomainAddressProvider(
+        public GithubMetaProvider(
             IOptionsMonitor<GithubOptions> options,
-            ILogger<MetaDomainAddressProvider> logger)
+            ILogger<GithubMetaProvider> logger)
         {
             this.options = options;
             this.logger = logger;
@@ -28,7 +28,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
-            var setting = this.options.CurrentValue.DominAddressProvider.MetaDomainAddress;
+            var setting = this.options.CurrentValue.DominAddressProviders.GithubMetaProvider;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
