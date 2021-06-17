@@ -27,7 +27,7 @@ namespace FastGithub.Scanner
             this.metaService = metaService;
             this.contextCollection = contextCollection;
             this.logger = logger;
-            ;
+
             this.fullScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
                 .Use<ConcurrentMiddleware>()
                 .Use<StatisticsMiddleware>()
@@ -37,7 +37,6 @@ namespace FastGithub.Scanner
 
             this.resultScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
                 .Use<StatisticsMiddleware>()
-                .Use<PortScanMiddleware>()
                 .Use<HttpsScanMiddleware>()
                 .Build();
         }
