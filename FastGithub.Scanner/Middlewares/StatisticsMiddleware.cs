@@ -28,15 +28,11 @@ namespace FastGithub.Scanner.Middlewares
             finally
             {
                 stopwatch.Stop();
+                context.History.Add(context.Available, stopwatch.Elapsed);
 
-                if (context.Available)
+                if (context.History.AvailableRate > 0d)
                 {
-                    context.History.AddSuccess(stopwatch.Elapsed);
                     this.logger.LogInformation(context.ToString());
-                }
-                else
-                {
-                    context.History.AddFailure(); 
                 }
             }
         }

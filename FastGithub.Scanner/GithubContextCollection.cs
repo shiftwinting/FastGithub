@@ -54,9 +54,9 @@ namespace FastGithub.Scanner
             lock (this.syncRoot)
             {
                 return this.contextList
-                    .Where(item => item.Available && item.Domain == domain)
-                    .OrderByDescending(item => item.History.GetSuccessRate())
-                    .ThenBy(item => item.History.GetAvgElapsed())
+                    .Where(item => item.Domain == domain && item.History.AvailableRate > 0d)
+                    .OrderByDescending(item => item.History.AvailableRate)
+                    .ThenBy(item => item.History.AvgElapsed)
                     .Select(item => item.Address)
                     .FirstOrDefault();
             }

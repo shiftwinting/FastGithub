@@ -8,7 +8,8 @@ namespace FastGithub.Scanner
         private record Github(
             string Domain,
             IPAddress Address,
-            double SuccessRate,
+            bool Available,
+            double AvailableRate,
             TimeSpan AvgElapsed);
 
         /// <summary>
@@ -58,8 +59,9 @@ namespace FastGithub.Scanner
             return new Github(
                 this.Domain,
                 this.Address,
-                this.History.GetSuccessRate(),
-                this.History.GetAvgElapsed()
+                this.Available,
+                this.History.AvailableRate,
+                this.History.AvgElapsed
                 ).ToString();
         }
     }

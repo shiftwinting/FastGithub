@@ -6,8 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DNS" Version="6.1.0" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+		<PackageReference Include="DNS" Version="6.1.0" /> 
 	</ItemGroup>
 
 	<ItemGroup>

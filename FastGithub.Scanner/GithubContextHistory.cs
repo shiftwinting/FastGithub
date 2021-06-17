@@ -1,74 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FastGithub.Scanner
 {
     sealed class GithubContextHistory
     {
-        private record ScanLog(DateTime ScanTime, TimeSpan Elapsed);
+        private const int MAX_LOG_COUNT = 10;
+        private record ScanLog(bool Available, TimeSpan Elapsed);
 
-        private readonly Queue<ScanLog> successLogs = new();
+        private readonly Queue<ScanLog> scanLogs = new();
 
-        private readonly Queue<ScanLog> failureLogs = new();
-
-        private static readonly TimeSpan keepLogsTimeSpan = TimeSpan.FromHours(2d);
-
-
-        public void AddSuccess(TimeSpan elapsed)
+        /// <summary>
+        /// 获取可用率
+        /// </summary>
+        /// <returns></returns>
+        public double AvailableRate
         {
-            ClearStaleData(this.successLogs, keepLogsTimeSpan);
-            this.successLogs.Enqueue(new ScanLog(DateTime.Now, elapsed));
-        }
-
-        public void AddFailure()
-        {
-            ClearStaleData(this.failureLogs, keepLogsTimeSpan);
-            this.failureLogs.Enqueue(new ScanLog(DateTime.Now, TimeSpan.Zero));
-        }
-
-        static void ClearStaleData(Queue<ScanLog> logs, TimeSpan timeSpan)
-        {
-            var time = DateTime.Now.Subtract(timeSpan);
-            while (logs.TryPeek(out var log))
+            get
             {
-                if (log.ScanTime < time)
+                if (this.scanLogs.Count == 0)
                 {
-                    logs.TryDequeue(out _);
+                    return 0d;
                 }
-                break;
+
+                var availableCount = this.scanLogs.Count(item => item.Available);
+                return (double)availableCount / this.scanLogs.Count;
             }
         }
 
-        /// <summary>
-        /// 获取成功率
-        /// </summary>
-        /// <returns></returns>
-        public double GetSuccessRate()
-        {
-            var successCount = this.successLogs.Count;
-            var totalScanCount = successCount + this.failureLogs.Count;
-            return totalScanCount == 0 ? 0d : (double)successCount / totalScanCount;
-        }
 
         /// <summary>
         /// 获取平均耗时
         /// </summary>
         /// <returns></returns>
-        public TimeSpan GetAvgElapsed()
+        public TimeSpan AvgElapsed
         {
-            var totalScanCount = this.successLogs.Count + this.failureLogs.Count;
-            if (totalScanCount == 0)
+            get
             {
-                return TimeSpan.MaxValue;
-            }
+                var availableCount = 0;
+                var availableElapsed = TimeSpan.Zero;
 
-            var totalSuccessElapsed = TimeSpan.Zero;
-            foreach (var item in this.successLogs)
+                foreach (var item in this.scanLogs)
+                {
+                    if (item.Available == true)
+                    {
+                        availableCount += 1;
+                        availableElapsed = availableElapsed.Add(item.Elapsed);
+                    }
+                }
+
+                return availableCount == 0 ? TimeSpan.MaxValue : availableElapsed / availableCount;
+            }
+        }
+
+        public void Add(bool available, TimeSpan elapsed)
+        {
+            this.scanLogs.Enqueue(new ScanLog(available, elapsed));
+            while (this.scanLogs.Count > MAX_LOG_COUNT)
             {
-                totalSuccessElapsed = totalSuccessElapsed.Add(item.Elapsed);
+                this.scanLogs.Dequeue();
             }
-
-            return totalSuccessElapsed / totalScanCount;
         }
     }
 }
