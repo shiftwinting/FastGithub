@@ -17,7 +17,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
         private readonly ILogger<DnsDomainAddressProvider> logger;
 
         public DnsDomainAddressProvider(
-             IOptionsMonitor<GithubOptions> options,
+            IOptionsMonitor<GithubOptions> options,
             ILogger<DnsDomainAddressProvider> logger)
         {
             this.options = options;
@@ -26,7 +26,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
-            var setting = this.options.CurrentValue.DnsDomainAddress;
+            var setting = this.options.CurrentValue.DominAddressProvider.DnsDomainAddress;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();

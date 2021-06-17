@@ -1,7 +1,5 @@
 ﻿using System;
 
-
-
 namespace FastGithub.Scanner
 {
     [Options("Github")]
@@ -9,9 +7,7 @@ namespace FastGithub.Scanner
     {
         public ScanSetting Scan { get; set; } = new ScanSetting();
 
-        public MetaDoaminAddressSetting MetaDomainAddress { get; set; } = new MetaDoaminAddressSetting();
-
-        public DnsDomainAddressSetting DnsDomainAddress { get; set; } = new DnsDomainAddressSetting();
+        public DomainAddressProviderSetting DominAddressProvider { get; set; } = new DomainAddressProviderSetting();
 
         public class ScanSetting
         {
@@ -24,21 +20,34 @@ namespace FastGithub.Scanner
             public TimeSpan HttpsScanTimeout { get; set; } = TimeSpan.FromSeconds(2d);
         }
 
-
-        public class MetaDoaminAddressSetting
+        public class DomainAddressProviderSetting
         {
-            public bool Enable { get; set; } = true;
+            public DnsDomainAddressSetting DnsDomainAddress { get; set; } = new DnsDomainAddressSetting();
+            public MetaDoaminAddressSetting MetaDomainAddress { get; set; } = new MetaDoaminAddressSetting();
+            public IPAddressComDomainAddressSetting IPAddressComDomainAddress { get; set; } = new IPAddressComDomainAddressSetting();
 
-            public Uri MetaUri { get; set; } = new Uri("https://gitee.com/jiulang/fast-github/raw/master/FastGithub/meta.json");
-        }
+            public class DnsDomainAddressSetting
+            {
+                public bool Enable { get; set; } = true;
 
-        public class DnsDomainAddressSetting
-        {
-            public bool Enable { get; set; } = true;
+                public string[] Dnss { get; set; } = Array.Empty<string>();
 
-            public string[] Dnss { get; set; } = Array.Empty<string>();
+                public string[] Domains { get; set; } = Array.Empty<string>();
+            }
 
-            public string[] Domains { get; set; } = Array.Empty<string>();
+            public class MetaDoaminAddressSetting
+            {
+                public bool Enable { get; set; } = true;
+
+                public Uri MetaUri { get; set; } = new Uri("https://gitee.com/jiulang/fast-github/raw/master/FastGithub/meta.json");
+            }
+
+            public class IPAddressComDomainAddressSetting
+            {
+                public bool Enable { get; set; } = true;
+
+                public string[] Domains { get; set; } = Array.Empty<string>();
+            }
         }
     }
 }

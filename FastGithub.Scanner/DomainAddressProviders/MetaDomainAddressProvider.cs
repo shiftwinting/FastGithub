@@ -28,7 +28,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
-            var setting = this.options.CurrentValue.MetaDomainAddress;
+            var setting = this.options.CurrentValue.DominAddressProvider.MetaDomainAddress;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
