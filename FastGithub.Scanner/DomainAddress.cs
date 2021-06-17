@@ -3,6 +3,9 @@ using System.Net;
 
 namespace FastGithub.Scanner
 {
+    /// <summary>
+    /// 域名与ip关系
+    /// </summary>
     class DomainAddress : IEquatable<DomainAddress>
     {
         /// <summary>
@@ -15,6 +18,11 @@ namespace FastGithub.Scanner
         /// </summary>
         public IPAddress Address { get; }
 
+        /// <summary>
+        /// 域名与ip关系
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="address"></param>
         public DomainAddress(string domain, IPAddress address)
         {
             this.Domain = domain;

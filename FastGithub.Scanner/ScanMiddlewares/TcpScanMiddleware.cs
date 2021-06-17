@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.ScanMiddlewares
 {
+    /// <summary>
+    /// tcp扫描中间件
+    /// </summary>
     [Service(ServiceLifetime.Singleton)]
     sealed class TcpScanMiddleware : IMiddleware<GithubContext>
     {
@@ -15,6 +18,11 @@ namespace FastGithub.Scanner.ScanMiddlewares
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<TcpScanMiddleware> logger;
 
+        /// <summary>
+        /// tcp扫描中间件
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public TcpScanMiddleware(
             IOptionsMonitor<GithubOptions> options,
             ILogger<TcpScanMiddleware> logger)
@@ -23,6 +31,12 @@ namespace FastGithub.Scanner.ScanMiddlewares
             this.logger = logger;
         }
 
+        /// <summary>
+        /// tcp扫描
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="next"></param>
+        /// <returns></returns>
         public async Task InvokeAsync(GithubContext context, Func<Task> next)
         {
             try

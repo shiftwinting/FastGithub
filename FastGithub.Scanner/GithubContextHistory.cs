@@ -4,8 +4,14 @@ using System.Linq;
 
 namespace FastGithub.Scanner
 {
+    /// <summary>
+    /// GithubContext的扫描历史
+    /// </summary>
     sealed class GithubContextHistory
     {
+        /// <summary>
+        /// 最多保存最的近的10条记录
+        /// </summary>
         private const int MAX_LOG_COUNT = 10;
         private record ScanLog(bool Available, TimeSpan Elapsed);
 
@@ -54,6 +60,11 @@ namespace FastGithub.Scanner
             }
         }
 
+        /// <summary>
+        /// 添加记录
+        /// </summary>
+        /// <param name="available">是否可用</param>
+        /// <param name="elapsed">扫描耗时</param>
         public void Add(bool available, TimeSpan elapsed)
         {
             this.scanLogs.Enqueue(new ScanLog(available, elapsed));

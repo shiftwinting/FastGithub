@@ -8,6 +8,9 @@ namespace FastGithub
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class OptionsAttribute : Attribute
     {
+        /// <summary>
+        /// 获取配置节点名称
+        /// </summary>
         public string? SessionKey { get; }
 
         /// <summary>
@@ -20,7 +23,7 @@ namespace FastGithub
         /// <summary>
         /// 选项特性
         /// </summary>
-        /// <param name="sessionKey"></param>
+        /// <param name="sessionKey">配置节点名称</param>
         public OptionsAttribute(string sessionKey)
         {
             this.SessionKey = sessionKey;

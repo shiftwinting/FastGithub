@@ -3,14 +3,11 @@ using System.Net;
 
 namespace FastGithub.Scanner
 {
+    /// <summary>
+    /// Github扫描上下文
+    /// </summary>
     sealed class GithubContext : DomainAddress, IEquatable<GithubContext>
     {
-        private record Github(
-            string Domain,
-            IPAddress Address,
-            double AvailableRate,
-            double AvgElapsed);
-
         /// <summary>
         /// 获取或设置是否可用
         /// </summary>
@@ -22,6 +19,11 @@ namespace FastGithub.Scanner
         public GithubContextHistory History { get; } = new();
 
 
+        /// <summary>
+        /// Github扫描上下文
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="address"></param>
         public GithubContext(string domain, IPAddress address)
             : base(domain, address)
         {
@@ -41,5 +43,12 @@ namespace FastGithub.Scanner
                 this.History.AvgElapsed.TotalSeconds
                 ).ToString();
         }
+
+        private record Github(
+            string Domain,
+            IPAddress Address,
+            double AvailableRate,
+            double AvgElapsed);
+
     }
 }

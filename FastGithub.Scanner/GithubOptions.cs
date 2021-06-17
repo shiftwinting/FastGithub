@@ -2,13 +2,25 @@
 
 namespace FastGithub.Scanner
 {
+    /// <summary>
+    /// github选项
+    /// </summary>
     [Options("Github")]
     sealed class GithubOptions
     {
+        /// <summary>
+        /// 扫描配置
+        /// </summary>
         public ScanSetting Scan { get; set; } = new ScanSetting();
 
+        /// <summary>
+        /// 域名与ip关系提供者配置
+        /// </summary>
         public DomainAddressProvidersSetting DominAddressProviders { get; set; } = new DomainAddressProvidersSetting();
 
+        /// <summary>
+        /// 扫描配置
+        /// </summary>
         public class ScanSetting
         {
             public TimeSpan FullScanInterval = TimeSpan.FromHours(2d);
@@ -20,6 +32,9 @@ namespace FastGithub.Scanner
             public TimeSpan HttpsScanTimeout { get; set; } = TimeSpan.FromSeconds(2d);
         }
 
+        /// <summary>
+        /// 域名与ip关系提供者配置
+        /// </summary>
         public class DomainAddressProvidersSetting
         {
             public GithubMetaProviderSetting GithubMetaProvider { get; set; } = new GithubMetaProviderSetting();

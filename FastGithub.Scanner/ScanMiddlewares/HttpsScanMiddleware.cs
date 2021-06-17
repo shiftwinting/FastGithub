@@ -10,12 +10,20 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.ScanMiddlewares
 {
+    /// <summary>
+    /// https扫描中间件
+    /// </summary>
     [Service(ServiceLifetime.Singleton)]
     sealed class HttpsScanMiddleware : IMiddleware<GithubContext>
     {
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<HttpsScanMiddleware> logger;
 
+        /// <summary>
+        /// https扫描中间件
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public HttpsScanMiddleware(
             IOptionsMonitor<GithubOptions> options,
             ILogger<HttpsScanMiddleware> logger)
@@ -24,6 +32,12 @@ namespace FastGithub.Scanner.ScanMiddlewares
             this.logger = logger;
         }
 
+        /// <summary>
+        /// https扫描
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="next"></param>
+        /// <returns></returns>
         public async Task InvokeAsync(GithubContext context, Func<Task> next)
         {
             try

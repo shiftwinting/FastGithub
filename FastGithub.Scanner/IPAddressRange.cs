@@ -8,12 +8,29 @@ using System.Net.Sockets;
 
 namespace FastGithub.Scanner
 {
+    /// <summary>
+    /// 表示IP范围
+    /// </summary>
+    /// <remarks>
+    /// <para>• 192.168.1.0/24</para>
+    /// <para>• 192.168.1.1-192.168.1.254</para>
+    /// </remarks>
     abstract class IPAddressRange : IEnumerable<IPAddress>
     {
+        /// <summary>
+        /// 获取ip数量
+        /// </summary>
         public abstract int Size { get; }
 
+        /// <summary>
+        /// 获取地址族
+        /// </summary>
         public abstract AddressFamily AddressFamily { get; }
 
+        /// <summary>
+        /// 获取迭代器
+        /// </summary>
+        /// <returns></returns>
         public abstract IEnumerator<IPAddress> GetEnumerator();
 
 
@@ -22,6 +39,11 @@ namespace FastGithub.Scanner
             return this.GetEnumerator();
         }
 
+        /// <summary>
+        /// 从多个ip范围文本解析
+        /// </summary>
+        /// <param name="ranges"></param>
+        /// <returns></returns>
         public static IEnumerable<IPAddressRange> From(IEnumerable<string> ranges)
         {
             foreach (var item in ranges)
@@ -33,12 +55,17 @@ namespace FastGithub.Scanner
             }
         }
 
-
+        /// <summary>
+        /// 尝试解析
+        /// </summary>
+        /// <param name="range"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static bool TryParse(ReadOnlySpan<char> range, [MaybeNullWhen(false)] out IPAddressRange value)
         {
             if (range.IsEmpty == false && IPNetwork.TryParse(range.ToString(), out var ipNetwork))
             {
-                value = new NetworkIPAddressRange(ipNetwork);
+                value = new CidrIPAddressRange(ipNetwork);
                 return true;
             }
 
@@ -61,8 +88,10 @@ namespace FastGithub.Scanner
             return false;
         }
 
-
-        private class NetworkIPAddressRange : IPAddressRange
+        /// <summary>
+        /// 192.168.1.0/24
+        /// </summary>
+        private class CidrIPAddressRange : IPAddressRange
         {
             private readonly IPAddressCollection addressCollection;
 
@@ -72,7 +101,7 @@ namespace FastGithub.Scanner
 
             public override AddressFamily AddressFamily => this.addressFamily;
 
-            public NetworkIPAddressRange(IPNetwork network)
+            public CidrIPAddressRange(IPNetwork network)
             {
                 this.addressCollection = network.ListIPAddress(FilterEnum.All);
                 this.addressFamily = network.AddressFamily;
@@ -84,6 +113,9 @@ namespace FastGithub.Scanner
             }
         }
 
+        /// <summary>
+        /// 192.168.1.1-192.168.1.254
+        /// </summary>
         private class SplitIPAddressRange : IPAddressRange
         {
             private readonly IPAddress start;

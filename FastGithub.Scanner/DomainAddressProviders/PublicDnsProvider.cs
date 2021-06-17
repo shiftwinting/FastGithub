@@ -10,12 +10,20 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.DomainMiddlewares
 {
+    /// <summary>
+    /// 公共dns的域名与ip关系提供者
+    /// </summary>
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
     sealed class PublicDnsProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<PublicDnsProvider> logger;
 
+        /// <summary>
+        /// 公共dns的域名与ip关系提供者
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public PublicDnsProvider(
             IOptionsMonitor<GithubOptions> options,
             ILogger<PublicDnsProvider> logger)
@@ -24,6 +32,10 @@ namespace FastGithub.Scanner.DomainMiddlewares
             this.logger = logger;
         }
 
+        /// <summary>
+        /// 创建域名与ip的关系
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
             var setting = this.options.CurrentValue.DominAddressProviders.PublicDnsProvider;
@@ -45,6 +57,12 @@ namespace FastGithub.Scanner.DomainMiddlewares
             return result;
         }
 
+        /// <summary>
+        /// 反查ip
+        /// </summary>
+        /// <param name="dns">dns服务器</param>
+        /// <param name="domains">域名</param>
+        /// <returns></returns>
         private async Task<List<DomainAddress>> LookupAsync(string dns, IEnumerable<string> domains)
         {
             var client = new DnsClient(dns);

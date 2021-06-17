@@ -12,12 +12,20 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.DomainMiddlewares
 {
+    /// <summary>
+    /// Github公开的域名与ip关系提供者
+    /// </summary>
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
     sealed class GithubMetaProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<GithubMetaProvider> logger;
 
+        /// <summary>
+        /// Github公开的域名与ip关系提供者
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public GithubMetaProvider(
             IOptionsMonitor<GithubOptions> options,
             ILogger<GithubMetaProvider> logger)
@@ -26,6 +34,10 @@ namespace FastGithub.Scanner.DomainMiddlewares
             this.logger = logger;
         }
 
+        /// <summary>
+        /// 创建域名与ip的关系
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
             var setting = this.options.CurrentValue.DominAddressProviders.GithubMetaProvider;
@@ -51,11 +63,18 @@ namespace FastGithub.Scanner.DomainMiddlewares
             return Enumerable.Empty<DomainAddress>();
         }
 
+        /// <summary>
+        /// github的meta结构
+        /// </summary>
         private class Meta
         {
             [JsonPropertyName("web")]
             public string[] Web { get; set; } = Array.Empty<string>();
 
+            /// <summary>
+            /// 转换为域名与ip关系
+            /// </summary>
+            /// <returns></returns>
             public IEnumerable<DomainAddress> ToDomainAddresses()
             {
                 foreach (var range in IPAddressRange.From(this.Web).OrderBy(item => item.Size))

@@ -5,12 +5,20 @@ using System.Net;
 
 namespace FastGithub.Scanner
 {
+    /// <summary>
+    ///  GithubContext集合
+    /// </summary>
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubContextCollection : IGithubScanResults
     {
         private readonly object syncRoot = new();
         private readonly List<GithubContext> contextList = new();
 
+        /// <summary>
+        /// 添加GithubContext
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public bool Add(GithubContext context)
         {
             lock (this.syncRoot)
@@ -24,7 +32,10 @@ namespace FastGithub.Scanner
             }
         }
 
-
+        /// <summary>
+        /// 转换为数组
+        /// </summary>
+        /// <returns></returns>
         public GithubContext[] ToArray()
         {
             lock (this.syncRoot)
@@ -33,7 +44,12 @@ namespace FastGithub.Scanner
             }
         }
 
-
+        /// <summary>
+        /// 查询ip是否可用
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
         public bool IsAvailable(string domain, IPAddress address)
         {
             lock (this.syncRoot)
@@ -45,7 +61,7 @@ namespace FastGithub.Scanner
         }
 
         /// <summary>
-        /// 查找又稳又快的ip
+        /// 查找最优的ip
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>

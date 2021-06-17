@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.DomainMiddlewares
 {
+    /// <summary>
+    /// ipaddress.com的域名与ip关系提供者
+    /// </summary>
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
     sealed class IPAddressComProvider : IDomainAddressProvider
     {
@@ -18,6 +21,11 @@ namespace FastGithub.Scanner.DomainMiddlewares
         private readonly ILogger<IPAddressComProvider> logger;
         private readonly Uri lookupUri = new("https://www.ipaddress.com/ip-lookup");
 
+        /// <summary>
+        /// ipaddress.com的域名与ip关系提供者
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public IPAddressComProvider(
             IOptionsMonitor<GithubOptions> options,
             ILogger<IPAddressComProvider> logger)
@@ -26,6 +34,10 @@ namespace FastGithub.Scanner.DomainMiddlewares
             this.logger = logger;
         }
 
+        /// <summary>
+        /// 创建域名与ip的关系
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
             var setting = this.options.CurrentValue.DominAddressProviders.IPAddressComProvider;
@@ -54,6 +66,12 @@ namespace FastGithub.Scanner.DomainMiddlewares
             return result;
         }
 
+        /// <summary>
+        /// 反查ip
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="domain"></param>
+        /// <returns></returns>
         private async Task<List<IPAddress>> LookupAsync(HttpClient httpClient, string domain)
         {
             var keyValue = new KeyValuePair<string?, string?>("host", domain);

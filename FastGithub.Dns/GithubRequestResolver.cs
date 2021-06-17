@@ -11,13 +11,22 @@ using System.Threading.Tasks;
 
 namespace FastGithub.Dns
 {
+    /// <summary>
+    /// github相关域名解析器
+    /// </summary>
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubRequestResolver : IRequestResolver
     {
         private readonly IGithubScanResults githubScanResults;
         private readonly IOptionsMonitor<DnsOptions> options;
-        private readonly ILogger<GithubRequestResolver> logger; 
+        private readonly ILogger<GithubRequestResolver> logger;
 
+        /// <summary>
+        /// github相关域名解析器
+        /// </summary>
+        /// <param name="githubScanResults"></param>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public GithubRequestResolver(
             IGithubScanResults githubScanResults,
             IOptionsMonitor<DnsOptions> options,
@@ -28,6 +37,12 @@ namespace FastGithub.Dns
             this.logger = logger;
         }
 
+        /// <summary>
+        /// 解析域名
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
         {
             var response = Response.FromRequest(request);
