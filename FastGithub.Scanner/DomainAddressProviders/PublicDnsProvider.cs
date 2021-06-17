@@ -8,7 +8,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.DomainMiddlewares
+namespace FastGithub.Scanner.DomainAddressProviders
 {
     /// <summary>
     /// 公共dns的域名与ip关系提供者

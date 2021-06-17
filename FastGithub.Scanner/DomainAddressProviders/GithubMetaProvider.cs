@@ -10,7 +10,7 @@ using System.Net.Sockets;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.DomainMiddlewares
+namespace FastGithub.Scanner.DomainAddressProviders
 {
     /// <summary>
     /// Github公开的域名与ip关系提供者

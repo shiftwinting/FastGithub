@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.DomainMiddlewares
+namespace FastGithub.Scanner.DomainAddressProviders
 {
     /// <summary>
     /// ipaddress.com的域名与ip关系提供者
