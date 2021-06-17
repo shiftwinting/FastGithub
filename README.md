@@ -8,3 +8,5 @@ github定制版的dns服务，解析访问github最快的ip
 
 ### 使用说明
 在局域网服务器(没有就使用本机)运行本程序，将网络连接的dns设置为程序运行的机器的ip。
+
+> 若无法下载相关资源，请转到[https://gitee.com/jiulang/fast-github](https://gitee.com/jiulang/fast-github)
