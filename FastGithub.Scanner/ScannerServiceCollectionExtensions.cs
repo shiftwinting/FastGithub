@@ -18,8 +18,7 @@ namespace FastGithub
         public static IServiceCollection AddGithubScanner(this IServiceCollection services, IConfiguration configuration)
         {
             var assembly = typeof(ScannerServiceCollectionExtensions).Assembly;
-            return services
-                .AddHttpClient()
+            return services 
                 .AddServiceAndOptions(assembly, configuration)
                 .AddHostedService<GithubFullScanHostedService>()
                 .AddHostedService<GithubResultScanHostedService>()

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,21 +13,30 @@ namespace FastGithub.Scanner.DomainMiddlewares
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
     sealed class LocalDomainAddressProvider : IDomainAddressProvider
     {
-        private const string JsonFile = "IPRange.json";
+        private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<LocalDomainAddressProvider> logger;
 
-        public LocalDomainAddressProvider(ILogger<LocalDomainAddressProvider> logger)
+        public LocalDomainAddressProvider(
+             IOptionsMonitor<GithubOptions> options,
+            ILogger<LocalDomainAddressProvider> logger)
         {
+            this.options = options;
             this.logger = logger;
         }
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
+            var setting = this.options.CurrentValue.LocalAddressProvider;
+            if (setting.Enable == false)
+            {
+                return Enumerable.Empty<DomainAddress>();
+            }
+
             try
             {
-                if (File.Exists(JsonFile) == true)
+                if (File.Exists(setting.IPRangeFilePath) == true)
                 {
-                    using var fileStream = File.OpenRead(JsonFile);
+                    using var fileStream = File.OpenRead(setting.IPRangeFilePath);
                     var datas = await JsonSerializer.DeserializeAsync<Dictionary<string, string[]>>(fileStream);
                     if (datas != null)
                     {
@@ -49,7 +59,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
                 var domain = kv.Key;
                 foreach (var item in kv.Value)
                 {
-                    if (IPRange.TryParse(item, out var range))
+                    if (IPAddressRange.TryParse(item, out var range))
                     {
                         foreach (var address in range)
                         {

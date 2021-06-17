@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace FastGithub.Scanner
 {
-    abstract class IPRange : IEnumerable<IPAddress>
+    abstract class IPAddressRange : IEnumerable<IPAddress>
     {
         public abstract int Size { get; }
 
@@ -22,7 +22,7 @@ namespace FastGithub.Scanner
             return this.GetEnumerator();
         }
 
-        public static IEnumerable<IPRange> From(IEnumerable<string> ranges)
+        public static IEnumerable<IPAddressRange> From(IEnumerable<string> ranges)
         {
             foreach (var item in ranges)
             {
@@ -34,7 +34,7 @@ namespace FastGithub.Scanner
         }
 
 
-        public static bool TryParse(ReadOnlySpan<char> range, [MaybeNullWhen(false)] out IPRange value)
+        public static bool TryParse(ReadOnlySpan<char> range, [MaybeNullWhen(false)] out IPAddressRange value)
         {
             if (range.IsEmpty == false && IPNetwork.TryParse(range.ToString(), out var ipNetwork))
             {
@@ -62,7 +62,7 @@ namespace FastGithub.Scanner
         }
 
 
-        private class NetworkIPAddressRange : IPRange
+        private class NetworkIPAddressRange : IPAddressRange
         {
             private readonly IPAddressCollection addressCollection;
 
@@ -84,7 +84,7 @@ namespace FastGithub.Scanner
             }
         }
 
-        private class SplitIPAddressRange : IPRange
+        private class SplitIPAddressRange : IPAddressRange
         {
             private readonly IPAddress start;
             private readonly IPAddress end;

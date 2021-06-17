@@ -12,7 +12,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
 
         public ConcurrentMiddleware()
         {
-            var currentCount = Environment.ProcessorCount * 4;
+            var currentCount = Environment.ProcessorCount * 2;
             this.semaphoreSlim = new SemaphoreSlim(currentCount, currentCount);
         }
 

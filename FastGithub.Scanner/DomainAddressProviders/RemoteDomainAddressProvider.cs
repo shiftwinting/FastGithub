@@ -15,26 +15,29 @@ namespace FastGithub.Scanner.DomainMiddlewares
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
     sealed class RemoteDomainAddressProvider : IDomainAddressProvider
     {
-        private readonly IHttpClientFactory httpClientFactory;
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<RemoteDomainAddressProvider> logger;
 
         public RemoteDomainAddressProvider(
-            IHttpClientFactory httpClientFactory,
             IOptionsMonitor<GithubOptions> options,
             ILogger<RemoteDomainAddressProvider> logger)
         {
-            this.httpClientFactory = httpClientFactory;
             this.options = options;
             this.logger = logger;
         }
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
+            var setting = this.options.CurrentValue.RemoteAddressProvider;
+            if (setting.Enable == false)
+            {
+                return Enumerable.Empty<DomainAddress>();
+            }
+
             try
             {
-                var httpClient = this.httpClientFactory.CreateClient();
-                var meta = await httpClient.GetFromJsonAsync<Meta>(this.options.CurrentValue.MetaUri);
+                using var httpClient = new HttpClient();
+                var meta = await httpClient.GetFromJsonAsync<Meta>(setting.MetaUri);
                 if (meta != null)
                 {
                     return meta.ToDomainAddresses();
@@ -50,7 +53,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         private class Meta
         {
-            [JsonPropertyName("web")]
+            [JsonPropertyName("web")] 
             public string[] Web { get; set; } = Array.Empty<string>();
 
             [JsonPropertyName("api")]
@@ -59,7 +62,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
             public IEnumerable<DomainAddress> ToDomainAddresses()
             {
-                foreach (var range in IPRange.From(this.Web).OrderBy(item => item.Size))
+                foreach (var range in IPAddressRange.From(this.Web).OrderBy(item => item.Size))
                 {
                     if (range.AddressFamily == AddressFamily.InterNetwork)
                     {
@@ -70,7 +73,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
                     }
                 }
 
-                foreach (var range in IPRange.From(this.Api).OrderBy(item => item.Size))
+                foreach (var range in IPAddressRange.From(this.Api).OrderBy(item => item.Size))
                 {
                     if (range.AddressFamily == AddressFamily.InterNetwork)
                     {

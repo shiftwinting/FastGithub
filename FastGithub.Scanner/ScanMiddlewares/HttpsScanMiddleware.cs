@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -35,23 +36,23 @@ namespace FastGithub.Scanner.ScanMiddlewares
                     RequestUri = new Uri($"https://{context.Address}"),
                 };
                 request.Headers.Host = context.Domain;
+                request.Headers.ConnectionClose = true;
                 request.Headers.Accept.TryParseAdd("*/*");
 
-                using var httpClient = new HttpClient(new HttpClientHandler
+                using var httpClient = new HttpMessageInvoker(new SocketsHttpHandler
                 {
                     Proxy = null,
                     UseProxy = false,
                     AllowAutoRedirect = false,
                 });
 
-                using var cancellationTokenSource = new CancellationTokenSource(this.options.CurrentValue.HttpsScanTimeout);
-                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
-                var server = response.EnsureSuccessStatusCode().Headers.Server;
-                if (server.Any(s => string.Equals("GitHub.com", s.Product?.Name, StringComparison.OrdinalIgnoreCase)))
-                {
-                    context.Available = true;
-                    await next();
-                }
+                var timeout = this.options.CurrentValue.Scan.HttpsScanTimeout;
+                using var cancellationTokenSource = new CancellationTokenSource(timeout);
+                using var response = await httpClient.SendAsync(request, cancellationTokenSource.Token);
+                this.VerifyHttpResponse(context.Domain, response);
+                context.Available = true;
+
+                await next();
             }
             catch (TaskCanceledException)
             {
@@ -61,6 +62,26 @@ namespace FastGithub.Scanner.ScanMiddlewares
             {
                 var message = GetInnerMessage(ex);
                 this.logger.LogTrace($"{context.Domain} {context.Address} {message}");
+            }
+        }
+
+        /// <summary>
+        /// 验证响应内容
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="response"></param>
+        /// <exception cref="HttpRequestException"></exception>
+        /// <exception cref="ValidationException"></exception>
+        private void VerifyHttpResponse(string domain, HttpResponseMessage response)
+        {
+            response.EnsureSuccessStatusCode();
+            if (domain.EndsWith(".github.com"))
+            {
+                var server = response.Headers.Server;
+                if (server.Any(s => string.Equals("github.com", s.Product?.Name, StringComparison.OrdinalIgnoreCase)) == false)
+                {
+                    throw new ValidationException("伪造的github服务");
+                }
             }
         }
 

@@ -8,9 +8,8 @@ namespace FastGithub.Scanner
         private record Github(
             string Domain,
             IPAddress Address,
-            bool Available,
             double AvailableRate,
-            TimeSpan AvgElapsed);
+            double AvgElapsed);
 
         /// <summary>
         /// 获取或设置是否可用
@@ -38,9 +37,8 @@ namespace FastGithub.Scanner
             return new Github(
                 this.Domain,
                 this.Address,
-                this.Available,
                 this.History.AvailableRate,
-                this.History.AvgElapsed
+                this.History.AvgElapsed.TotalSeconds
                 ).ToString();
         }
     }
