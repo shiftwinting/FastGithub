@@ -1,5 +1,7 @@
 ﻿using System;
 
+
+
 namespace FastGithub.Scanner
 {
     [Options("Github")]
@@ -7,9 +9,9 @@ namespace FastGithub.Scanner
     {
         public ScanSetting Scan { get; set; } = new ScanSetting();
 
-        public RemoteAddressProviderSetting RemoteAddressProvider { get; set; } = new RemoteAddressProviderSetting();
+        public MetaDoaminAddressSetting MetaDomainAddress { get; set; } = new MetaDoaminAddressSetting();
 
-        public LocalAddressProviderSetting LocalAddressProvider { get; set; } = new LocalAddressProviderSetting();
+        public DnsDomainAddressSetting DnsDomainAddress { get; set; } = new DnsDomainAddressSetting();
 
         public class ScanSetting
         {
@@ -23,18 +25,20 @@ namespace FastGithub.Scanner
         }
 
 
-        public class RemoteAddressProviderSetting
+        public class MetaDoaminAddressSetting
         {
             public bool Enable { get; set; } = true;
 
             public Uri MetaUri { get; set; } = new Uri("https://gitee.com/jiulang/fast-github/raw/master/FastGithub/meta.json");
         }
 
-        public class LocalAddressProviderSetting
+        public class DnsDomainAddressSetting
         {
             public bool Enable { get; set; } = true;
 
-            public string IPRangeFilePath { get; set; } = "./IPRange.json";
+            public string[] Dnss { get; set; } = Array.Empty<string>();
+
+            public string[] Domains { get; set; } = Array.Empty<string>();
         }
     }
 }

@@ -13,14 +13,14 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner.DomainMiddlewares
 {
     [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class RemoteDomainAddressProvider : IDomainAddressProvider
+    sealed class MetaDomainAddressProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly ILogger<RemoteDomainAddressProvider> logger;
+        private readonly ILogger<MetaDomainAddressProvider> logger;
 
-        public RemoteDomainAddressProvider(
+        public MetaDomainAddressProvider(
             IOptionsMonitor<GithubOptions> options,
-            ILogger<RemoteDomainAddressProvider> logger)
+            ILogger<MetaDomainAddressProvider> logger)
         {
             this.options = options;
             this.logger = logger;
@@ -28,7 +28,7 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
         {
-            var setting = this.options.CurrentValue.RemoteAddressProvider;
+            var setting = this.options.CurrentValue.MetaDomainAddress;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
@@ -53,12 +53,8 @@ namespace FastGithub.Scanner.DomainMiddlewares
 
         private class Meta
         {
-            [JsonPropertyName("web")] 
+            [JsonPropertyName("web")]
             public string[] Web { get; set; } = Array.Empty<string>();
-
-            [JsonPropertyName("api")]
-            public string[] Api { get; set; } = Array.Empty<string>();
-
 
             public IEnumerable<DomainAddress> ToDomainAddresses()
             {
@@ -69,17 +65,6 @@ namespace FastGithub.Scanner.DomainMiddlewares
                         foreach (var address in range)
                         {
                             yield return new DomainAddress("github.com", address);
-                        }
-                    }
-                }
-
-                foreach (var range in IPAddressRange.From(this.Api).OrderBy(item => item.Size))
-                {
-                    if (range.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        foreach (var address in range)
-                        {
-                            yield return new DomainAddress("api.github.com", address);
                         }
                     }
                 }

@@ -6,18 +6,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="DNS" Version="6.1.0" />
 		<PackageReference Include="IPNetwork2" Version="2.5.320" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" /> 
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Update="IPRange.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	</ItemGroup>
 
 </Project>
