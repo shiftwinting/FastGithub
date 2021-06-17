@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.Middlewares
+namespace FastGithub.Scanner.ScanMiddlewares
 {
     [Service(ServiceLifetime.Singleton)]
     sealed class ConcurrentMiddleware : IMiddleware<GithubContext>

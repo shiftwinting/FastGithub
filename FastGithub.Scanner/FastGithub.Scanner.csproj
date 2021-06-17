@@ -15,4 +15,10 @@
 	  <ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="IPRange.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

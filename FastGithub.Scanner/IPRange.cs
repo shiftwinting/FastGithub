@@ -8,111 +8,144 @@ using System.Net.Sockets;
 
 namespace FastGithub.Scanner
 {
-    sealed class IPRange : IEnumerable<IPAddress>
+    abstract class IPRange : IEnumerable<IPAddress>
     {
-        private readonly IPNetwork network;
+        public abstract int Size { get; }
 
-        public AddressFamily AddressFamily => this.network.AddressFamily;
+        public abstract AddressFamily AddressFamily { get; }
 
-        public int Size => (int)this.network.Total;
+        public abstract IEnumerator<IPAddress> GetEnumerator();
 
-        private IPRange(IPNetwork network)
-        {
-            this.network = network;
-        }
-
-        public IEnumerator<IPAddress> GetEnumerator()
-        {
-            return new Enumerator(this.network);
-        }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
         }
 
-        private class Enumerator : IEnumerator<IPAddress>
+        public static IEnumerable<IPRange> From(IEnumerable<string> ranges)
         {
-            private IPAddress? currrent;
-            private readonly IPNetwork network;
-            private readonly IPAddress maxAddress;
-
-            public Enumerator(IPNetwork network)
+            foreach (var item in ranges)
             {
-                this.network = network;
-                this.maxAddress = Add(network.LastUsable, 1);
-            }
-
-            public IPAddress Current => this.currrent ?? throw new NotImplementedException();
-
-            object IEnumerator.Current => this.Current;
-
-            public void Dispose()
-            {
-            }
-
-            public bool MoveNext()
-            {
-                var value = this.currrent == null
-                     ? this.network.FirstUsable
-                     : Add(this.currrent, 1);
-
-                if (value.Equals(maxAddress))
+                if (TryParse(item, out var range))
                 {
-                    return false;
-                }
-
-                this.currrent = value;
-                return true;
-            }
-
-            public void Reset()
-            {
-                this.currrent = null;
-            }
-        }
-
-        /// <summary>
-        /// 添加值
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private static IPAddress Add(IPAddress ip, int value)
-        {
-            var span = ip.GetAddressBytes().AsSpan();
-            var hostValue = BinaryPrimitives.ReadInt32BigEndian(span);
-            BinaryPrimitives.WriteInt32BigEndian(span, hostValue + value);
-            return new IPAddress(span);
-        }
-
-        public static IEnumerable<IPRange> From(IEnumerable<string> networks)
-        {
-            foreach (var item in networks)
-            {
-                if (TryParse(item, out var value))
-                {
-                    yield return value;
+                    yield return range;
                 }
             }
         }
 
-        public static bool TryParse(ReadOnlySpan<char> network, [MaybeNullWhen(false)] out IPRange value)
+
+        public static bool TryParse(ReadOnlySpan<char> range, [MaybeNullWhen(false)] out IPRange value)
         {
-            if (network.IsEmpty == false && IPNetwork.TryParse(network.ToString(), out var ipNetwork))
+            if (range.IsEmpty == false && IPNetwork.TryParse(range.ToString(), out var ipNetwork))
             {
-                value = new IPRange(ipNetwork);
+                value = new NetworkIPAddressRange(ipNetwork);
                 return true;
+            }
+
+            var index = range.IndexOf('-');
+            if (index >= 0)
+            {
+                var start = range.Slice(0, index);
+                var end = range.Slice(index + 1);
+
+                if (IPAddress.TryParse(start, out var startIp) &&
+                   IPAddress.TryParse(end, out var endIp) &&
+                   startIp.AddressFamily == endIp.AddressFamily)
+                {
+                    value = new SplitIPAddressRange(startIp, endIp);
+                    return true;
+                }
             }
 
             value = null;
             return false;
         }
 
-        public override string ToString()
+
+        private class NetworkIPAddressRange : IPRange
         {
-            return this.network.ToString();
+            private readonly IPAddressCollection addressCollection;
+
+            private readonly AddressFamily addressFamily;
+
+            public override int Size => (int)this.addressCollection.Count;
+
+            public override AddressFamily AddressFamily => this.addressFamily;
+
+            public NetworkIPAddressRange(IPNetwork network)
+            {
+                this.addressCollection = network.ListIPAddress(FilterEnum.All);
+                this.addressFamily = network.AddressFamily;
+            }
+
+            public override IEnumerator<IPAddress> GetEnumerator()
+            {
+                return ((IEnumerable<IPAddress>)this.addressCollection).GetEnumerator();
+            }
         }
 
+        private class SplitIPAddressRange : IPRange
+        {
+            private readonly IPAddress start;
+            private readonly IPAddress end;
+
+            private readonly AddressFamily addressFamily;
+
+            public override AddressFamily AddressFamily => this.addressFamily;
+
+            public SplitIPAddressRange(IPAddress start, IPAddress end)
+            {
+                this.start = start;
+                this.end = end;
+                this.addressFamily = start.AddressFamily;
+            }
+
+            public override int Size
+            {
+                get
+                {
+                    if (this.start.AddressFamily == AddressFamily.InterNetworkV6)
+                    {
+                        var startValue = BinaryPrimitives.ReadInt64BigEndian(this.start.GetAddressBytes());
+                        var endValue = BinaryPrimitives.ReadInt64BigEndian(this.end.GetAddressBytes());
+                        return (int)(endValue - startValue) + 1;
+                    }
+                    else
+                    {
+                        var startValue = BinaryPrimitives.ReadInt32BigEndian(this.start.GetAddressBytes());
+                        var endValue = BinaryPrimitives.ReadInt32BigEndian(this.end.GetAddressBytes());
+                        return endValue - startValue + 1;
+                    }
+                }
+            }
+
+            public override IEnumerator<IPAddress> GetEnumerator()
+            {
+                return this.GetIPAddresses().GetEnumerator();
+            }
+
+            private IEnumerable<IPAddress> GetIPAddresses()
+            {
+                for (var i = 0; i < this.Size; i++)
+                {
+                    var value = i;
+                    yield return Add(this.start, value);
+                }
+            }
+
+            /// <summary>
+            /// 添加值
+            /// </summary>
+            /// <param name="address"></param>
+            /// <param name="value"></param>
+            /// <returns></returns>
+            private static IPAddress Add(IPAddress address, int value)
+            {
+                var span = address.GetAddressBytes().AsSpan();
+                var hostValue = BinaryPrimitives.ReadInt32BigEndian(span);
+                BinaryPrimitives.WriteInt32BigEndian(span, hostValue + value);
+                return new IPAddress(span);
+            }
+        }
     }
 }

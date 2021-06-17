@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.Middlewares
+namespace FastGithub.Scanner.ScanMiddlewares
 {
     [Service(ServiceLifetime.Singleton)]
     sealed class PortScanMiddleware : IMiddleware<GithubContext>

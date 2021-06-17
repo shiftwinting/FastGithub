@@ -24,7 +24,7 @@ namespace FastGithub
         {
             while (stoppingToken.IsCancellationRequested == false)
             {
-                await githubScanService.ScanAllAsync(stoppingToken);
+                await githubScanService.ScanAllAsync();
                 await Task.Delay(this.options.CurrentValue.ScanAllInterval, stoppingToken);
             }
         }

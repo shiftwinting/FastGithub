@@ -1,9 +1,8 @@
-﻿using FastGithub.Scanner.Middlewares;
+﻿using FastGithub.Scanner.ScanMiddlewares;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner
@@ -11,7 +10,7 @@ namespace FastGithub.Scanner
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubScanService
     {
-        private readonly GithubMetaService metaService;
+        private readonly DomainAddressFacotry domainAddressFactory;
         private readonly ILogger<GithubScanService> logger;
         private readonly GithubContextCollection contextCollection;
 
@@ -19,12 +18,12 @@ namespace FastGithub.Scanner
         private readonly InvokeDelegate<GithubContext> resultScanDelegate;
 
         public GithubScanService(
-            GithubMetaService metaService,
+            DomainAddressFacotry domainAddressFactory,
             GithubContextCollection contextCollection,
             IServiceProvider appService,
             ILogger<GithubScanService> logger)
         {
-            this.metaService = metaService;
+            this.domainAddressFactory = domainAddressFactory;
             this.contextCollection = contextCollection;
             this.logger = logger;
 
@@ -41,17 +40,19 @@ namespace FastGithub.Scanner
                 .Build();
         }
 
-        public async Task ScanAllAsync(CancellationToken cancellationToken = default)
+        public async Task ScanAllAsync()
         {
             this.logger.LogInformation("完整扫描开始..");
-            var meta = await this.metaService.GetMetaAsync(cancellationToken);
-            if (meta != null)
-            {
-                var scanTasks = meta.ToGithubContexts().Select(ctx => ScanAsync(ctx));
-                var results = await Task.WhenAll(scanTasks);
-                var successCount = results.Count(item => item);
-                this.logger.LogInformation($"完整扫描结束，成功{successCount}条共{results.Length}条");
-            }
+            var domainAddresses = await this.domainAddressFactory.CreateDomainAddressesAsync();
+
+            var scanTasks = domainAddresses
+                .Select(item => new GithubContext(item.Domain, item.Address))
+                .Select(ctx => ScanAsync(ctx));
+
+            var results = await Task.WhenAll(scanTasks);
+            var successCount = results.Count(item => item);
+            this.logger.LogInformation($"完整扫描结束，成功{successCount}条共{results.Length}条");
+
 
             async Task<bool> ScanAsync(GithubContext context)
             {

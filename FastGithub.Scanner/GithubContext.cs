@@ -3,7 +3,7 @@ using System.Net;
 
 namespace FastGithub.Scanner
 {
-    sealed class GithubContext : IEquatable<GithubContext>
+    sealed class GithubContext : DomainAddress, IEquatable<GithubContext>
     {
         private record Github(
             string Domain,
@@ -11,16 +11,6 @@ namespace FastGithub.Scanner
             bool Available,
             double AvailableRate,
             TimeSpan AvgElapsed);
-
-        /// <summary>
-        /// 获取域名
-        /// </summary>
-        public string Domain { get; }
-
-        /// <summary>
-        /// 获取ip
-        /// </summary>
-        public IPAddress Address { get; }
 
         /// <summary>
         /// 获取或设置是否可用
@@ -34,24 +24,13 @@ namespace FastGithub.Scanner
 
 
         public GithubContext(string domain, IPAddress address)
+            : base(domain, address)
         {
-            this.Domain = domain;
-            this.Address = address;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is GithubContext other && this.Equals(other);
         }
 
         public bool Equals(GithubContext? other)
         {
-            return other != null && other.Address.Equals(this.Address) && other.Domain == this.Domain;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(this.Domain, this.Address);
+            return base.Equals(other);
         }
 
         public override string ToString()
