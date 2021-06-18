@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.DomainAddressProviders
@@ -46,7 +47,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// 创建域名与ip的关系
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
+        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
         {
             var setting = this.options.CurrentValue.DominAddressProviders.IPAddressComProvider;
             if (setting.Enable == false)
@@ -60,7 +61,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             {
                 try
                 {
-                    var addresses = await this.LookupAsync(httpClient, domain);
+                    var addresses = await this.LookupAsync(httpClient, domain, cancellationToken);
                     foreach (var address in addresses)
                     {
                         result.Add(new DomainAddress(domain, address));
@@ -68,6 +69,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
                 }
                 catch (Exception)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     this.logger.LogWarning($"ipaddress.com无法解析{domain}");
                 }
             }
@@ -80,7 +82,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="httpClient"></param>
         /// <param name="domain"></param>
         /// <returns></returns>
-        private async Task<List<IPAddress>> LookupAsync(HttpClient httpClient, string domain)
+        private async Task<List<IPAddress>> LookupAsync(HttpClient httpClient, string domain, CancellationToken cancellationToken)
         {
             var keyValue = new KeyValuePair<string?, string?>("host", domain);
             var content = new FormUrlEncodedContent(Enumerable.Repeat(keyValue, 1));
@@ -91,8 +93,8 @@ namespace FastGithub.Scanner.DomainAddressProviders
                 Content = content
             };
 
-            using var response = await httpClient.SendAsync(request);
-            var html = await response.Content.ReadAsStringAsync();
+            using var response = await httpClient.SendAsync(request, cancellationToken);
+            var html = await response.Content.ReadAsStringAsync(cancellationToken);
             var match = Regex.Match(html, @"(?<=<h1>IP Lookup : )\d+\.\d+\.\d+\.\d+", RegexOptions.IgnoreCase);
 
             if (match.Success && IPAddress.TryParse(match.Value, out var address))

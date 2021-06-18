@@ -32,20 +32,23 @@ namespace FastGithub.Scanner.ScanMiddlewares
         public async Task InvokeAsync(GithubContext context, Func<Task> next)
         {
             var stopwatch = new Stopwatch();
-            stopwatch.Start();
 
             try
             {
+                stopwatch.Start();
                 await next();
             }
             finally
             {
                 stopwatch.Stop();
-                context.History.Add(context.Available, stopwatch.Elapsed);
 
-                if (context.History.AvailableRate > 0d)
+                if (context.CancellationToken.IsCancellationRequested == false)
                 {
-                    this.logger.LogInformation(context.ToString());
+                    context.History.Add(context.Available, stopwatch.Elapsed);
+                    if (context.History.AvailableRate > 0d)
+                    {
+                        this.logger.LogInformation(context.ToString());
+                    }
                 }
             }
         }

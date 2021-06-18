@@ -39,6 +39,6 @@ namespace FastGithub
                 await Task.Delay(this.options.CurrentValue.Scan.ResultScanInterval, stoppingToken);
                 await githubScanService.ScanResultAsync();
             }
-        }
+        } 
     }
 }

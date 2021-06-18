@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner
@@ -54,13 +55,13 @@ namespace FastGithub.Scanner
         /// 扫描所有的ip
         /// </summary>
         /// <returns></returns>
-        public async Task ScanAllAsync()
+        public async Task ScanAllAsync(CancellationToken cancellationToken)
         {
             this.logger.LogInformation("完整扫描开始..");
-            var domainAddresses = await this.domainAddressFactory.CreateDomainAddressesAsync();
+            var domainAddresses = await this.domainAddressFactory.CreateDomainAddressesAsync(cancellationToken);
 
             var scanTasks = domainAddresses
-                .Select(item => new GithubContext(item.Domain, item.Address))
+                .Select(item => new GithubContext(item.Domain, item.Address, cancellationToken))
                 .Select(ctx => ScanAsync(ctx));
 
             var results = await Task.WhenAll(scanTasks);

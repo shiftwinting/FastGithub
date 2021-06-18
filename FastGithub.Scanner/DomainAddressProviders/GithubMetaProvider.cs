@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.DomainAddressProviders
@@ -47,7 +48,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// 创建域名与ip的关系
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
+        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
         {
             var setting = this.options.CurrentValue.DominAddressProviders.GithubMetaProvider;
             if (setting.Enable == false)
@@ -58,7 +59,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             try
             {
                 var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
-                var meta = await this.GetMetaAsync(httpClient, setting.MetaUri);
+                var meta = await GetMetaAsync(httpClient, setting.MetaUri, cancellationToken);
                 if (meta != null)
                 {
                     return meta.ToDomainAddresses();
@@ -66,6 +67,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             }
             catch (Exception ex)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 this.logger.LogWarning($"加载远程的ip列表异常：{ex.Message}");
             }
 
@@ -79,15 +81,16 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="httpClient"></param>
         /// <param name="metaUri"></param>
         /// <returns></returns>
-        private async Task<Meta?> GetMetaAsync(HttpClient httpClient, Uri metaUri)
+        private static async Task<Meta?> GetMetaAsync(HttpClient httpClient, Uri metaUri, CancellationToken cancellationToken)
         {
             try
             {
-                return await httpClient.GetFromJsonAsync<Meta>(META_URI);
+                return await httpClient.GetFromJsonAsync<Meta>(META_URI, cancellationToken);
             }
             catch (Exception)
             {
-                return await httpClient.GetFromJsonAsync<Meta>(metaUri);
+                cancellationToken.ThrowIfCancellationRequested();
+                return await httpClient.GetFromJsonAsync<Meta>(metaUri, cancellationToken);
             }
         }
 

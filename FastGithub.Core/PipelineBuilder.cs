@@ -11,7 +11,7 @@ namespace FastGithub
     public class PipelineBuilder<TContext> : IPipelineBuilder<TContext>
     {
         private readonly InvokeDelegate<TContext> completedHandler;
-        private readonly List<Func<InvokeDelegate<TContext>, InvokeDelegate<TContext>>> middlewares = new List<Func<InvokeDelegate<TContext>, InvokeDelegate<TContext>>>();
+        private readonly List<Func<InvokeDelegate<TContext>, InvokeDelegate<TContext>>> middlewares = new();
 
         /// <summary>
         /// 获取服务提供者

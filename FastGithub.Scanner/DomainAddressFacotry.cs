@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner
@@ -26,12 +27,12 @@ namespace FastGithub.Scanner
         /// 创建域名与ip的关系
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
+        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<DomainAddress>();
             foreach (var provider in this.providers)
             {
-                var domainAddresses = await provider.CreateDomainAddressesAsync();
+                var domainAddresses = await provider.CreateDomainAddressesAsync(cancellationToken);
                 foreach (var item in domainAddresses)
                 {
                     hashSet.Add(item);

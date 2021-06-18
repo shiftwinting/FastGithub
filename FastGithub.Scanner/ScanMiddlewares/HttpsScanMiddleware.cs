@@ -53,26 +53,24 @@ namespace FastGithub.Scanner.ScanMiddlewares
                     Method = HttpMethod.Head,
                     RequestUri = new Uri($"https://{context.Address}"),
                 };
-                request.Headers.Host = context.Domain; 
+                request.Headers.Host = context.Domain;
 
                 var timeout = this.options.CurrentValue.Scan.HttpsScanTimeout;
-                using var cancellationTokenSource = new CancellationTokenSource(timeout);
+                using var timeoutTokenSource = new CancellationTokenSource(timeout);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, context.CancellationToken);
+
                 var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
-                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
+                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linkedTokenSource.Token);
 
                 VerifyHttpsResponse(context.Domain, response);
                 context.Available = true;
 
                 await next();
             }
-            catch (TaskCanceledException)
-            {
-                this.logger.LogTrace($"{context.Domain} {context.Address}连接超时");
-            }
             catch (Exception ex)
             {
-                var message = GetInnerMessage(ex);
-                this.logger.LogTrace($"{context.Domain} {context.Address} {message}");
+                context.CancellationToken.ThrowIfCancellationRequested();
+                this.logger.LogTrace($"{context.Domain} {context.Address} { GetInnerMessage(ex)}");
             }
         }
 

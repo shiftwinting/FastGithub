@@ -73,7 +73,7 @@ namespace FastGithub.Scanner
             if (index >= 0)
             {
                 var start = range.Slice(0, index);
-                var end = range.Slice(index + 1);
+                var end = range[(index + 1)..];
 
                 if (IPAddress.TryParse(start, out var startIp) &&
                    IPAddress.TryParse(end, out var endIp) &&

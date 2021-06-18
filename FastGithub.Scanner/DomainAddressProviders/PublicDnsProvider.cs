@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner.DomainAddressProviders
@@ -41,7 +42,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// 创建域名与ip的关系
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync()
+        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
         {
             var setting = this.options.CurrentValue.DominAddressProviders.PublicDnsProvider;
             if (setting.Enable == false)
@@ -52,7 +53,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             var result = new HashSet<DomainAddress>();
             foreach (var dns in setting.Dnss)
             {
-                var domainAddresses = await this.LookupAsync(dns, setting.Domains);
+                var domainAddresses = await this.LookupAsync(dns, setting.Domains, cancellationToken);
                 foreach (var item in domainAddresses)
                 {
                     result.Add(item);
@@ -68,7 +69,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="dns">dns服务器</param>
         /// <param name="domains">域名</param>
         /// <returns></returns>
-        private async Task<List<DomainAddress>> LookupAsync(string dns, IEnumerable<string> domains)
+        private async Task<List<DomainAddress>> LookupAsync(string dns, IEnumerable<string> domains, CancellationToken cancellationToken)
         {
             var client = new DnsClient(dns);
             var result = new List<DomainAddress>();
@@ -77,7 +78,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             {
                 try
                 {
-                    var addresses = await client.Lookup(domain);
+                    var addresses = await client.Lookup(domain, cancellationToken: cancellationToken);
                     foreach (var address in addresses)
                     {
                         if (address.AddressFamily == AddressFamily.InterNetwork)
@@ -88,6 +89,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
                 }
                 catch (Exception)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     this.logger.LogWarning($"dns({dns})无法解析{domain}");
                 }
             }

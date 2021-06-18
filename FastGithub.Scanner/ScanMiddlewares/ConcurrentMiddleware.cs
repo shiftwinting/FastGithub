@@ -32,7 +32,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
         {
             try
             {
-                await this.semaphoreSlim.WaitAsync();
+                await this.semaphoreSlim.WaitAsync(context.CancellationToken);
                 await next();
             }
             finally

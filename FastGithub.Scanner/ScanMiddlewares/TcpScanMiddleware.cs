@@ -71,14 +71,17 @@ namespace FastGithub.Scanner.ScanMiddlewares
         {
             try
             {
-                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 var timeout = this.options.CurrentValue.Scan.TcpScanTimeout;
-                using var cancellationTokenSource = new CancellationTokenSource(timeout);
-                await socket.ConnectAsync(context.Address, PORT, cancellationTokenSource.Token);
+                using var timeoutTokenSource = new CancellationTokenSource(timeout);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, context.CancellationToken);
+
+                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                await socket.ConnectAsync(context.Address, PORT, linkedTokenSource.Token);
                 return true;
             }
             catch (Exception)
             {
+                context.CancellationToken.ThrowIfCancellationRequested();
                 return false;
             }
         }

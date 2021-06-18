@@ -31,7 +31,7 @@ namespace FastGithub
                     c.Service<IHost>(service => service
                         .ConstructUsing(() => hostBuilder.Build())
                         .WhenStarted(service => service.Start())
-                        .WhenStopped(service => service.StopAsync())
+                        .WhenStopped(service => service.StopAsync().Wait())
                         );
                 });
             }
