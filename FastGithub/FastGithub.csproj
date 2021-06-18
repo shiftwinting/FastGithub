@@ -6,11 +6,17 @@
     <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <Version>1.0.0-beta2</Version>
+    <Description>github定制版的dns服务，解析github最优的ip</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Topshelf" Version="4.3.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />

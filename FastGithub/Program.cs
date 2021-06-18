@@ -10,7 +10,7 @@ namespace FastGithub
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).RunAsTopShelf();
         }
 
         /// <summary>
