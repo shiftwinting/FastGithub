@@ -20,6 +20,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
     {
         private readonly IOptionsMonitor<GithubOptions> options;
         private readonly ILogger<GithubMetaProvider> logger;
+        private const string META_URI = "https://api.github.com/meta";
 
         /// <summary>
         /// Github公开的域名与ip关系提供者
@@ -49,7 +50,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             try
             {
                 using var httpClient = new HttpClient();
-                var meta = await httpClient.GetFromJsonAsync<Meta>(setting.MetaUri);
+                var meta = await this.GetMetaAsync(httpClient, setting.MetaUri);
                 if (meta != null)
                 {
                     return meta.ToDomainAddresses();
@@ -61,6 +62,25 @@ namespace FastGithub.Scanner.DomainAddressProviders
             }
 
             return Enumerable.Empty<DomainAddress>();
+        }
+
+
+        /// <summary>
+        /// 尝试获取meta
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="metaUri"></param>
+        /// <returns></returns>
+        private async Task<Meta?> GetMetaAsync(HttpClient httpClient, Uri metaUri)
+        {
+            try
+            {
+                return await httpClient.GetFromJsonAsync<Meta>(META_URI);
+            }
+            catch (Exception)
+            {
+                return await httpClient.GetFromJsonAsync<Meta>(metaUri);
+            }
         }
 
         /// <summary>
