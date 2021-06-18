@@ -29,7 +29,7 @@ namespace FastGithub.Scanner
 
             public TimeSpan TcpScanTimeout { get; set; } = TimeSpan.FromSeconds(1d);
 
-            public TimeSpan HttpsScanTimeout { get; set; } = TimeSpan.FromSeconds(2d);
+            public TimeSpan HttpsScanTimeout { get; set; } = TimeSpan.FromSeconds(5d);
         }
 
         /// <summary>
