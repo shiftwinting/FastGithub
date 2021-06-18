@@ -18,6 +18,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
     sealed class IPAddressComProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly HttpClientFactory httpClientFactory;
         private readonly ILogger<IPAddressComProvider> logger;
         private readonly Uri lookupUri = new("https://www.ipaddress.com/ip-lookup");
 
@@ -28,9 +29,11 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="logger"></param>
         public IPAddressComProvider(
             IOptionsMonitor<GithubOptions> options,
+            HttpClientFactory httpClientFactory,
             ILogger<IPAddressComProvider> logger)
         {
             this.options = options;
+            this.httpClientFactory = httpClientFactory;
             this.logger = logger;
         }
 
@@ -46,7 +49,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
                 return Enumerable.Empty<DomainAddress>();
             }
 
-            using var httpClient = new HttpClient();
+            using var httpClient = this.httpClientFactory.Create();
             var result = new HashSet<DomainAddress>();
             foreach (var domain in setting.Domains)
             {

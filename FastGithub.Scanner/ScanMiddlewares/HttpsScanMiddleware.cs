@@ -18,6 +18,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
     sealed class HttpsScanMiddleware : IMiddleware<GithubContext>
     {
         private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly HttpClientFactory httpClientFactory;
         private readonly ILogger<HttpsScanMiddleware> logger;
 
         /// <summary>
@@ -27,9 +28,11 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <param name="logger"></param>
         public HttpsScanMiddleware(
             IOptionsMonitor<GithubOptions> options,
+            HttpClientFactory httpClientFactory,
             ILogger<HttpsScanMiddleware> logger)
         {
             this.options = options;
+            this.httpClientFactory = httpClientFactory;
             this.logger = logger;
         }
 
@@ -52,18 +55,12 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 };
                 request.Headers.Host = context.Domain;
                 request.Headers.ConnectionClose = true;
-                request.Headers.Accept.TryParseAdd("*/*");
-
-                using var httpClient = new HttpMessageInvoker(new SocketsHttpHandler
-                {
-                    Proxy = null,
-                    UseProxy = false,
-                    AllowAutoRedirect = false,
-                });
 
                 var timeout = this.options.CurrentValue.Scan.HttpsScanTimeout;
                 using var cancellationTokenSource = new CancellationTokenSource(timeout);
-                using var response = await httpClient.SendAsync(request, cancellationTokenSource.Token);
+                using var httpClient = this.httpClientFactory.Create(allowAutoRedirect: false);
+                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
+
                 this.VerifyHttpsResponse(context.Domain, response);
                 context.Available = true;
 

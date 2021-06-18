@@ -19,6 +19,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
     sealed class GithubMetaProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly HttpClientFactory httpClientFactory;
         private readonly ILogger<GithubMetaProvider> logger;
         private const string META_URI = "https://api.github.com/meta";
 
@@ -29,9 +30,11 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="logger"></param>
         public GithubMetaProvider(
             IOptionsMonitor<GithubOptions> options,
+            HttpClientFactory httpClientFactory,
             ILogger<GithubMetaProvider> logger)
         {
             this.options = options;
+            this.httpClientFactory = httpClientFactory;
             this.logger = logger;
         }
 
@@ -49,7 +52,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
 
             try
             {
-                using var httpClient = new HttpClient();
+                using var httpClient = this.httpClientFactory.Create();
                 var meta = await this.GetMetaAsync(httpClient, setting.MetaUri);
                 if (meta != null)
                 {
@@ -91,6 +94,9 @@ namespace FastGithub.Scanner.DomainAddressProviders
             [JsonPropertyName("web")]
             public string[] Web { get; set; } = Array.Empty<string>();
 
+            [JsonPropertyName("api")]
+            public string[] Api { get; set; } = Array.Empty<string>();
+
             /// <summary>
             /// 转换为域名与ip关系
             /// </summary>
@@ -104,6 +110,17 @@ namespace FastGithub.Scanner.DomainAddressProviders
                         foreach (var address in range)
                         {
                             yield return new DomainAddress("github.com", address);
+                        }
+                    }
+                }
+
+                foreach (var range in IPAddressRange.From(this.Api).OrderBy(item => item.Size))
+                {
+                    if (range.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        foreach (var address in range)
+                        {
+                            yield return new DomainAddress("api.github.com", address);
                         }
                     }
                 }
