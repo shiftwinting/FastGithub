@@ -24,6 +24,11 @@ namespace FastGithub.Scanner.DomainAddressProviders
         private const string META_URI = "https://api.github.com/meta";
 
         /// <summary>
+        /// 获取排序
+        /// </summary>
+        public int Order => int.MaxValue;
+
+        /// <summary>
         /// Github公开的域名与ip关系提供者
         /// </summary>
         /// <param name="options"></param>

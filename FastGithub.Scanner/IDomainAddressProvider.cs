@@ -9,6 +9,11 @@ namespace FastGithub.Scanner
     interface IDomainAddressProvider
     {
         /// <summary>
+        /// 获取排序
+        /// </summary>
+        int Order { get; }
+
+        /// <summary>
         /// 创建域名与ip的关系
         /// </summary>
         /// <returns></returns>

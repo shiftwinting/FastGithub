@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FastGithub.Scanner
@@ -18,7 +19,7 @@ namespace FastGithub.Scanner
         /// <param name="providers"></param>
         public DomainAddressFacotry(IEnumerable<IDomainAddressProvider> providers)
         {
-            this.providers = providers;
+            this.providers = providers.OrderBy(item => item.Order);
         }
 
         /// <summary>
