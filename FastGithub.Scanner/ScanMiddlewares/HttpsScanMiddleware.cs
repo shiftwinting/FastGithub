@@ -50,7 +50,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
 
                 var request = new HttpRequestMessage
                 {
-                    Method = HttpMethod.Get,
+                    Method = HttpMethod.Head,
                     RequestUri = new Uri($"https://{context.Address}"),
                 };
                 request.Headers.Host = context.Domain;
