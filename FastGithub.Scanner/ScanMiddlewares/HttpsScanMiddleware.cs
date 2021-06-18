@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,7 +64,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 var timeout = this.options.CurrentValue.Scan.HttpsScanTimeout;
                 using var cancellationTokenSource = new CancellationTokenSource(timeout);
                 using var response = await httpClient.SendAsync(request, cancellationTokenSource.Token);
-                this.VerifyHttpResponse(context.Domain, response);
+                this.VerifyHttpsResponse(context.Domain, response);
                 context.Available = true;
 
                 await next();
@@ -86,16 +87,22 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <param name="response"></param>
         /// <exception cref="HttpRequestException"></exception>
         /// <exception cref="ValidationException"></exception>
-        private void VerifyHttpResponse(string domain, HttpResponseMessage response)
+        private void VerifyHttpsResponse(string domain, HttpResponseMessage response)
         {
             response.EnsureSuccessStatusCode();
-            if (domain.EndsWith(".github.com"))
+
+            if (domain == "github.com" || domain.EndsWith(".github.com"))
             {
-                var server = response.Headers.Server;
-                if (server.Any(s => string.Equals("github.com", s.Product?.Name, StringComparison.OrdinalIgnoreCase)) == false)
+                if (response.Headers.Server.Any(item => IsGithubServer(item)) == false)
                 {
                     throw new ValidationException("伪造的github服务");
                 }
+            }
+
+            static bool IsGithubServer(ProductInfoHeaderValue headerValue)
+            {
+                var value = headerValue.Product?.Name;
+                return string.Equals("github.com", value, StringComparison.OrdinalIgnoreCase);
             }
         }
 
