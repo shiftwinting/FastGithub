@@ -1,31 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <Nullable>enable</Nullable>
-    <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <Version>1.0.0-beta3</Version>
-    <Description>github定制版的dns服务，解析github最优的ip</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<Nullable>enable</Nullable>
+		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<Version>1.0.0-beta3</Version>
+		<Description>github定制版的dns服务，解析github最优的ip</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Topshelf" Version="4.3.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Topshelf" Version="4.3.0" />
+		<ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>
