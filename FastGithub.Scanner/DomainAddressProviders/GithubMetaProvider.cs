@@ -19,7 +19,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
     sealed class GithubMetaProvider : IDomainAddressProvider
     {
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly HttpClientFactory httpClientFactory;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger<GithubMetaProvider> logger;
         private const string META_URI = "https://api.github.com/meta";
 
@@ -35,7 +35,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="logger"></param>
         public GithubMetaProvider(
             IOptionsMonitor<GithubOptions> options,
-            HttpClientFactory httpClientFactory,
+            IHttpClientFactory httpClientFactory,
             ILogger<GithubMetaProvider> logger)
         {
             this.options = options;
@@ -57,7 +57,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
 
             try
             {
-                using var httpClient = this.httpClientFactory.Create();
+                var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
                 var meta = await this.GetMetaAsync(httpClient, setting.MetaUri);
                 if (meta != null)
                 {

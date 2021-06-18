@@ -18,7 +18,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
     sealed class HttpsScanMiddleware : IMiddleware<GithubContext>
     {
         private readonly IOptionsMonitor<GithubOptions> options;
-        private readonly HttpClientFactory httpClientFactory;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger<HttpsScanMiddleware> logger;
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <param name="logger"></param>
         public HttpsScanMiddleware(
             IOptionsMonitor<GithubOptions> options,
-            HttpClientFactory httpClientFactory,
+            IHttpClientFactory httpClientFactory,
             ILogger<HttpsScanMiddleware> logger)
         {
             this.options = options;
@@ -53,15 +53,14 @@ namespace FastGithub.Scanner.ScanMiddlewares
                     Method = HttpMethod.Head,
                     RequestUri = new Uri($"https://{context.Address}"),
                 };
-                request.Headers.Host = context.Domain;
-                request.Headers.ConnectionClose = true;
+                request.Headers.Host = context.Domain; 
 
                 var timeout = this.options.CurrentValue.Scan.HttpsScanTimeout;
                 using var cancellationTokenSource = new CancellationTokenSource(timeout);
-                using var httpClient = this.httpClientFactory.Create(allowAutoRedirect: false);
+                var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
                 using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
 
-                this.VerifyHttpsResponse(context.Domain, response);
+                VerifyHttpsResponse(context.Domain, response);
                 context.Available = true;
 
                 await next();
@@ -84,7 +83,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <param name="response"></param>
         /// <exception cref="HttpRequestException"></exception>
         /// <exception cref="ValidationException"></exception>
-        private void VerifyHttpsResponse(string domain, HttpResponseMessage response)
+        private static void VerifyHttpsResponse(string domain, HttpResponseMessage response)
         {
             response.EnsureSuccessStatusCode();
 
@@ -103,7 +102,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
             }
         }
 
-        private string GetInnerMessage(Exception ex)
+        private static string GetInnerMessage(Exception ex)
         {
             while (ex.InnerException != null)
             {

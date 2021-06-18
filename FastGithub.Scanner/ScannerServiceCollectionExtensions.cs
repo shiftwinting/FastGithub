@@ -1,6 +1,9 @@
 ﻿using FastGithub.Scanner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace FastGithub
 {
@@ -18,7 +21,24 @@ namespace FastGithub
         public static IServiceCollection AddGithubScanner(this IServiceCollection services, IConfiguration configuration)
         {
             var assembly = typeof(ScannerServiceCollectionExtensions).Assembly;
-            return services 
+            var defaultUserAgent = new ProductInfoHeaderValue(assembly.GetName().Name ?? nameof(FastGithub), assembly.GetName().Version?.ToString());
+
+            services
+                .AddHttpClient(nameof(FastGithub))
+                .SetHandlerLifetime(TimeSpan.FromMinutes(10d))
+                .ConfigureHttpClient(httpClient =>
+                {
+                    httpClient.DefaultRequestHeaders.Accept.TryParseAdd("*/*");
+                    httpClient.DefaultRequestHeaders.UserAgent.Add(defaultUserAgent);
+                })
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    Proxy = null,
+                    UseProxy = false,
+                    AllowAutoRedirect = false
+                });
+
+            return services
                 .AddServiceAndOptions(assembly, configuration)
                 .AddHostedService<GithubFullScanHostedService>()
                 .AddHostedService<GithubResultScanHostedService>()
