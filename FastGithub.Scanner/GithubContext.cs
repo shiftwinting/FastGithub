@@ -54,19 +54,7 @@ namespace FastGithub.Scanner
 
         public override string ToString()
         {
-            return new Github(
-                this.Domain,
-                this.Address,
-                this.History.AvailableRate,
-                this.History.AvgElapsed.TotalSeconds
-                ).ToString();
+            return $"{this.Domain} {{Address={this.Address}, AvailableRate={this.History.AvailableRate}, AvgElapsed={this.History.AvgElapsed}}}";
         }
-
-        private record Github(
-            string Domain,
-            IPAddress Address,
-            double AvailableRate,
-            double AvgElapsed);
-
     }
 }
