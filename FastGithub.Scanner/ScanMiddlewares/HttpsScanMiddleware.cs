@@ -48,11 +48,15 @@ namespace FastGithub.Scanner.ScanMiddlewares
             {
                 context.Available = false;
 
-                var request = new HttpRequestMessage
+                var setting = this.options.CurrentValue;
+                if (setting.Rules.TryGetValue(context.Domain, out var rule) == false)
                 {
-                    Method = HttpMethod.Head,
-                    RequestUri = new Uri($"https://{context.Address}"),
-                };
+                    rule = new HttpsScanOptions.ScanRule();
+                }
+
+                using var request = new HttpRequestMessage();
+                request.Method = new HttpMethod(rule.Method);
+                request.RequestUri = new Uri(new Uri($"https://{context.Address}"), rule.Path);
                 request.Headers.Host = context.Domain;
 
                 var timeout = this.options.CurrentValue.Timeout;

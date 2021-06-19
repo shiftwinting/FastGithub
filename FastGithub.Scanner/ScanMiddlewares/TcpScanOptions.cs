@@ -2,6 +2,9 @@
 
 namespace FastGithub.Scanner.ScanMiddlewares
 {
+    /// <summary>
+    /// tcp扫描选项
+    /// </summary>
     [Options("Github:Scan:TcpScan")]
     sealed class TcpScanOptions
     {

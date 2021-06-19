@@ -14,7 +14,7 @@ namespace FastGithub.Scanner
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubScanService
     {
-        private readonly GithubLookupFacotry domainAddressFactory;
+        private readonly GithubLookupFacotry lookupFactory;
         private readonly GithubContextCollection scanResults;
         private readonly ILogger<GithubScanService> logger;
 
@@ -24,17 +24,17 @@ namespace FastGithub.Scanner
         /// <summary>
         /// github扫描服务
         /// </summary>
-        /// <param name="domainAddressFactory"></param>
+        /// <param name="lookupFactory"></param>
         /// <param name="scanResults"></param>
         /// <param name="appService"></param>
         /// <param name="logger"></param>
         public GithubScanService(
-            GithubLookupFacotry domainAddressFactory,
+            GithubLookupFacotry lookupFactory,
             GithubContextCollection scanResults,
             IServiceProvider appService,
             ILogger<GithubScanService> logger)
         {
-            this.domainAddressFactory = domainAddressFactory;
+            this.lookupFactory = lookupFactory;
             this.scanResults = scanResults;
             this.logger = logger;
 
@@ -58,7 +58,7 @@ namespace FastGithub.Scanner
         public async Task ScanAllAsync(CancellationToken cancellationToken)
         {
             this.logger.LogInformation("完整扫描开始..");
-            var domainAddresses = await this.domainAddressFactory.CreateDomainAddressesAsync(cancellationToken);
+            var domainAddresses = await this.lookupFactory.LookupAsync(cancellationToken);
 
             var scanTasks = domainAddresses
                 .Select(item => new GithubContext(item.Domain, item.Address, cancellationToken))

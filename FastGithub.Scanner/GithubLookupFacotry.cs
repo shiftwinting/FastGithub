@@ -30,10 +30,10 @@ namespace FastGithub.Scanner
         }
 
         /// <summary>
-        /// 创建域名与ip的关系
+        /// 查找域名与ip关系
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<DomainAddress>> LookupAsync(CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<DomainAddress>();
             var domains = this.options.CurrentValue.Domains;

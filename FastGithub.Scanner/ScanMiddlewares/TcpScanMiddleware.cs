@@ -74,7 +74,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 using var timeoutTokenSource = new CancellationTokenSource(timeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, context.CancellationToken);
 
-                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                using var socket = new Socket(context.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 await socket.ConnectAsync(context.Address, PORT, linkedTokenSource.Token);
                 return true;
             }
