@@ -10,7 +10,7 @@ namespace FastGithub
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).RunAsTopShelf();
+            CreateHostBuilder(args).Build().RunWithWindowsServiceControl();
         }
 
         /// <summary>
@@ -22,8 +22,10 @@ namespace FastGithub
         {
             return Host
                 .CreateDefaultBuilder(args)
+                .UseWindowsService()
+                .UseBinaryPathContentRoot()
                 .ConfigureServices((ctx, services) =>
-                {
+                { 
                     services.AddGithubDns(ctx.Configuration);
                 });
         }
