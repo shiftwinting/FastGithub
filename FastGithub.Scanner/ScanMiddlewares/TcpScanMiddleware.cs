@@ -16,8 +16,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
     sealed class TcpScanMiddleware : IMiddleware<GithubContext>
     {
         private const int PORT = 443;
-        private readonly TimeSpan cacheTimeSpan = TimeSpan.FromMinutes(20d);
-        private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly IOptionsMonitor<TcpScanOptions> options;
         private readonly IMemoryCache memoryCache;
         private readonly ILogger<TcpScanMiddleware> logger;
 
@@ -27,7 +26,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public TcpScanMiddleware(
-            IOptionsMonitor<GithubOptions> options,
+            IOptionsMonitor<TcpScanOptions> options,
             IMemoryCache memoryCache,
             ILogger<TcpScanMiddleware> logger)
         {
@@ -48,7 +47,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
             if (this.memoryCache.TryGetValue<bool>(key, out var available) == false)
             {
                 available = await this.TcpScanAsync(context);
-                this.memoryCache.Set(key, available, cacheTimeSpan);
+                this.memoryCache.Set(key, available, this.options.CurrentValue.CacheExpiration);
             }
 
             if (available == true)
@@ -71,7 +70,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
         {
             try
             {
-                var timeout = this.options.CurrentValue.Scan.TcpScanTimeout;
+                var timeout = this.options.CurrentValue.Timeout;
                 using var timeoutTokenSource = new CancellationTokenSource(timeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, context.CancellationToken);
 

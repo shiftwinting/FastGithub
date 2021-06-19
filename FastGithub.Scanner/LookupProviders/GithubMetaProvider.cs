@@ -11,15 +11,15 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.DomainAddressProviders
+namespace FastGithub.Scanner.LookupProviders
 {
     /// <summary>
     /// Github公开的域名与ip关系提供者
     /// </summary>
-    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class GithubMetaProvider : IDomainAddressProvider
+    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IGithubLookupProvider))]
+    sealed class GithubMetaProvider : IGithubLookupProvider
     {
-        private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly IOptionsMonitor<GithubMetaProviderOptions> options;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger<GithubMetaProvider> logger;
         private const string META_URI = "https://api.github.com/meta";
@@ -35,7 +35,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public GithubMetaProvider(
-            IOptionsMonitor<GithubOptions> options,
+            IOptionsMonitor<GithubMetaProviderOptions> options,
             IHttpClientFactory httpClientFactory,
             ILogger<GithubMetaProvider> logger)
         {
@@ -45,12 +45,14 @@ namespace FastGithub.Scanner.DomainAddressProviders
         }
 
         /// <summary>
-        /// 创建域名与ip的关系
+        /// 查找域名与ip关系
         /// </summary>
+        /// <param name="domains"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<DomainAddress>> LookupAsync(IEnumerable<string> domains, CancellationToken cancellationToken)
         {
-            var setting = this.options.CurrentValue.DominAddressProviders.GithubMetaProvider;
+            var setting = this.options.CurrentValue;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
@@ -62,7 +64,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
                 var meta = await GetMetaAsync(httpClient, setting.MetaUri, cancellationToken);
                 if (meta != null)
                 {
-                    return meta.ToDomainAddresses();
+                    return meta.ToDomainAddresses(domains);
                 }
             }
             catch (Exception ex)
@@ -109,26 +111,35 @@ namespace FastGithub.Scanner.DomainAddressProviders
             /// 转换为域名与ip关系
             /// </summary>
             /// <returns></returns>
-            public IEnumerable<DomainAddress> ToDomainAddresses()
+            public IEnumerable<DomainAddress> ToDomainAddresses(IEnumerable<string> domains)
             {
-                foreach (var range in IPAddressRange.From(this.Web).OrderBy(item => item.Size))
+                const string github = "github.com";
+                const string apiGithub = "api.github.com";
+
+                if (domains.Contains(github) == true)
                 {
-                    if (range.AddressFamily == AddressFamily.InterNetwork)
+                    foreach (var range in IPAddressRange.From(this.Web).OrderBy(item => item.Size))
                     {
-                        foreach (var address in range)
+                        if (range.AddressFamily == AddressFamily.InterNetwork)
                         {
-                            yield return new DomainAddress("github.com", address);
+                            foreach (var address in range)
+                            {
+                                yield return new DomainAddress(github, address);
+                            }
                         }
                     }
                 }
 
-                foreach (var range in IPAddressRange.From(this.Api).OrderBy(item => item.Size))
+                if (domains.Contains(apiGithub) == true)
                 {
-                    if (range.AddressFamily == AddressFamily.InterNetwork)
+                    foreach (var range in IPAddressRange.From(this.Api).OrderBy(item => item.Size))
                     {
-                        foreach (var address in range)
+                        if (range.AddressFamily == AddressFamily.InterNetwork)
                         {
-                            yield return new DomainAddress("api.github.com", address);
+                            foreach (var address in range)
+                            {
+                                yield return new DomainAddress(apiGithub, address);
+                            }
                         }
                     }
                 }

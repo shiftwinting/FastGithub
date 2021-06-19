@@ -10,15 +10,15 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.DomainAddressProviders
+namespace FastGithub.Scanner.LookupProviders
 {
     /// <summary>
     /// ipaddress.com的域名与ip关系提供者
     /// </summary>
-    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class IPAddressComProvider : IDomainAddressProvider
+    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IGithubLookupProvider))]
+    sealed class IPAddressComProvider : IGithubLookupProvider
     {
-        private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly IOptionsMonitor<IPAddressComProviderOptions> options;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger<IPAddressComProvider> logger;
         private readonly Uri lookupUri = new("https://www.ipaddress.com/ip-lookup");
@@ -34,7 +34,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public IPAddressComProvider(
-            IOptionsMonitor<GithubOptions> options,
+            IOptionsMonitor<IPAddressComProviderOptions> options,
             IHttpClientFactory httpClientFactory,
             ILogger<IPAddressComProvider> logger)
         {
@@ -44,12 +44,14 @@ namespace FastGithub.Scanner.DomainAddressProviders
         }
 
         /// <summary>
-        /// 创建域名与ip的关系
+        /// 查找域名与ip关系
         /// </summary>
+        /// <param name="domains"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<DomainAddress>> LookupAsync(IEnumerable<string> domains, CancellationToken cancellationToken)
         {
-            var setting = this.options.CurrentValue.DominAddressProviders.IPAddressComProvider;
+            var setting = this.options.CurrentValue;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
@@ -57,7 +59,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
 
             var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
             var result = new HashSet<DomainAddress>();
-            foreach (var domain in setting.Domains)
+            foreach (var domain in domains)
             {
                 try
                 {

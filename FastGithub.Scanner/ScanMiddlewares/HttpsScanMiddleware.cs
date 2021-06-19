@@ -17,7 +17,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
     [Service(ServiceLifetime.Singleton)]
     sealed class HttpsScanMiddleware : IMiddleware<GithubContext>
     {
-        private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly IOptionsMonitor<HttpsScanOptions> options;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger<HttpsScanMiddleware> logger;
 
@@ -27,7 +27,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public HttpsScanMiddleware(
-            IOptionsMonitor<GithubOptions> options,
+            IOptionsMonitor<HttpsScanOptions> options,
             IHttpClientFactory httpClientFactory,
             ILogger<HttpsScanMiddleware> logger)
         {
@@ -55,7 +55,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 };
                 request.Headers.Host = context.Domain;
 
-                var timeout = this.options.CurrentValue.Scan.HttpsScanTimeout;
+                var timeout = this.options.CurrentValue.Timeout;
                 using var timeoutTokenSource = new CancellationTokenSource(timeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, context.CancellationToken);
 

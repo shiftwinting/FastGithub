@@ -12,7 +12,7 @@ namespace FastGithub
     sealed class GithubFullScanHostedService : BackgroundService
     {
         private readonly GithubScanService githubScanService;
-        private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly IOptionsMonitor<GithubScanOptions> options;
 
         /// <summary>
         /// 完整扫描后台服务
@@ -21,7 +21,7 @@ namespace FastGithub
         /// <param name="options"></param>
         public GithubFullScanHostedService(
             GithubScanService githubScanService,
-            IOptionsMonitor<GithubOptions> options)
+            IOptionsMonitor<GithubScanOptions> options)
         {
             this.githubScanService = githubScanService;
             this.options = options;
@@ -37,7 +37,7 @@ namespace FastGithub
             while (stoppingToken.IsCancellationRequested == false)
             {
                 await githubScanService.ScanAllAsync(stoppingToken);
-                await Task.Delay(this.options.CurrentValue.Scan.FullScanInterval, stoppingToken);
+                await Task.Delay(this.options.CurrentValue.FullScanInterval, stoppingToken);
             }
         }
     }

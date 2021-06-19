@@ -14,7 +14,7 @@ namespace FastGithub.Scanner
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubScanService
     {
-        private readonly DomainAddressFacotry domainAddressFactory;
+        private readonly GithubLookupFacotry domainAddressFactory;
         private readonly GithubContextCollection scanResults;
         private readonly ILogger<GithubScanService> logger;
 
@@ -29,7 +29,7 @@ namespace FastGithub.Scanner
         /// <param name="appService"></param>
         /// <param name="logger"></param>
         public GithubScanService(
-            DomainAddressFacotry domainAddressFactory,
+            GithubLookupFacotry domainAddressFactory,
             GithubContextCollection scanResults,
             IServiceProvider appService,
             ILogger<GithubScanService> logger)

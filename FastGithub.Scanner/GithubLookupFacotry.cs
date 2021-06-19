@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,17 +11,22 @@ namespace FastGithub.Scanner
     /// 域名与ip关系工厂
     /// </summary>
     [Service(ServiceLifetime.Singleton)]
-    sealed class DomainAddressFacotry
+    sealed class GithubLookupFacotry
     {
-        private readonly IEnumerable<IDomainAddressProvider> providers;
+        private readonly IEnumerable<IGithubLookupProvider> providers;
+        private readonly IOptionsMonitor<GithubLookupFactoryOptions> options;
 
         /// <summary>
         /// 域名与ip关系工厂
         /// </summary>
         /// <param name="providers"></param>
-        public DomainAddressFacotry(IEnumerable<IDomainAddressProvider> providers)
+        /// <param name="options"></param>
+        public GithubLookupFacotry(
+            IEnumerable<IGithubLookupProvider> providers,
+            IOptionsMonitor<GithubLookupFactoryOptions> options)
         {
             this.providers = providers.OrderBy(item => item.Order);
+            this.options = options;
         }
 
         /// <summary>
@@ -30,9 +36,11 @@ namespace FastGithub.Scanner
         public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<DomainAddress>();
+            var domains = this.options.CurrentValue.Domains;
+
             foreach (var provider in this.providers)
             {
-                var domainAddresses = await provider.CreateDomainAddressesAsync(cancellationToken);
+                var domainAddresses = await provider.LookupAsync(domains, cancellationToken);
                 foreach (var item in domainAddresses)
                 {
                     hashSet.Add(item);

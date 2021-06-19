@@ -7,7 +7,7 @@ namespace FastGithub.Scanner
     /// <summary>
     /// 定义域名的ip提值者
     /// </summary>
-    interface IDomainAddressProvider
+    interface IGithubLookupProvider
     {
         /// <summary>
         /// 获取排序
@@ -15,9 +15,11 @@ namespace FastGithub.Scanner
         int Order { get; }
 
         /// <summary>
-        /// 创建域名与ip的关系
+        /// 查找域名与ip关系
         /// </summary>
+        /// <param name="domains"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<DomainAddress>> LookupAsync(IEnumerable<string> domains, CancellationToken cancellationToken);
     }
 }

@@ -9,15 +9,15 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Scanner.DomainAddressProviders
+namespace FastGithub.Scanner.LookupProviders
 {
     /// <summary>
     /// 公共dns的域名与ip关系提供者
     /// </summary>
-    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IDomainAddressProvider))]
-    sealed class PublicDnsProvider : IDomainAddressProvider
+    [Service(ServiceLifetime.Singleton, ServiceType = typeof(IGithubLookupProvider))]
+    sealed class PublicDnsProvider : IGithubLookupProvider
     {
-        private readonly IOptionsMonitor<GithubOptions> options;
+        private readonly IOptionsMonitor<PublicDnsProviderOptions> options;
         private readonly ILogger<PublicDnsProvider> logger;
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public PublicDnsProvider(
-            IOptionsMonitor<GithubOptions> options,
+            IOptionsMonitor<PublicDnsProviderOptions> options,
             ILogger<PublicDnsProvider> logger)
         {
             this.options = options;
@@ -39,12 +39,14 @@ namespace FastGithub.Scanner.DomainAddressProviders
         }
 
         /// <summary>
-        /// 创建域名与ip的关系
+        /// 查找域名与ip关系
         /// </summary>
+        /// <param name="domains"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<DomainAddress>> CreateDomainAddressesAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<DomainAddress>> LookupAsync(IEnumerable<string> domains, CancellationToken cancellationToken)
         {
-            var setting = this.options.CurrentValue.DominAddressProviders.PublicDnsProvider;
+            var setting = this.options.CurrentValue;
             if (setting.Enable == false)
             {
                 return Enumerable.Empty<DomainAddress>();
@@ -53,7 +55,7 @@ namespace FastGithub.Scanner.DomainAddressProviders
             var result = new HashSet<DomainAddress>();
             foreach (var dns in setting.Dnss)
             {
-                var domainAddresses = await this.LookupAsync(dns, setting.Domains, cancellationToken);
+                var domainAddresses = await this.LookupAsync(dns, domains, cancellationToken);
                 foreach (var item in domainAddresses)
                 {
                     result.Add(item);
