@@ -15,6 +15,11 @@ namespace FastGithub.Scanner.ScanMiddlewares
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5d);
 
         /// <summary>
+        /// 是否使用短连接
+        /// </summary>
+        public bool ConnectionClose { get; set; } = false;
+
+        /// <summary>
         /// 各域名扫描规则
         /// </summary>
         public Dictionary<string, ScanRule> Rules { get; set; } = new Dictionary<string, ScanRule>();

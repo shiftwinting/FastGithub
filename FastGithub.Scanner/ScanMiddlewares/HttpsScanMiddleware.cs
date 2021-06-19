@@ -58,6 +58,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 request.Method = new HttpMethod(rule.Method);
                 request.RequestUri = new Uri(new Uri($"https://{context.Address}"), rule.Path);
                 request.Headers.Host = context.Domain;
+                request.Headers.ConnectionClose = setting.ConnectionClose;
 
                 var timeout = this.options.CurrentValue.Timeout;
                 using var timeoutTokenSource = new CancellationTokenSource(timeout);
