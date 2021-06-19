@@ -90,7 +90,8 @@ namespace FastGithub.Scanner
 
             var results = this.scanResults.ToArray();
             var contexts = results
-                .OrderByDescending(item => item.History.AvailableRate)
+                .OrderBy(item => item.Domain)
+                .ThenByDescending(item => item.History.AvailableRate)
                 .ThenBy(item => item.History.AvgElapsed);
 
             foreach (var context in contexts)
