@@ -16,6 +16,6 @@ namespace FastGithub.Scanner.ScanMiddlewares
         /// <summary>
         /// 扫描结果缓存时长
         /// </summary>
-        public TimeSpan CacheExpiration { get; set; } = TimeSpan.FromMinutes(20d);
+        public TimeSpan CacheExpiration { get; set; } = TimeSpan.FromMinutes(30d);
     }
 }
