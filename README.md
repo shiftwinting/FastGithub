@@ -7,5 +7,5 @@ github定制版的dns服务，解析github最优的ip
 * 轮询扫描历史扫描出的可访问ip，统计ip的访问成功率与访问耗时；
 * 提值dns服务，客户端查询github相关域名时返回对应的最优ip；
 
-#### 程序下载
+### 程序下载
 [下载最新发布版本](https://gitee.com/jiulang/fast-github/releases)
