@@ -88,13 +88,17 @@ namespace FastGithub.Scanner
         {
             this.logger.LogInformation("结果扫描开始..");
 
-            var contexts = this.scanResults.ToArray();
+            var results = this.scanResults.ToArray();
+            var contexts = results
+                .OrderByDescending(item => item.History.AvailableRate)
+                .ThenBy(item => item.History.AvgElapsed);
+
             foreach (var context in contexts)
             {
                 await this.resultScanDelegate(context);
             }
 
-            this.logger.LogInformation($"结果扫描结束，共扫描{contexts.Length}条记录");
+            this.logger.LogInformation($"结果扫描结束，共扫描{results.Length}条记录");
         }
     }
 }

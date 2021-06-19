@@ -25,7 +25,7 @@ namespace FastGithub
 
             services
                 .AddHttpClient(nameof(FastGithub))
-                .SetHandlerLifetime(TimeSpan.FromMinutes(10d))
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5d))
                 .ConfigureHttpClient(httpClient =>
                 {
                     httpClient.DefaultRequestHeaders.Accept.TryParseAdd("*/*");

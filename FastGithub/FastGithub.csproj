@@ -4,9 +4,10 @@
 		<OutputType>Exe</OutputType>
 		<Nullable>enable</Nullable>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
-		<Version>1.0.0-beta3</Version>
+		<Version>1.0.0-beta4</Version>
 		<Description>github定制版的dns服务，解析github最优的ip</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>https://github.com/xljiulang/FastGithub</Copyright>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
