@@ -72,6 +72,7 @@ namespace FastGithub.Scanner
                 return this.contextList
                     .Where(item => item.Domain == domain && item.History.AvailableRate > 0d)
                     .OrderByDescending(item => item.History.AvailableRate)
+                    .ThenByDescending(item => item.Available)
                     .ThenBy(item => item.History.AvgElapsed)
                     .Select(item => item.Address)
                     .FirstOrDefault();
