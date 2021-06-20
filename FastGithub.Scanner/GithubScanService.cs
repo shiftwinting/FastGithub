@@ -16,6 +16,7 @@ namespace FastGithub.Scanner
     {
         private readonly GithubLookupFacotry lookupFactory;
         private readonly GithubContextCollection scanResults;
+        private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<GithubScanService> logger;
 
         private readonly InvokeDelegate<GithubContext> fullScanDelegate;
@@ -32,10 +33,12 @@ namespace FastGithub.Scanner
             GithubLookupFacotry lookupFactory,
             GithubContextCollection scanResults,
             IServiceProvider appService,
+            ILoggerFactory loggerFactory,
             ILogger<GithubScanService> logger)
         {
             this.lookupFactory = lookupFactory;
             this.scanResults = scanResults;
+            this.loggerFactory = loggerFactory;
             this.logger = logger;
 
             this.fullScanDelegate = new PipelineBuilder<GithubContext>(appService, ctx => Task.CompletedTask)
@@ -72,9 +75,9 @@ namespace FastGithub.Scanner
             async Task<bool> ScanAsync(GithubContext context)
             {
                 await this.fullScanDelegate(context);
-                if (context.Available == true)
+                if (context.Available && this.scanResults.Add(context))
                 {
-                    this.scanResults.Add(context);
+                    this.logger.LogInformation($"扫描到{context}");
                 }
                 return context.Available;
             }
@@ -97,6 +100,15 @@ namespace FastGithub.Scanner
             foreach (var context in contexts)
             {
                 await this.resultScanDelegate(context);
+                var domainLogger = this.loggerFactory.CreateLogger(context.Domain);
+                if (context.Available == true)
+                {
+                    domainLogger.LogInformation(context.ToStatisticsString());
+                }
+                else
+                {
+                    domainLogger.LogWarning(context.ToStatisticsString());
+                }
             }
 
             this.logger.LogInformation($"结果扫描结束，共扫描{results.Length}条记录");

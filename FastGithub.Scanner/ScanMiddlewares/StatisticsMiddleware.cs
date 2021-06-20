@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -12,17 +11,6 @@ namespace FastGithub.Scanner.ScanMiddlewares
     [Service(ServiceLifetime.Singleton)]
     sealed class StatisticsMiddleware : IMiddleware<GithubContext>
     {
-        private readonly ILogger<StatisticsMiddleware> logger;
-
-        /// <summary>
-        /// 扫描统计中间件
-        /// </summary>
-        /// <param name="logger"></param>
-        public StatisticsMiddleware(ILogger<StatisticsMiddleware> logger)
-        {
-            this.logger = logger;
-        }
-
         /// <summary>
         /// 记录扫描结果
         /// </summary>
@@ -41,16 +29,9 @@ namespace FastGithub.Scanner.ScanMiddlewares
             finally
             {
                 stopwatch.Stop();
-
-                if (context.CancellationToken.IsCancellationRequested == false)
-                {
-                    context.History.Add(context.Available, stopwatch.Elapsed);
-                    if (context.History.AvailableRate > 0d)
-                    {
-                        this.logger.LogInformation(context.ToString());
-                    }
-                }
             }
+
+            context.History.Add(context.Available, stopwatch.Elapsed);
         }
     }
 }

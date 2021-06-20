@@ -52,10 +52,14 @@ namespace FastGithub.Scanner
             return base.Equals(other);
         }
 
-        public override string ToString()
+        /// <summary>
+        /// 转换为为统计信息
+        /// </summary>
+        /// <returns></returns>
+        public string ToStatisticsString()
         {
             var rate = Math.Round(this.History.AvailableRate * 100, 2);
-            return $"{this.Domain} {{Address={this.Address}, AvailableRate={rate}%, AvgElapsed={this.History.AvgElapsed.TotalSeconds}s}}";
+            return $"{{Address={this.Address}, AvailableRate={rate}%, AvgElapsed={this.History.AvgElapsed.TotalSeconds}s}}";
         }
     }
 }

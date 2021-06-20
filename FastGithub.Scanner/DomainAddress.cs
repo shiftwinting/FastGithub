@@ -46,8 +46,7 @@ namespace FastGithub.Scanner
 
         public override string ToString()
         {
-            return $"{this.Domain} {this.Address}";
+            return $"{this.Domain}=>{this.Address}";
         }
-
     }
 }
