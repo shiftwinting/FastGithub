@@ -8,14 +8,6 @@ namespace FastGithub.Scanner
     public interface IGithubScanResults
     {
         /// <summary>
-        /// 查询ip是否可用
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        bool IsAvailable(string domain, IPAddress address);
-
-        /// <summary>
         /// 查找最优的ip
         /// </summary>
         /// <param name="domain"></param>

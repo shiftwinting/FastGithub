@@ -44,7 +44,7 @@ namespace FastGithub
                 .AddServiceAndOptions(assembly, configuration)
                 .AddHostedService<GithubFullScanHostedService>()
                 .AddHostedService<GithubResultScanHostedService>()
-                .AddSingleton<IGithubScanResults>(appService => appService.GetRequiredService<GithubContextCollection>());
+                .AddSingleton<IGithubScanResults>(appService => appService.GetRequiredService<GithubScanResults>());
             ;
         }
     }

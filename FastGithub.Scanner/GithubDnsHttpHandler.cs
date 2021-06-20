@@ -13,12 +13,12 @@ namespace FastGithub.Scanner
     [Service(ServiceLifetime.Transient)]
     sealed class GithubDnsHttpHandler : DelegatingHandler
     {
-        private readonly GithubContextCollection scanResults;
+        private readonly GithubScanResults scanResults;
 
         /// <summary>
         /// Github的dns解析的httpHandler
         /// </summary>
-        public GithubDnsHttpHandler(GithubContextCollection scanResults)
+        public GithubDnsHttpHandler(GithubScanResults scanResults)
         {
             this.scanResults = scanResults;
         }

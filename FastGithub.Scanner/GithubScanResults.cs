@@ -9,10 +9,10 @@ namespace FastGithub.Scanner
     ///  GithubContext集合
     /// </summary>
     [Service(ServiceLifetime.Singleton)]
-    sealed class GithubContextCollection : IGithubScanResults
+    sealed class GithubScanResults : IGithubScanResults
     {
         private readonly object syncRoot = new();
-        private readonly List<GithubContext> contextList = new();
+        private readonly List<GithubContext> contexts = new();
 
         /// <summary>
         /// 添加GithubContext
@@ -23,11 +23,11 @@ namespace FastGithub.Scanner
         {
             lock (this.syncRoot)
             {
-                if (this.contextList.Contains(context))
+                if (this.contexts.Contains(context))
                 {
                     return false;
                 }
-                this.contextList.Add(context);
+                this.contexts.Add(context);
                 return true;
             }
         }
@@ -40,23 +40,7 @@ namespace FastGithub.Scanner
         {
             lock (this.syncRoot)
             {
-                return this.contextList.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// 查询ip是否可用
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public bool IsAvailable(string domain, IPAddress address)
-        {
-            lock (this.syncRoot)
-            {
-                var target = new GithubContext(domain, address);
-                var context = this.contextList.Find(item => item.Equals(target));
-                return context != null && context.Available;
+                return this.contexts.ToArray();
             }
         }
 
@@ -69,11 +53,11 @@ namespace FastGithub.Scanner
         {
             lock (this.syncRoot)
             {
-                return this.contextList
-                    .Where(item => item.Domain == domain && item.History.AvailableRate > 0d)
-                    .OrderByDescending(item => item.History.AvailableRate)
+                return this.contexts
+                    .Where(item => item.Domain == domain && item.AvailableRate > 0d)
+                    .OrderByDescending(item => item.AvailableRate)
                     .ThenByDescending(item => item.Available)
-                    .ThenBy(item => item.History.AvgElapsed)
+                    .ThenBy(item => item.AvgElapsed)
                     .Select(item => item.Address)
                     .FirstOrDefault();
             }

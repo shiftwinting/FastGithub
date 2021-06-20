@@ -31,7 +31,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 stopwatch.Stop();
             }
 
-            context.History.Add(context.Available, stopwatch.Elapsed);
+            context.AddScanLog(stopwatch.Elapsed);
         }
     }
 }

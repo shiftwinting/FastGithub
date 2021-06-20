@@ -15,7 +15,7 @@ namespace FastGithub.Scanner
     sealed class GithubScanService
     {
         private readonly GithubLookupFacotry lookupFactory;
-        private readonly GithubContextCollection scanResults;
+        private readonly GithubScanResults scanResults;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<GithubScanService> logger;
 
@@ -31,7 +31,7 @@ namespace FastGithub.Scanner
         /// <param name="logger"></param>
         public GithubScanService(
             GithubLookupFacotry lookupFactory,
-            GithubContextCollection scanResults,
+            GithubScanResults scanResults,
             IServiceProvider appService,
             ILoggerFactory loggerFactory,
             ILogger<GithubScanService> logger)
@@ -94,8 +94,8 @@ namespace FastGithub.Scanner
             var results = this.scanResults.ToArray();
             var contexts = results
                 .OrderBy(item => item.Domain)
-                .ThenByDescending(item => item.History.AvailableRate)
-                .ThenBy(item => item.History.AvgElapsed);
+                .ThenByDescending(item => item.AvailableRate)
+                .ThenBy(item => item.AvgElapsed);
 
             foreach (var context in contexts)
             {
