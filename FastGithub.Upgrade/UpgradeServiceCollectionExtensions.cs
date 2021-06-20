@@ -1,5 +1,4 @@
 ﻿using FastGithub.Upgrade;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FastGithub
@@ -16,7 +15,9 @@ namespace FastGithub
         /// <returns></returns>
         public static IServiceCollection AddAppUpgrade(this IServiceCollection services)
         {
-            return services.AddHostedService<UpgradeHostedService>();
+            return services
+                .AddTransient<UpgradeService>()
+                .AddHostedService<UpgradeHostedService>();
         }
     }
 }

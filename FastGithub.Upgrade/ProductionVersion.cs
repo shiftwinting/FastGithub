@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace FastGithub.Upgrade
@@ -86,6 +87,21 @@ namespace FastGithub.Upgrade
             var verion = Regex.Match(productionVersion, VERSION).Value;
             var subVersion = productionVersion[verion.Length..];
             return new ProductionVersion(Version.Parse(verion), subVersion);
+        }
+
+
+        /// <summary>
+        /// 获取当前应用程序的产品版本
+        /// </summary>
+        /// <returns></returns>
+        public static ProductionVersion? GetApplicationVersion()
+        {
+            var version = Assembly
+                .GetEntryAssembly()?
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion;
+
+            return version == null ? null : ProductionVersion.Parse(version);
         }
     }
 }
