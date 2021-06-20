@@ -54,7 +54,8 @@ namespace FastGithub.Scanner
 
         public override string ToString()
         {
-            return $"{this.Domain} {{Address={this.Address}, AvailableRate={this.History.AvailableRate}, AvgElapsed={this.History.AvgElapsed}}}";
+            var rate = Math.Round(this.History.AvailableRate * 100, 2);
+            return $"{this.Domain} {{Address={this.Address}, AvailableRate={rate}%, AvgElapsed={this.History.AvgElapsed.TotalSeconds}s}}";
         }
     }
 }
