@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 
 namespace FastGithub
 {
@@ -27,7 +26,7 @@ namespace FastGithub
                 .UseBinaryPathContentRoot()
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddHostedService<VersionHostedService>();
+                    services.AddAppUpgrade();
                     services.AddGithubDns(ctx.Configuration);
                 });
         }

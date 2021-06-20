@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Dns", "FastGithu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Scanner", "FastGithub.Scanner\FastGithub.Scanner.csproj", "{7F24CD2F-07C0-4002-A534-80688DE95ECF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastGithub.Upgrade", "FastGithub.Upgrade\FastGithub.Upgrade.csproj", "{8239A077-A84C-4FDF-A204-02A2DE4243F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
