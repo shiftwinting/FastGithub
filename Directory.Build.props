@@ -1,0 +1,13 @@
+<Project>
+	<PropertyGroup>
+		<Version>1.0.0-rc2</Version>
+		<Nullable>enable</Nullable>
+		<Description>github定制版的dns服务，解析github最优的ip</Description>
+		<Copyright>https://github.com/xljiulang/FastGithub</Copyright>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+</Project>
