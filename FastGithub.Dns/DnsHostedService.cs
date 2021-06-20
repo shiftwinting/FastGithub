@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +15,7 @@ namespace FastGithub.Dns
     sealed class DnsHostedService : IHostedService
     {
         private readonly DnsServer dnsServer;
+        private readonly IOptions<DnsOptions> options;
         private readonly ILogger<DnsHostedService> logger;
 
         /// <summary>
@@ -27,6 +30,7 @@ namespace FastGithub.Dns
             ILogger<DnsHostedService> logger)
         {
             this.dnsServer = new DnsServer(githubRequestResolver, options.Value.UpStream);
+            this.options = options;
             this.logger = logger;
         }
 
@@ -39,6 +43,8 @@ namespace FastGithub.Dns
         {
             this.dnsServer.Listen();
             this.logger.LogInformation("dns服务启用成功");
+            this.SetNameServers(IPAddress.Loopback, this.options.Value.UpStream);
+
             return Task.CompletedTask;
         }
 
@@ -51,7 +57,30 @@ namespace FastGithub.Dns
         {
             this.dnsServer.Dispose();
             this.logger.LogInformation("dns服务已终止");
+            this.SetNameServers();
+
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 设备dns
+        /// </summary>
+        /// <param name="nameServers"></param>
+        private void SetNameServers(params IPAddress[] nameServers)
+        {
+            var action = nameServers.Length == 0 ? "清除" : "设置";
+            if (this.options.Value.SetToLocalMachine && OperatingSystem.IsWindows())
+            {
+                try
+                {
+                    NameServiceUtil.SetNameServers(nameServers);
+                    this.logger.LogInformation($"{action}本机dns成功");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning($"{action}本机dns失败：{ex.Message}");
+                }
+            }
         }
     }
 }

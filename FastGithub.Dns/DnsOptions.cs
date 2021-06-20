@@ -18,5 +18,10 @@ namespace FastGithub.Dns
         /// 获取或设置github相关域名的ip存活时长
         /// </summary>
         public TimeSpan GithubTTL { get; set; } = TimeSpan.FromMinutes(10d);
+
+        /// <summary>
+        /// 是否设置本机使用此dns
+        /// </summary>
+        public bool SetToLocalMachine { get; set; } = true;
     }
 }

@@ -4,10 +4,15 @@
 		<OutputType>Exe</OutputType>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<ApplicationIcon>app.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 
 	<ItemGroup>

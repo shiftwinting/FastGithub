@@ -5,6 +5,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="DnsOptions.cs~RF5dfc81de.TMP" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\FastGithub.Scanner\FastGithub.Scanner.csproj" />
 	</ItemGroup>
 </Project>
