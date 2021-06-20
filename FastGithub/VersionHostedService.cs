@@ -42,7 +42,7 @@ namespace FastGithub
         {
             try
             {
-                var version = Assembly.GetEntryAssembly()?.GetName().Version;
+                var version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
                 if (version == null)
                 {
                     return;
