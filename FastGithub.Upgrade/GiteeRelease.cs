@@ -7,7 +7,7 @@ namespace FastGithub.Upgrade
     /// <summary>
     /// 发行记录
     /// </summary>
-    sealed class Release
+    sealed class GiteeRelease
     {
         /// <summary>
         /// 标签名

@@ -57,10 +57,10 @@ namespace FastGithub.Upgrade
         /// 获取最新发布
         /// </summary>
         /// <returns></returns>
-        public async Task<Release?> GetLastedReleaseAsync(CancellationToken cancellationToken)
+        public async Task<GiteeRelease?> GetLastedReleaseAsync(CancellationToken cancellationToken)
         {
             using var httpClient = new HttpClient();
-            var releases = await httpClient.GetFromJsonAsync<Release[]>(ReleasesUri, cancellationToken);
+            var releases = await httpClient.GetFromJsonAsync<GiteeRelease[]>(ReleasesUri, cancellationToken);
             return releases?.FirstOrDefault();
         }
     }
