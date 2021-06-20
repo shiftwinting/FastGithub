@@ -1,8 +1,5 @@
-﻿using DNS.Client;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,15 +7,21 @@ using System.Threading.Tasks;
 namespace FastGithub.Scanner
 {
     /// <summary>
-    /// 由本程序提值的dns的httpHandler
+    /// Github的dns解析的httpHandler
+    /// 使扫描索结果作为github的https请求的域名解析
     /// </summary>
     [Service(ServiceLifetime.Transient)]
-    sealed class LoopbackDnsHttpHandler : DelegatingHandler
+    sealed class GithubDnsHttpHandler : DelegatingHandler
     {
+        private readonly GithubContextCollection scanResults;
+
         /// <summary>
-        /// 本程序的dns
+        /// Github的dns解析的httpHandler
         /// </summary>
-        private static readonly DnsClient dnsClient = new(IPAddress.Loopback);
+        public GithubDnsHttpHandler(GithubContextCollection scanResults)
+        {
+            this.scanResults = scanResults;
+        }
 
         /// <summary>
         /// 发送消息
@@ -31,7 +34,7 @@ namespace FastGithub.Scanner
             var uri = request.RequestUri;
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
-                var address = await LookupAsync(uri.Host);
+                var address = this.scanResults.FindBestAddress(uri.Host);
                 if (address != null)
                 {
                     var builder = new UriBuilder(uri)
@@ -44,25 +47,6 @@ namespace FastGithub.Scanner
             }
 
             return await base.SendAsync(request, cancellationToken);
-        }
-
-        /// <summary>
-        /// dns解析ip
-        /// </summary>
-        /// <param name="host"></param>
-        /// <returns></returns>
-        private static async Task<IPAddress?> LookupAsync(string host)
-        {
-            try
-            {
-                using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500d));
-                var addresses = await dnsClient.Lookup(host, cancellationToken: cancellationTokenSource.Token);
-                return addresses.FirstOrDefault();
-            }
-            catch (Exception)
-            {
-                return default;
-            }
         }
     }
 }

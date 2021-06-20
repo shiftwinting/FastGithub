@@ -37,7 +37,7 @@ namespace FastGithub
                     UseProxy = false,
                     AllowAutoRedirect = false
                 })
-                .AddHttpMessageHandler<LoopbackDnsHttpHandler>();
+                .AddHttpMessageHandler<GithubDnsHttpHandler>();
 
             return services
                 .AddMemoryCache()
