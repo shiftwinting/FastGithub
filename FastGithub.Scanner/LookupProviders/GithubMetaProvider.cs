@@ -83,7 +83,7 @@ namespace FastGithub.Scanner.LookupProviders
         /// <param name="httpClient"></param>
         /// <param name="metaUri"></param>
         /// <returns></returns>
-        private static async Task<Meta?> GetMetaAsync(HttpClient httpClient, Uri metaUri, CancellationToken cancellationToken)
+        private async Task<Meta?> GetMetaAsync(HttpClient httpClient, Uri metaUri, CancellationToken cancellationToken)
         {
             try
             {
@@ -92,6 +92,7 @@ namespace FastGithub.Scanner.LookupProviders
             catch (Exception)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                this.logger.LogWarning($"当前网络无法从{META_URI}加载github维护的ip数据，{Environment.NewLine}本轮扫描暂时使用{metaUri}的副本数据");
                 return await httpClient.GetFromJsonAsync<Meta>(metaUri, cancellationToken);
             }
         }
