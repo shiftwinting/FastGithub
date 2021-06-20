@@ -4,7 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<Nullable>enable</Nullable>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
-		<Version>1.0.0-rc1</Version>
+		<Version>1.0.0-rc2</Version>
 		<Description>github定制版的dns服务，解析github最优的ip</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Copyright>https://github.com/xljiulang/FastGithub</Copyright>
