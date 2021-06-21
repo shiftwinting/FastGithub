@@ -14,6 +14,11 @@ namespace FastGithub.Scanner.LookupProviders
         public bool Enable { get; set; } = true;
 
         /// <summary>
+        /// dns查询超时时长
+        /// </summary>
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMilliseconds(100d);
+
+        /// <summary>
         /// dns列表
         /// </summary>
         public string[] Dnss { get; set; } = Array.Empty<string>();

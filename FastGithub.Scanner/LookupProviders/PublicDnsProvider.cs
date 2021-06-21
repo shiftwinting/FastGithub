@@ -80,7 +80,10 @@ namespace FastGithub.Scanner.LookupProviders
             {
                 try
                 {
-                    var addresses = await client.Lookup(domain, cancellationToken: cancellationToken);
+                    using var timeoutTokenSource = new CancellationTokenSource(this.options.CurrentValue.Timeout);
+                    using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, cancellationToken);
+
+                    var addresses = await client.Lookup(domain, cancellationToken: linkedTokenSource.Token);
                     foreach (var address in addresses)
                     {
                         if (address.AddressFamily == AddressFamily.InterNetwork)
