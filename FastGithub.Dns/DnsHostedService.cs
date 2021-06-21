@@ -17,6 +17,7 @@ namespace FastGithub.Dns
         private readonly DnsServer dnsServer;
         private readonly IOptions<DnsOptions> options;
         private readonly ILogger<DnsHostedService> logger;
+        private IPAddress[]? dnsAddresses;
 
         /// <summary>
         /// dns后台服务
@@ -43,7 +44,7 @@ namespace FastGithub.Dns
         {
             this.dnsServer.Listen();
             this.logger.LogInformation("dns服务启用成功");
-            this.SetNameServers(IPAddress.Loopback, this.options.Value.UpStream);
+            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, this.options.Value.UpStream);
 
             return Task.CompletedTask;
         }
@@ -57,30 +58,38 @@ namespace FastGithub.Dns
         {
             this.dnsServer.Dispose();
             this.logger.LogInformation("dns服务已终止");
-            this.SetNameServers();
+
+            if (this.dnsAddresses != null)
+            {
+                this.SetNameServers(this.dnsAddresses);
+            }
 
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// 设备dns
+        /// 设置dns
         /// </summary>
         /// <param name="nameServers"></param>
-        private void SetNameServers(params IPAddress[] nameServers)
+        /// <returns></returns>
+        private IPAddress[]? SetNameServers(params IPAddress[] nameServers)
         {
-            var action = nameServers.Length == 0 ? "清除" : "设置";
             if (this.options.Value.SetToLocalMachine && OperatingSystem.IsWindows())
             {
                 try
                 {
-                    NameServiceUtil.SetNameServers(nameServers);
-                    this.logger.LogInformation($"{action}本机dns成功");
+                    var results = NameServiceUtil.SetNameServers(nameServers);
+                    this.logger.LogInformation($"设置本机dns成功");
+                    return results;
                 }
+
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning($"{action}本机dns失败：{ex.Message}");
+                    this.logger.LogWarning($"设置本机dns失败：{ex.Message}");
                 }
             }
+
+            return default;
         }
     }
 }

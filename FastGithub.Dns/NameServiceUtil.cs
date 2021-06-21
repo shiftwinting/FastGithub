@@ -32,12 +32,9 @@ namespace FastGithub.Dns
             var dwBestIfIndex = 0u;
             var dwDestAddr = BitConverter.ToUInt32(remoteAddress.GetAddressBytes());
             var errorCode = GetBestInterface(dwDestAddr, ref dwBestIfIndex);
-            if (errorCode != 0)
-            {
-                throw new NetworkInformationException(errorCode);
-            }
-
-            return NetworkInterface
+            return errorCode != 0
+                ? throw new NetworkInformationException(errorCode)
+                : NetworkInterface
                 .GetAllNetworkInterfaces()
                 .Where(item => item.GetIPProperties().GetIPv4Properties().Index == dwBestIfIndex)
                 .FirstOrDefault();
@@ -49,19 +46,23 @@ namespace FastGithub.Dns
         /// <param name="nameServers"></param>
         /// <exception cref="NetworkInformationException"></exception>
         /// <exception cref="NotSupportedException"></exception>
-        public static void SetNameServers(params IPAddress[] nameServers)
+        /// <returns>未设置之前的记录</returns>
+        public static IPAddress[] SetNameServers(params IPAddress[] nameServers)
         {
-            var networkIF = GetBestNetworkInterface(www_baidu_com);
-            if (networkIF == null)
+            var networkInterface = GetBestNetworkInterface(www_baidu_com);
+            if (networkInterface == null)
             {
                 throw new NotSupportedException("找不到网络适配器用来设置dns");
             }
+            var dnsAddresses = networkInterface.GetIPProperties().DnsAddresses.ToArray();
 
-            Netsh($@"interface ipv4 delete dns ""{networkIF.Name}"" all");
+            Netsh($@"interface ipv4 delete dns ""{networkInterface.Name}"" all");
             foreach (var address in nameServers)
             {
-                Netsh($@"interface ipv4 add dns ""{networkIF.Name}"" {address} validate=no");
+                Netsh($@"interface ipv4 add dns ""{networkInterface.Name}"" {address} validate=no");
             }
+
+            return dnsAddresses;
         }
 
         /// <summary>
