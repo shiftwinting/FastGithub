@@ -12,9 +12,9 @@ namespace FastGithub.Scanner
     sealed class GithubContext : DomainAddress, IEquatable<GithubContext>
     {
         /// <summary>
-        /// 最多保存最的近的10条记录
+        /// 最多保存最的近的20条记录
         /// </summary>
-        private const int MAX_LOG_COUNT = 10;
+        private const int MAX_LOG_COUNT = 20;
 
         /// <summary>
         /// 扫描记录
