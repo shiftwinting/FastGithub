@@ -34,6 +34,7 @@ namespace FastGithub
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await githubScanService.ScanFastAsync(stoppingToken);
             while (stoppingToken.IsCancellationRequested == false)
             {
                 await githubScanService.ScanAllAsync(stoppingToken);

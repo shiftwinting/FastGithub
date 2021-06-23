@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ namespace FastGithub.Scanner
     {
         private readonly IEnumerable<IGithubLookupProvider> providers;
         private readonly IOptionsMonitor<GithubLookupFactoryOptions> options;
+        private readonly ILogger<GithubLookupFacotry> logger;
 
         /// <summary>
         /// 域名与ip关系工厂
@@ -23,10 +25,12 @@ namespace FastGithub.Scanner
         /// <param name="options"></param>
         public GithubLookupFacotry(
             IEnumerable<IGithubLookupProvider> providers,
-            IOptionsMonitor<GithubLookupFactoryOptions> options)
+            IOptionsMonitor<GithubLookupFactoryOptions> options,
+            ILogger<GithubLookupFacotry> logger)
         {
             this.providers = providers.OrderBy(item => item.Order);
             this.options = options;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -35,6 +39,7 @@ namespace FastGithub.Scanner
         /// <returns></returns>
         public async Task<IEnumerable<DomainAddress>> LookupAsync(CancellationToken cancellationToken)
         {
+            this.logger.LogInformation($"开始查找各域名的ip..");
             var hashSet = new HashSet<DomainAddress>();
             var domains = this.options.CurrentValue.Domains;
 
@@ -46,6 +51,8 @@ namespace FastGithub.Scanner
                     hashSet.Add(item);
                 }
             }
+
+            this.logger.LogInformation($"查找到{hashSet.Count}条域名ip记录");
             return hashSet;
         }
     }
