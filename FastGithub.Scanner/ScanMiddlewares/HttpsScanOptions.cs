@@ -6,7 +6,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
     /// <summary>
     /// https扫描选项
     /// </summary>
-    [Options("Github:Scan:HttpsScan")]
+    [Options("Scan:HttpsScan")]
     sealed class HttpsScanOptions
     {
         /// <summary>

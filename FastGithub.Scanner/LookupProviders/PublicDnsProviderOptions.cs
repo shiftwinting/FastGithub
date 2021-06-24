@@ -5,7 +5,7 @@ namespace FastGithub.Scanner.LookupProviders
     /// <summary>
     /// 公共dns的域名与ip关系提供者选项
     /// </summary>
-    [Options("Github:Lookup:PublicDnsProvider")]
+    [Options("Lookup:PublicDnsProvider")]
     sealed class PublicDnsProviderOptions
     {
         /// <summary>

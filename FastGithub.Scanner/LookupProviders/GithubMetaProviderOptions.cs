@@ -5,7 +5,7 @@ namespace FastGithub.Scanner.LookupProviders
     /// <summary>
     /// Github公开的域名与ip关系提供者选项
     /// </summary>
-    [Options("Github:Lookup:GithubMetaProvider")]
+    [Options("Lookup:GithubMetaProvider")]
     sealed class GithubMetaProviderOptions
     {
         /// <summary>

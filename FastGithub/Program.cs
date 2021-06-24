@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using System.IO;
 
 namespace FastGithub
 {
@@ -24,6 +26,13 @@ namespace FastGithub
                 .CreateDefaultBuilder(args)
                 .UseWindowsService()
                 .UseBinaryPathContentRoot()
+                .ConfigureAppConfiguration(c =>
+                {
+                    foreach (var jsonFile in Directory.GetFiles(".", "appsettings.*.json"))
+                    {
+                        c.AddJsonFile(jsonFile, optional: true);
+                    }
+                })
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddAppUpgrade();

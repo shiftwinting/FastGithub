@@ -5,7 +5,7 @@ namespace FastGithub.Scanner
     /// <summary>
     /// 扫描选项
     /// </summary>
-    [Options("Github:Scan")]
+    [Options("Scan")]
     sealed class GithubScanOptions
     {
         /// <summary>

@@ -5,7 +5,7 @@ namespace FastGithub.Scanner
     /// <summary>
     /// 域名
     /// </summary>
-    [Options("Github:Lookup")]
+    [Options("Lookup")]
     sealed class GithubLookupFactoryOptions
     {
         /// <summary>

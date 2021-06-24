@@ -3,7 +3,7 @@
     /// <summary>
     /// ipaddress.com的域名与ip关系提供者选项
     /// </summary>
-    [Options("Github:Lookup:IPAddressComProvider")]
+    [Options("Lookup:IPAddressComProvider")]
     sealed class IPAddressComProviderOptions
     {
         /// <summary>

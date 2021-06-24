@@ -12,4 +12,4 @@ github定制版的dns服务，解析github最优的ip
 ### 以windows服务运行
 以管理员身份运行cmd，键入如下命令，其中D:\Softs为软件实际目录
 * D:\Softs\FastGithub.exe start // 安装并启动服务
-* D:\Softs\FastGithub.exe stop  // 卸载并删除服务
+* D:\Softs\FastGithub.exe stop  // 卸载并删除服务 
