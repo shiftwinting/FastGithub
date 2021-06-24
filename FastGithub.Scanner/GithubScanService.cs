@@ -17,6 +17,7 @@ namespace FastGithub.Scanner
     {
         private readonly GithubLookupFacotry lookupFactory;
         private readonly GithubScanResults scanResults;
+        private readonly GithubDnsFlushService dnsFlushService;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<GithubScanService> logger;
 
@@ -33,12 +34,14 @@ namespace FastGithub.Scanner
         public GithubScanService(
             GithubLookupFacotry lookupFactory,
             GithubScanResults scanResults,
+            GithubDnsFlushService dnsFlushService,
             IServiceProvider appService,
             ILoggerFactory loggerFactory,
             ILogger<GithubScanService> logger)
         {
             this.lookupFactory = lookupFactory;
             this.scanResults = scanResults;
+            this.dnsFlushService = dnsFlushService;
             this.loggerFactory = loggerFactory;
             this.logger = logger;
 
@@ -156,7 +159,7 @@ namespace FastGithub.Scanner
                     domainLogger.LogWarning(context.ToStatisticsString());
                 }
             }
-
+            this.dnsFlushService.FlushGithubResolverCache();
             this.logger.LogInformation($"结果扫描结束，共扫描{results.Length}条记录");
         }
     }
