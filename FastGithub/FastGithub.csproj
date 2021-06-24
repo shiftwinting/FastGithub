@@ -23,6 +23,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="appsettings.domain.json.example">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="appsettings.github.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

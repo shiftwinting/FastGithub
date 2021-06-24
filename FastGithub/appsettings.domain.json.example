@@ -1,0 +1,23 @@
+{
+  "Lookup": { // ip查找
+    "Domains": [ // 查找的域名，下面是要加速的域名
+      "domain.com",
+      "xx.domain.com",
+      "yy.domain.com"
+    ]
+  },
+  "Scan": { // 扫描规则
+    "HttpsScan": {
+      "Rules": { // 域名扫描规则，缺失的域名，将默认HEAD请求到域名的根路径
+        "xx.domain.com": {
+          "Method": "HEAD",
+          "Path": "/xx/"
+        },
+        "yy.domain.com": {
+          "Method": "HEAD",
+          "Path": "/yy/"
+        }
+      }
+    }
+  }
+}
