@@ -8,4 +8,4 @@ github定制版的dns服务，解析github最优的ip
 * 提值dns服务，客户端查询github相关域名时返回对应的最优ip；
 
 ### 程序下载
-[下载最新发布版本](https://gitee.com/jiulang/fast-github/releases)
+[下载最新发布版本](https://gitee.com/jiulang/fast-github)
