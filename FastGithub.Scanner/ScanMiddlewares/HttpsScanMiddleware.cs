@@ -56,7 +56,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
 
                 using var request = new HttpRequestMessage();
                 request.Method = new HttpMethod(rule.Method);
-                request.RequestUri = new Uri(new Uri($"https://{context.Address}"), rule.Path);
+                request.RequestUri = new Uri(new Uri($"http://{context.Address}:443/"), rule.Path);
                 request.Headers.Host = context.Domain;
                 request.Headers.ConnectionClose = setting.ConnectionClose;
 
