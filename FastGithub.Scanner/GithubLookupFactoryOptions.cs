@@ -6,7 +6,7 @@ namespace FastGithub.Scanner
     /// 域名
     /// </summary>
     [Options("Lookup")]
-    sealed class GithubLookupFactoryOptions
+    public class GithubLookupFactoryOptions
     {
         /// <summary>
         /// 反查的域名

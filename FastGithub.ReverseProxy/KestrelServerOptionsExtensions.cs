@@ -68,13 +68,16 @@ namespace FastGithub
         {
             return listenOptions.UseHttps(https =>
             {
-                const string defaultDomain = "github.com";
                 var certs = new ConcurrentDictionary<string, X509Certificate2>();
-                https.ServerCertificateSelector = (ctx, domain) => certs.GetOrAdd(domain ?? defaultDomain, CreateCert);
+                https.ServerCertificateSelector = (ctx, domain) => certs.GetOrAdd(domain, CreateCert);
             });
 
             X509Certificate2 CreateCert(string domain)
             {
+                if (domain == string.Empty)
+                {
+                    domain = "github.com";
+                }
                 var domains = new[] { domain };
                 var validFrom = DateTime.Today.AddYears(-1);
                 var validTo = DateTime.Today.AddYears(10);
