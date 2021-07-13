@@ -7,7 +7,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development",
-        //"Logging__LogLevel__Default": "Trace"
+        "Logging__LogLevel__Default": "Trace"
       }
     }
   }

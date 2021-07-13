@@ -43,15 +43,8 @@ namespace FastGithub
                 })
                 .ConfigureWebHostDefaults(web =>
                 {
-                    web.Configure(app =>
-                    {
-                        app.UseGithubReverseProxy();
-                    });
-
-                    web.UseKestrel(kestrel =>
-                    {                        
-                        kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps("FastGithub_CA.cer", "FastGithub_CA.key"));
-                    });
+                    web.Configure(app => app.UseGithubReverseProxy());
+                    web.UseKestrel(kestrel => kestrel.ListenGithubReverseProxy("FastGithub.cer", "FastGithub.key"));
                 });
         }
     }

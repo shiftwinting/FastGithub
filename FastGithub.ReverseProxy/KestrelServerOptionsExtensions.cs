@@ -5,23 +5,45 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub
 {
     /// <summary>
-    /// ListenOptions扩展
+    /// Kestrel扩展
     /// </summary>
-    public static class ListenOptionsHttpsExtensions
+    public static class KestrelServerOptionsExtensions
     {
         /// <summary>
-        /// 应用fastGihub的https
+        /// 监听github的反向代理
         /// </summary>
-        /// <param name="listenOptions"></param>
+        /// <param name="kestrel"></param>
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
-        /// <returns></returns>
-        public static ListenOptions UseGithubHttps(this ListenOptions listenOptions, string caPublicCerPath, string caPrivateKeyPath)
+        public static void ListenGithubReverseProxy(this KestrelServerOptions kestrel, string caPublicCerPath, string caPrivateKeyPath)
+        {
+            var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}{nameof(ReverseProxy)}");
+            TryInstallCaCert(caPublicCerPath, logger);
+
+            try
+            {
+                kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps(caPublicCerPath, caPrivateKeyPath));
+                logger.LogInformation("反向代理服务启动成功");
+            }
+            catch (IOException ex)
+            {
+                logger.LogError($"无法开启反向代理功能：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 安装根证书
+        /// </summary>
+        /// <param name="caPublicCerPath"></param>
+        /// <param name="logger"></param>
+        private static void TryInstallCaCert(string caPublicCerPath, ILogger logger)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -38,12 +60,20 @@ namespace FastGithub
                 }
                 catch (Exception ex)
                 {
-                    var loggerFactory = listenOptions.ApplicationServices.GetRequiredService<LoggerFactory>();
-                    var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}{nameof(ReverseProxy)}");
                     logger.LogError($"安装根证书{caPublicCerPath}失败：{ex.Message}");
                 }
             }
+        }
 
+        /// <summary>
+        /// 应用fastGihub的https
+        /// </summary>
+        /// <param name="listenOptions"></param>
+        /// <param name="caPublicCerPath"></param>
+        /// <param name="caPrivateKeyPath"></param>
+        /// <returns></returns>
+        private static ListenOptions UseGithubHttps(this ListenOptions listenOptions, string caPublicCerPath, string caPrivateKeyPath)
+        {
             return listenOptions.UseHttps(https =>
             {
                 var certs = new ConcurrentDictionary<string, X509Certificate2>();

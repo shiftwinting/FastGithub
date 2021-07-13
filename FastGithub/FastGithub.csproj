@@ -25,19 +25,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="appsettings.domain.json.example">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="appsettings.github.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="FastGithub_CA.cer">
+		<None Update="FastGithub.cer">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="FastGithub_CA.key">
+		<None Update="FastGithub.key">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="README.MD">

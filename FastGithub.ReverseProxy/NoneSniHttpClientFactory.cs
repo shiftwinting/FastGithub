@@ -1,5 +1,6 @@
 ﻿using FastGithub.Scanner;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
 using System.Net.Security;
@@ -14,6 +15,7 @@ namespace FastGithub.ReverseProxy
     sealed class NoneSniHttpClientFactory
     {
         private readonly IGithubScanResults githubScanResults;
+        private readonly ILogger<NoneSniHttpClientFactory> logger;
 
         /// <summary>
         /// 生命周期
@@ -35,9 +37,12 @@ namespace FastGithub.ReverseProxy
         /// 禁用tls sni的HttpClient工厂
         /// </summary>
         /// <param name="githubScanResults"></param>
-        public NoneSniHttpClientFactory(IGithubScanResults githubScanResults)
+        public NoneSniHttpClientFactory(
+            IGithubScanResults githubScanResults,
+            ILogger<NoneSniHttpClientFactory> logger)
         {
             this.githubScanResults = githubScanResults;
+            this.logger = logger;
             this.lifeTimeHttpHandlerLazy = new Lazy<LifetimeHttpHandler>(this.CreateHttpHandler, true);
         }
 
@@ -78,7 +83,7 @@ namespace FastGithub.ReverseProxy
                 }
             };
 
-            var dnsHandler = new GithubDnsHttpHandler(this.githubScanResults, noneSniHandler);
+            var dnsHandler = new GithubDnsHttpHandler(this.githubScanResults, noneSniHandler, this.logger);
             return new LifetimeHttpHandler(dnsHandler, this.lifeTime, this.OnHttpHandlerDeactivate);
         }
 

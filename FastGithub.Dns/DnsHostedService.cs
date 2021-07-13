@@ -43,7 +43,7 @@ namespace FastGithub.Dns
         public Task StartAsync(CancellationToken cancellationToken)
         {
             this.dnsServer.Listen();
-            this.logger.LogInformation("dns服务启用成功");
+            this.logger.LogInformation("dns服务启动成功");
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, this.options.Value.UpStream);
 
             return Task.CompletedTask;
