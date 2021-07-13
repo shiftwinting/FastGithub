@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.IO;
 
@@ -37,6 +38,22 @@ namespace FastGithub
                 {
                     services.AddAppUpgrade();
                     services.AddGithubDns(ctx.Configuration);
+                    services.AddGithubReverseProxy();
+                    services.AddGithubScanner(ctx.Configuration);
+                })
+                .ConfigureWebHostDefaults(web =>
+                {
+                    web.Configure(app =>
+                    {
+                        app.UseGithubReverseProxy();
+                    });
+
+                    web.UseKestrel(kestrel =>
+                    {
+                        const string caPublicCerPath = "FastGithub_CA.cer";
+                        const string caPrivateKeyPath = "FastGithub_CA.key";
+                        kestrel.ListenLocalhost(443, listen => listen.UseGithubHttps(caPublicCerPath, caPrivateKeyPath));
+                    });
                 });
         }
     }

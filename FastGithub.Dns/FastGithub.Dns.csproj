@@ -2,11 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
-	</PropertyGroup>
-
-	<ItemGroup>
-	  <None Remove="DnsOptions.cs~RF5dfc81de.TMP" />
-	</ItemGroup>
+	</PropertyGroup> 
 
 	<ItemGroup>
 		<ProjectReference Include="..\FastGithub.Scanner\FastGithub.Scanner.csproj" />

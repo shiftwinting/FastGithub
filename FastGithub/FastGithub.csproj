@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -19,6 +19,7 @@
 		<PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
 		<ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
+		<ProjectReference Include="..\FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj" />
 		<ProjectReference Include="..\FastGithub.Upgrade\FastGithub.Upgrade.csproj" />
 	</ItemGroup>
 
@@ -31,6 +32,12 @@
 		</None>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="FastGithub_CA.cer">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="FastGithub_CA.key">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="README.MD">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

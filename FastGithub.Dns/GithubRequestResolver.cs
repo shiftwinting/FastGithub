@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,6 +56,7 @@ namespace FastGithub.Dns
 
                 if (address != null)
                 {
+                    address = IPAddress.Loopback;
                     var ttl = this.options.CurrentValue.GithubTTL;
                     var record = new IPAddressResourceRecord(question.Name, address, ttl);
                     response.AnswerRecords.Add(record);

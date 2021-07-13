@@ -30,6 +30,7 @@ namespace FastGithub
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5d))
                 .ConfigureHttpClient(httpClient =>
                 {
+                    httpClient.Timeout = TimeSpan.FromSeconds(10d);
                     httpClient.DefaultRequestHeaders.Accept.TryParseAdd("*/*");
                     httpClient.DefaultRequestHeaders.UserAgent.Add(defaultUserAgent);
                 })
