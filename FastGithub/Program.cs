@@ -38,7 +38,7 @@ namespace FastGithub
                 {
                     services.AddAppUpgrade();
                     services.AddGithubDns(ctx.Configuration);
-                    services.AddGithubReverseProxy();
+                    services.AddGithubReverseProxy(ctx.Configuration);
                     services.AddGithubScanner(ctx.Configuration);
                 })
                 .ConfigureWebHostDefaults(web =>
@@ -50,9 +50,7 @@ namespace FastGithub
 
                     web.UseKestrel(kestrel =>
                     {
-                        const string caPublicCerPath = "FastGithub_CA.cer";
-                        const string caPrivateKeyPath = "FastGithub_CA.key";
-                        kestrel.ListenLocalhost(443, listen => listen.UseGithubHttps(caPublicCerPath, caPrivateKeyPath));
+                        kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps("FastGithub_CA.cer", "FastGithub_CA.key"));
                     });
                 });
         }

@@ -26,8 +26,9 @@ namespace FastGithub
             var defaultUserAgent = new ProductInfoHeaderValue(assembly.GetName().Name ?? nameof(FastGithub), assembly.GetName().Version?.ToString());
 
             services
-                .AddHttpClient(nameof(FastGithub))
+                .AddHttpClient(nameof(Scanner))
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5d))
+                .AddHttpMessageHandler<GithubDnsHttpHandler>()
                 .ConfigureHttpClient(httpClient =>
                 {
                     httpClient.Timeout = TimeSpan.FromSeconds(10d);
@@ -53,8 +54,7 @@ namespace FastGithub
                         await sslStream.AuthenticateAsClientAsync(string.Empty, null, false);
                         return sslStream;
                     }
-                })
-                .AddHttpMessageHandler<GithubDnsHttpHandler>();
+                });
 
             return services
                 .AddMemoryCache()

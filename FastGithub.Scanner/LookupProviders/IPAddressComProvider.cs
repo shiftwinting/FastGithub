@@ -57,7 +57,7 @@ namespace FastGithub.Scanner.LookupProviders
                 return Enumerable.Empty<DomainAddress>();
             }
 
-            var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
+            var httpClient = this.httpClientFactory.CreateClient(nameof(Scanner));
             var result = new HashSet<DomainAddress>();
             foreach (var domain in domains)
             {

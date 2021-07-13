@@ -64,7 +64,7 @@ namespace FastGithub.Scanner.ScanMiddlewares
                 using var timeoutTokenSource = new CancellationTokenSource(timeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, context.CancellationToken);
 
-                var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
+                var httpClient = this.httpClientFactory.CreateClient(nameof(Scanner));
                 using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linkedTokenSource.Token);
 
                 VerifyHttpsResponse(context.Domain, response);

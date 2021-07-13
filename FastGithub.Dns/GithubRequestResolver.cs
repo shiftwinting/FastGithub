@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
-using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -44,7 +44,7 @@ namespace FastGithub.Dns
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
+        public async Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
         {
             var response = Response.FromRequest(request);
             var question = request.Questions.FirstOrDefault();
@@ -56,15 +56,31 @@ namespace FastGithub.Dns
 
                 if (address != null)
                 {
-                    address = IPAddress.Loopback;
                     var ttl = this.options.CurrentValue.GithubTTL;
-                    var record = new IPAddressResourceRecord(question.Name, address, ttl);
-                    response.AnswerRecords.Add(record);
-                    this.logger.LogInformation(record.ToString());
+                    if (this.options.CurrentValue.UseReverseProxy == false)
+                    {
+                        var record = new IPAddressResourceRecord(question.Name, address, ttl);
+                        response.AnswerRecords.Add(record);
+                        this.logger.LogInformation(record.ToString());
+                    }
+                    else
+                    {
+                        var hostName = System.Net.Dns.GetHostName();
+                        var addresses = await System.Net.Dns.GetHostAddressesAsync(hostName);
+                        foreach (var item in addresses)
+                        {
+                            if (item.AddressFamily == AddressFamily.InterNetwork)
+                            {
+                                var record = new IPAddressResourceRecord(question.Name, item, ttl);
+                                response.AnswerRecords.Add(record);
+                                this.logger.LogInformation(record.ToString());
+                            }
+                        }
+                    }
                 }
             }
 
-            return Task.FromResult<IResponse>(response);
+            return response;
         }
     }
 }

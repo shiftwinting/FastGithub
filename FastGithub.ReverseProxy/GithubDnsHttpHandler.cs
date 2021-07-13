@@ -1,5 +1,4 @@
 ﻿using FastGithub.Scanner;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net.Http;
 using System.Threading;
@@ -10,7 +9,7 @@ namespace FastGithub.ReverseProxy
     /// <summary>
     /// Github的dns解析的httpHandler
     /// 使扫描索结果作为github的https请求的域名解析
-    /// </summary> 
+    /// </summary>  
     sealed class GithubDnsHttpHandler : DelegatingHandler
     {
         private readonly IGithubScanResults scanResults;
@@ -19,9 +18,9 @@ namespace FastGithub.ReverseProxy
         /// Github的dns解析的httpHandler
         /// </summary>
         /// <param name="scanResults"></param>
-        /// <param name="handler"></param>
-        public GithubDnsHttpHandler(IGithubScanResults scanResults, HttpMessageHandler handler)
-            : base(handler)
+        /// <param name="innerHandler"></param>
+        public GithubDnsHttpHandler(IGithubScanResults scanResults, HttpMessageHandler innerHandler)
+            : base(innerHandler)
         {
             this.scanResults = scanResults;
         }

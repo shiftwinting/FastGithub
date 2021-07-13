@@ -7,6 +7,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub
 {
+    /// <summary>
+    /// ListenOptions扩展
+    /// </summary>
     public static class ListenOptionsHttpsExtensions
     {
         /// <summary>
@@ -21,16 +24,16 @@ namespace FastGithub
             return listenOptions.UseHttps(https =>
             {
                 var certs = new ConcurrentDictionary<string, X509Certificate2>();
-                https.ServerCertificateSelector = (ctx, domain) =>
-                    certs.GetOrAdd(domain, d =>
-                        CertGenerator.Generate(
-                            new[] { d },
-                            2048,
-                            DateTime.Today.AddYears(-1),
-                            DateTime.Today.AddYears(1),
-                            caPublicCerPath,
-                            caPrivateKeyPath));
+                https.ServerCertificateSelector = (ctx, domain) => certs.GetOrAdd(domain, CreateCert);
             });
+
+            X509Certificate2 CreateCert(string domain)
+            {
+                var domains = new[] { domain };
+                var validFrom = DateTime.Today.AddYears(-1);
+                var validTo = DateTime.Today.AddYears(10);
+                return CertGenerator.Generate(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
+            }
         }
     }
 }

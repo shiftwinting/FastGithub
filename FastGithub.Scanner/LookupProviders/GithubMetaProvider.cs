@@ -60,7 +60,7 @@ namespace FastGithub.Scanner.LookupProviders
 
             try
             {
-                var httpClient = this.httpClientFactory.CreateClient(nameof(FastGithub));
+                var httpClient = this.httpClientFactory.CreateClient(nameof(Scanner));
                 var meta = await GetMetaAsync(httpClient, setting.MetaUri, cancellationToken);
                 if (meta != null)
                 {

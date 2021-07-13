@@ -38,7 +38,7 @@ namespace FastGithub.ReverseProxy
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
         /// <returns></returns>
-        public static X509Certificate2 Generate(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath)
+        public static X509Certificate2 Generate(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath, string? password = default)
         {
             if (File.Exists(caPublicCerPath) == false)
             {
@@ -61,7 +61,7 @@ namespace FastGithub.ReverseProxy
             var keys = GenerateRsaKeyPair(keySizeBits);
             var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, caSubjectName, caCert.GetPublicKey(), caPrivateKey, null);
 
-            return GeneratePfx(cert, keys.Private, password: null);
+            return GeneratePfx(cert, keys.Private, password);
         }
 
         /// <summary>
