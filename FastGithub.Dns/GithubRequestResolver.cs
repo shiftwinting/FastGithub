@@ -5,6 +5,7 @@ using FastGithub.Scanner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
@@ -56,17 +57,19 @@ namespace FastGithub.Dns
 
                 if (address != null)
                 {
-                    var ttl = this.options.CurrentValue.GithubTTL;
                     if (this.options.CurrentValue.UseReverseProxy == false)
                     {
+                        var ttl = this.options.CurrentValue.GithubTTL;
                         var record = new IPAddressResourceRecord(question.Name, address, ttl);
                         response.AnswerRecords.Add(record);
                         this.logger.LogInformation(record.ToString());
                     }
                     else
                     {
-                        var hostName = System.Net.Dns.GetHostName();
-                        var addresses = await System.Net.Dns.GetHostAddressesAsync(hostName);
+                        var localhost = System.Net.Dns.GetHostName();
+                        var addresses = await System.Net.Dns.GetHostAddressesAsync(localhost);
+                        var ttl = TimeSpan.FromMinutes(1d);
+
                         foreach (var item in addresses)
                         {
                             if (item.AddressFamily == AddressFamily.InterNetwork)

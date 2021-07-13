@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub
@@ -27,15 +26,8 @@ namespace FastGithub
             var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}{nameof(ReverseProxy)}");
             TryInstallCaCert(caPublicCerPath, logger);
 
-            try
-            {
-                kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps(caPublicCerPath, caPrivateKeyPath));
-                logger.LogInformation("反向代理服务启动成功");
-            }
-            catch (IOException ex)
-            {
-                logger.LogError($"无法开启反向代理功能：{ex.Message}");
-            }
+            kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps(caPublicCerPath, caPrivateKeyPath));
+            logger.LogInformation("反向代理服务启动成功");
         }
 
         /// <summary>
@@ -76,8 +68,9 @@ namespace FastGithub
         {
             return listenOptions.UseHttps(https =>
             {
+                const string defaultDomain = "github.com";
                 var certs = new ConcurrentDictionary<string, X509Certificate2>();
-                https.ServerCertificateSelector = (ctx, domain) => certs.GetOrAdd(domain, CreateCert);
+                https.ServerCertificateSelector = (ctx, domain) => certs.GetOrAdd(domain ?? defaultDomain, CreateCert);
             });
 
             X509Certificate2 CreateCert(string domain)
