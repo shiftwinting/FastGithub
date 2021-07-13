@@ -5,6 +5,7 @@
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<ApplicationIcon>app.ico</ApplicationIcon>
+		<ANCMPreConfiguredForIIS>true</ANCMPreConfiguredForIIS>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
@@ -25,19 +26,19 @@
 
 	<ItemGroup>
 		<None Update="appsettings.domain.json.example">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="appsettings.github.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="FastGithub_CA.cer">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="FastGithub_CA.key">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="README.MD">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

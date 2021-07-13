@@ -49,7 +49,7 @@ namespace FastGithub
                     });
 
                     web.UseKestrel(kestrel =>
-                    {
+                    {                        
                         kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps("FastGithub_CA.cer", "FastGithub_CA.key"));
                     });
                 });
