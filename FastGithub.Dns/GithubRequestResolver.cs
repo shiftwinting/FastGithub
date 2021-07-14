@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,24 +77,15 @@ namespace FastGithub.Dns
                     var ttl = this.options.CurrentValue.GithubTTL;
                     var record = new IPAddressResourceRecord(question.Name, address, ttl);
                     response.AnswerRecords.Add(record);
-                    this.logger.LogInformation(record.ToString());
+                    this.logger.LogInformation($"[{domain}->{address}]");
                 }
             }
             else
             {
-                var localhost = System.Net.Dns.GetHostName();
-                var addresses = await System.Net.Dns.GetHostAddressesAsync(localhost);
-                var ttl = TimeSpan.FromMinutes(1d);
-
-                foreach (var item in addresses)
-                {
-                    if (item.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        var record = new IPAddressResourceRecord(question.Name, item, ttl);
-                        response.AnswerRecords.Add(record);
-                        this.logger.LogInformation(record.ToString());
-                    }
-                }
+                var address = await this.GetLocalHostAddress();
+                var record = new IPAddressResourceRecord(question.Name, address, TimeSpan.FromMinutes(1));
+                response.AnswerRecords.Add(record);
+                this.logger.LogInformation($"[{domain}->{address}]");
             }
 
             if (response.AnswerRecords.Count == 0)
@@ -102,6 +94,25 @@ namespace FastGithub.Dns
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// 获取本机ip
+        /// </summary>
+        /// <returns></returns>
+        private async Task<IPAddress> GetLocalHostAddress()
+        {
+            try
+            {
+                var localhost = System.Net.Dns.GetHostName();
+                var addresses = await System.Net.Dns.GetHostAddressesAsync(localhost);
+                var address = addresses.FirstOrDefault(item => item.AddressFamily == AddressFamily.InterNetwork);
+                return address ?? IPAddress.Loopback;
+            }
+            catch (Exception)
+            {
+                return IPAddress.Loopback;
+            }
         }
     }
 }
