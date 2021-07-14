@@ -96,6 +96,11 @@ namespace FastGithub.Dns
                 }
             }
 
+            if (response.AnswerRecords.Count == 0)
+            {
+                this.logger.LogWarning($"无法获得{domain}的最快ip");
+            }
+
             return response;
         }
     }
