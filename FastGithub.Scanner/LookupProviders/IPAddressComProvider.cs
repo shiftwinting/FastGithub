@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,13 +87,11 @@ namespace FastGithub.Scanner.LookupProviders
         /// <returns></returns>
         private async Task<List<IPAddress>> LookupAsync(HttpClient httpClient, string domain, CancellationToken cancellationToken)
         {
-            var keyValue = new KeyValuePair<string?, string?>("host", domain);
-            var content = new FormUrlEncodedContent(Enumerable.Repeat(keyValue, 1));
             using var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
                 RequestUri = lookupUri,
-                Content = content
+                Content = new StringContent($"host={domain}", Encoding.UTF8, "application/x-www-form-urlencoded")
             };
 
             using var response = await httpClient.SendAsync(request, cancellationToken);

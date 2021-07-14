@@ -28,7 +28,6 @@ namespace FastGithub
             services
                 .AddHttpClient(nameof(Scanner))
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5d))
-                .AddHttpMessageHandler<GithubDnsHttpHandler>()
                 .ConfigureHttpClient(httpClient =>
                 {
                     httpClient.Timeout = TimeSpan.FromSeconds(10d);
