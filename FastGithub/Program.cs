@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using System.IO;
 
 namespace FastGithub
 {
@@ -29,10 +28,7 @@ namespace FastGithub
                 .UseBinaryPathContentRoot()
                 .ConfigureAppConfiguration(c =>
                 {
-                    foreach (var jsonFile in Directory.GetFiles(".", "appsettings.*.json"))
-                    {
-                        c.AddJsonFile(jsonFile, optional: true);
-                    }
+                    c.AddJsonFile("appsettings.github.json", optional: true);
                 })
                 .ConfigureServices((ctx, services) =>
                 {

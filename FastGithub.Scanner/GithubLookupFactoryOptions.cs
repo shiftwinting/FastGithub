@@ -11,6 +11,6 @@ namespace FastGithub.Scanner
         /// <summary>
         /// 反查的域名
         /// </summary>
-        public HashSet<string> Domains { get; set; } = new();
+        public string [] Domains { get; set; } = new string[0];
     }
 }
