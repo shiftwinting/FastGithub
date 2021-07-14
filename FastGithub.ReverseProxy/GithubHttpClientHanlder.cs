@@ -85,7 +85,7 @@ namespace FastGithub.ReverseProxy
                 var address = this.Resolve(uri.Host);
                 if (address != null)
                 {
-                    this.logger.LogInformation($"使用{address}请求{uri.Host}");
+                    this.logger.LogInformation($"使用{address} No SNI请求{uri.Host}");
                     var builder = new UriBuilder(uri)
                     {
                         Host = address.ToString()
