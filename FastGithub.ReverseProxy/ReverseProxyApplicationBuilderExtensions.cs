@@ -4,8 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System;
-using System.Linq;
+using System.Net.Http;
 using Yarp.ReverseProxy.Forwarder;
 
 namespace FastGithub
@@ -23,7 +22,7 @@ namespace FastGithub
         public static IApplicationBuilder UseGithubReverseProxy(this IApplicationBuilder app)
         {
             var httpForwarder = app.ApplicationServices.GetRequiredService<IHttpForwarder>();
-            var httpClientFactory = app.ApplicationServices.GetRequiredService<NoneSniHttpClientFactory>();
+            var httpClientHanlder = app.ApplicationServices.GetRequiredService<GithubHttpClientHanlder>();
             var lookupOptions = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubLookupFactoryOptions>>();
             var options = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubReverseProxyOptions>>();
 
@@ -38,7 +37,7 @@ namespace FastGithub
                 {
                     var port = context.Request.Host.Port ?? 443;
                     var destinationPrefix = $"http://{host}:{port}/";
-                    var httpClient = httpClientFactory.CreateHttpClient();
+                    var httpClient = new HttpMessageInvoker(httpClientHanlder, disposeHandler: false);
                     var requestConfig = options.CurrentValue.ForwarderRequestConfig;
                     await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
                 }

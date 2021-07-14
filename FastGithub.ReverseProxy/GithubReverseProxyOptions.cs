@@ -14,11 +14,6 @@ namespace FastGithub.ReverseProxy
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// 每个服务的最大代理连接数
-        /// </summary>
-        public int MaxConnectionsPerServer { get; set; } = int.MaxValue;
-
-        /// <summary>
         /// 请求配置
         /// </summary>
         public ForwarderRequestConfig ForwarderRequestConfig { get; set; } = new();

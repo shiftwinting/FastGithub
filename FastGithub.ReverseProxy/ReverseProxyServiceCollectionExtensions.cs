@@ -19,6 +19,7 @@ namespace FastGithub
             var assembly = typeof(ReverseProxyServiceCollectionExtensions).Assembly;
             return services
                 .AddServiceAndOptions(assembly, configuration)
+                .AddMemoryCache()
                 .AddHttpForwarder();
         }
     }
