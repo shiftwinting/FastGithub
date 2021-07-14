@@ -104,7 +104,8 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         private IPAddress? Resolve(string domain)
         {
-            return this.memoryCache.GetOrCreate(typeof(GithubHttpClientHanlder), e =>
+            var key = $"domain:{domain}";
+            return this.memoryCache.GetOrCreate(key, e =>
             {
                 e.SetAbsoluteExpiration(TimeSpan.FromSeconds(1d));
                 return this.githubScanResults.FindBestAddress(domain);
