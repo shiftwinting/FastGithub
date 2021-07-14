@@ -50,8 +50,12 @@ namespace FastGithub
                             return stream;
                         }
 
-                        var sslStream = new SslStream(stream, leaveInnerStreamOpen: false, delegate { return true; });
-                        await sslStream.AuthenticateAsClientAsync(string.Empty, null, false);
+                        var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
+                        await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+                        {
+                            TargetHost = string.Empty,
+                            RemoteCertificateValidationCallback = delegate { return true; }
+                        }, ct);
                         return sslStream;
                     }
                 });

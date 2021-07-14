@@ -1,6 +1,7 @@
 ﻿using FastGithub.Scanner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Net.Security;
@@ -15,6 +16,7 @@ namespace FastGithub.ReverseProxy
     sealed class NoneSniHttpClientFactory
     {
         private readonly IGithubScanResults githubScanResults;
+        private readonly IOptionsMonitor<GithubReverseProxyOptions> options;
         private readonly ILogger<NoneSniHttpClientFactory> logger;
 
         /// <summary>
@@ -25,12 +27,12 @@ namespace FastGithub.ReverseProxy
         /// <summary>
         /// 具有生命周期的httpHandler延时创建对象
         /// </summary>
-        private Lazy<LifetimeHttpHandler> lifeTimeHttpHandlerLazy;
+        private volatile Lazy<LifetimeHttpHandler> lifeTimeHttpHandlerLazy;
 
         /// <summary>
         /// HttpHandler清理器
         /// </summary>
-        private readonly LifetimeHttpHandlerCleaner httpHandlerCleaner = new LifetimeHttpHandlerCleaner();
+        private readonly LifetimeHttpHandlerCleaner httpHandlerCleaner;
 
 
         /// <summary>
@@ -39,11 +41,14 @@ namespace FastGithub.ReverseProxy
         /// <param name="githubScanResults"></param>
         public NoneSniHttpClientFactory(
             IGithubScanResults githubScanResults,
+            IOptionsMonitor<GithubReverseProxyOptions> options,
             ILogger<NoneSniHttpClientFactory> logger)
         {
             this.githubScanResults = githubScanResults;
+            this.options = options;
             this.logger = logger;
             this.lifeTimeHttpHandlerLazy = new Lazy<LifetimeHttpHandler>(this.CreateHttpHandler, true);
+            this.httpHandlerCleaner = new LifetimeHttpHandlerCleaner(logger);
         }
 
         /// <summary>
@@ -53,7 +58,7 @@ namespace FastGithub.ReverseProxy
         public HttpMessageInvoker CreateHttpClient()
         {
             var handler = this.lifeTimeHttpHandlerLazy.Value;
-            return new HttpMessageInvoker(handler, disposeHandler: false);
+            return new HttpMessageInvoker(handler);
         }
 
         /// <summary>
@@ -67,6 +72,7 @@ namespace FastGithub.ReverseProxy
                 Proxy = null,
                 UseProxy = false,
                 AllowAutoRedirect = false,
+                MaxConnectionsPerServer = this.options.CurrentValue.MaxConnectionsPerServer,
                 ConnectCallback = async (ctx, ct) =>
                 {
                     var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -77,8 +83,12 @@ namespace FastGithub.ReverseProxy
                         return stream;
                     }
 
-                    var sslStream = new SslStream(stream, leaveInnerStreamOpen: false, delegate { return true; });
-                    await sslStream.AuthenticateAsClientAsync(string.Empty, null, false);
+                    var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
+                    await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+                    {
+                        TargetHost = string.Empty,
+                        RemoteCertificateValidationCallback = delegate { return true; }
+                    }, ct);
                     return sslStream;
                 }
             };

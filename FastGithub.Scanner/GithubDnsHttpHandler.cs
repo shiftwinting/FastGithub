@@ -39,7 +39,9 @@ namespace FastGithub.Scanner
                 {
                     var builder = new UriBuilder(uri)
                     {
-                        Host = address.ToString()
+                        Scheme = Uri.UriSchemeHttp,
+                        Host = address.ToString(),
+                        Port = 443
                     };
                     request.RequestUri = builder.Uri;
                     request.Headers.Host = uri.Host;

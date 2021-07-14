@@ -24,12 +24,13 @@ namespace FastGithub
         {
             var httpForwarder = app.ApplicationServices.GetRequiredService<IHttpForwarder>();
             var httpClientFactory = app.ApplicationServices.GetRequiredService<NoneSniHttpClientFactory>();
-            var options = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubLookupFactoryOptions>>();
+            var lookupOptions = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubLookupFactoryOptions>>();
+            var options = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubReverseProxyOptions>>();
 
             app.Use(next => async context =>
             {
                 var host = context.Request.Host.Host;
-                if (options.CurrentValue.Domains.Contains(host) == false)
+                if (lookupOptions.CurrentValue.Domains.Contains(host) == false)
                 {
                     await context.Response.WriteAsJsonAsync(new { message = $"不支持以{host}访问" });
                 }
@@ -38,7 +39,8 @@ namespace FastGithub
                     var port = context.Request.Host.Port ?? 443;
                     var destinationPrefix = $"http://{host}:{port}/";
                     var httpClient = httpClientFactory.CreateHttpClient();
-                    await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
+                    var requestConfig = options.CurrentValue.ForwarderRequestConfig;
+                    await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
                 }
             });
 

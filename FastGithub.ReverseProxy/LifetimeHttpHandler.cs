@@ -19,7 +19,7 @@ namespace FastGithub.ReverseProxy
         /// <summary>
         /// Token取消源
         /// </summary>
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource tokenSource = new();
 
         /// <summary>
         /// 具有生命周期的HttpHandler

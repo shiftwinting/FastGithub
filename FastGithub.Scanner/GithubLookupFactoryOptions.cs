@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace FastGithub.Scanner
 {
@@ -11,6 +11,6 @@ namespace FastGithub.Scanner
         /// <summary>
         /// 反查的域名
         /// </summary>
-        public string[] Domains { get; set; } = Array.Empty<string>();
+        public HashSet<string> Domains { get; set; } = new();
     }
 }

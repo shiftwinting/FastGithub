@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
@@ -11,6 +12,8 @@ namespace FastGithub.ReverseProxy
     /// </summary>
     sealed class LifetimeHttpHandlerCleaner
     {
+        private readonly ILogger logger;
+
         /// <summary>
         /// 当前监视生命周期的记录的数量
         /// </summary>
@@ -26,6 +29,15 @@ namespace FastGithub.ReverseProxy
         /// 默认10s
         /// </summary>
         public TimeSpan CleanupInterval { get; set; } = TimeSpan.FromSeconds(10d);
+
+        /// <summary>
+        /// LifetimeHttpHandler清理器
+        /// </summary>
+        /// <param name="logger"></param>
+        public LifetimeHttpHandlerCleaner(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         /// <summary>
         /// 添加要清除的httpHandler
@@ -52,18 +64,16 @@ namespace FastGithub.ReverseProxy
             {
                 while (true)
                 {
-                    await Task
-                        .Delay(this.CleanupInterval)
-                        .ConfigureAwait(false);
-
+                    await Task.Delay(this.CleanupInterval);
                     if (this.Cleanup() == true)
                     {
                         break;
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                this.logger.LogError(ex, "清理HttpMessageHandler出现不可预期的异常");
                 // 这是应该不可能发生的
             }
         }
@@ -76,6 +86,8 @@ namespace FastGithub.ReverseProxy
         private bool Cleanup()
         {
             var cleanCount = this.trackingEntries.Count;
+            this.logger.LogTrace($"尝试清理{cleanCount}条HttpMessageHandler");
+
             for (var i = 0; i < cleanCount; i++)
             {
                 this.trackingEntries.TryDequeue(out var entry);
@@ -87,12 +99,14 @@ namespace FastGithub.ReverseProxy
                     continue;
                 }
 
+                this.logger.LogTrace($"释放了{entry.GetHashCode()}@HttpMessageHandler");
                 entry.Dispose();
                 if (Interlocked.Decrement(ref this.trackingEntryCount) == 0)
                 {
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -116,10 +130,7 @@ namespace FastGithub.ReverseProxy
             /// 获取是否可以释放资源
             /// </summary>
             /// <returns></returns>
-            public bool CanDispose
-            {
-                get => this.weakReference.IsAlive == false;
-            }
+            public bool CanDispose => this.weakReference.IsAlive == false;
 
             /// <summary>
             /// 监视生命周期的记录
@@ -131,6 +142,9 @@ namespace FastGithub.ReverseProxy
                 this.weakReference = new WeakReference(handler);
             }
 
+            /// <summary>
+            /// 释放资源
+            /// </summary>
             public void Dispose()
             {
                 try

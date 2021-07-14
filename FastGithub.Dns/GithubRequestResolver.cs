@@ -1,6 +1,7 @@
 ﻿using DNS.Client.RequestResolver;
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
+using FastGithub.ReverseProxy;
 using FastGithub.Scanner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,8 @@ namespace FastGithub.Dns
     {
         private readonly IGithubScanResults githubScanResults;
         private readonly IOptionsMonitor<DnsOptions> options;
+        private readonly IOptionsMonitor<GithubLookupFactoryOptions> lookupOptions;
+        private readonly IOptionsMonitor<GithubReverseProxyOptions> reverseProxyOptions;
         private readonly ILogger<GithubRequestResolver> logger;
 
         /// <summary>
@@ -32,10 +35,14 @@ namespace FastGithub.Dns
         public GithubRequestResolver(
             IGithubScanResults githubScanResults,
             IOptionsMonitor<DnsOptions> options,
+            IOptionsMonitor<GithubLookupFactoryOptions> lookupOptions,
+            IOptionsMonitor<GithubReverseProxyOptions> reverseProxyOptions,
             ILogger<GithubRequestResolver> logger)
         {
             this.githubScanResults = githubScanResults;
             this.options = options;
+            this.lookupOptions = lookupOptions;
+            this.reverseProxyOptions = reverseProxyOptions;
             this.logger = logger;
         }
 
@@ -50,35 +57,41 @@ namespace FastGithub.Dns
             var response = Response.FromRequest(request);
             var question = request.Questions.FirstOrDefault();
 
-            if (question != null && question.Type == RecordType.A)
+            if (question == null || question.Type != RecordType.A)
             {
-                var domain = question.Name.ToString();
-                var address = this.githubScanResults.FindBestAddress(domain);
+                return response;
+            }
 
+            var domain = question.Name.ToString();
+            if (this.lookupOptions.CurrentValue.Domains.Contains(domain) == false)
+            {
+                return response;
+            }
+
+            if (this.reverseProxyOptions.CurrentValue.Enable == false)
+            {
+                var address = this.githubScanResults.FindBestAddress(domain);
                 if (address != null)
                 {
-                    if (this.options.CurrentValue.UseReverseProxy == false)
+                    var ttl = this.options.CurrentValue.GithubTTL;
+                    var record = new IPAddressResourceRecord(question.Name, address, ttl);
+                    response.AnswerRecords.Add(record);
+                    this.logger.LogInformation(record.ToString());
+                }
+            }
+            else
+            {
+                var localhost = System.Net.Dns.GetHostName();
+                var addresses = await System.Net.Dns.GetHostAddressesAsync(localhost);
+                var ttl = TimeSpan.FromMinutes(1d);
+
+                foreach (var item in addresses)
+                {
+                    if (item.AddressFamily == AddressFamily.InterNetwork)
                     {
-                        var ttl = this.options.CurrentValue.GithubTTL;
-                        var record = new IPAddressResourceRecord(question.Name, address, ttl);
+                        var record = new IPAddressResourceRecord(question.Name, item, ttl);
                         response.AnswerRecords.Add(record);
                         this.logger.LogInformation(record.ToString());
-                    }
-                    else
-                    {
-                        var localhost = System.Net.Dns.GetHostName();
-                        var addresses = await System.Net.Dns.GetHostAddressesAsync(localhost);
-                        var ttl = TimeSpan.FromMinutes(1d);
-
-                        foreach (var item in addresses)
-                        {
-                            if (item.AddressFamily == AddressFamily.InterNetwork)
-                            {
-                                var record = new IPAddressResourceRecord(question.Name, item, ttl);
-                                response.AnswerRecords.Add(record);
-                                this.logger.LogInformation(record.ToString());
-                            }
-                        }
                     }
                 }
             }
