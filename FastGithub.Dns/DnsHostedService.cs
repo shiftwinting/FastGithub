@@ -12,7 +12,7 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns后台服务
     /// </summary>
-    sealed class DnsHostedService : IHostedService
+    sealed class DnsHostedService : BackgroundService
     {
         private readonly DnsServer dnsServer;
         private readonly IOptions<DnsOptions> options;
@@ -31,22 +31,51 @@ namespace FastGithub.Dns
             ILogger<DnsHostedService> logger)
         {
             this.dnsServer = new DnsServer(githubRequestResolver, options.Value.UpStream);
+            this.dnsServer.Listening += DnsServer_Listening;
+            this.dnsServer.Errored += DnsServer_Errored;
             this.options = options;
             this.logger = logger;
         }
 
         /// <summary>
-        /// 启动dns服务
+        /// 监听后
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task StartAsync(CancellationToken cancellationToken)
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DnsServer_Listening(object? sender, EventArgs e)
         {
-            this.dnsServer.Listen();
             this.logger.LogInformation("dns服务启动成功");
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, this.options.Value.UpStream);
+        }
 
-            return Task.CompletedTask;
+        /// <summary>
+        /// dns异常
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DnsServer_Errored(object? sender, DnsServer.ErroredEventArgs e)
+        {
+            if (e.Exception is not OperationCanceledException)
+            {
+                this.logger.LogError($"dns服务异常：{e.Exception.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 启动dns
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
+        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            try
+            {
+                await this.dnsServer.Listen();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"dns服务启动失败：{ex.Message}");
+            }
         }
 
         /// <summary>
@@ -54,7 +83,7 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
             this.dnsServer.Dispose();
             this.logger.LogInformation("dns服务已终止");

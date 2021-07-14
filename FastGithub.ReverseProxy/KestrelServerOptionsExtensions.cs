@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace FastGithub
 {
@@ -14,6 +15,11 @@ namespace FastGithub
     /// </summary>
     public static class KestrelServerOptionsExtensions
     {
+        /// <summary>
+        /// 域名与证书
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, Lazy<X509Certificate2>> domainCerts = new();
+
         /// <summary>
         /// 监听github的反向代理
         /// </summary>
@@ -26,8 +32,29 @@ namespace FastGithub
             var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}{nameof(ReverseProxy)}");
             TryInstallCaCert(caPublicCerPath, logger);
 
-            kestrel.ListenAnyIP(443, listen => listen.UseGithubHttps(caPublicCerPath, caPrivateKeyPath));
+            kestrel.ListenAnyIP(443, listen =>
+                listen.UseHttps(https =>
+                    https.ServerCertificateSelector = (ctx, domain) =>
+                        GetOrCreateCert(domain)));
+
             logger.LogInformation("反向代理服务启动成功");
+
+
+            X509Certificate2 GetOrCreateCert(string key)
+            {
+                if (key == string.Empty)
+                {
+                    key = "github.com";
+                }
+
+                return domainCerts.GetOrAdd(key, domain => new Lazy<X509Certificate2>(() =>
+                {
+                    var domains = new[] { domain };
+                    var validFrom = DateTime.Today.AddYears(-1);
+                    var validTo = DateTime.Today.AddYears(10);
+                    return CertGenerator.Generate(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
+                }, LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+            }
         }
 
         /// <summary>
@@ -57,32 +84,5 @@ namespace FastGithub
             }
         }
 
-        /// <summary>
-        /// 应用fastGihub的https
-        /// </summary>
-        /// <param name="listenOptions"></param>
-        /// <param name="caPublicCerPath"></param>
-        /// <param name="caPrivateKeyPath"></param>
-        /// <returns></returns>
-        private static ListenOptions UseGithubHttps(this ListenOptions listenOptions, string caPublicCerPath, string caPrivateKeyPath)
-        {
-            return listenOptions.UseHttps(https =>
-            {
-                var certs = new ConcurrentDictionary<string, X509Certificate2>();
-                https.ServerCertificateSelector = (ctx, domain) => certs.GetOrAdd(domain, CreateCert);
-            });
-
-            X509Certificate2 CreateCert(string domain)
-            {
-                if (domain == string.Empty)
-                {
-                    domain = "github.com";
-                }
-                var domains = new[] { domain };
-                var validFrom = DateTime.Today.AddYears(-1);
-                var validTo = DateTime.Today.AddYears(10);
-                return CertGenerator.Generate(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
-            }
-        }
     }
 }
