@@ -26,6 +26,10 @@ namespace FastGithub
                 .CreateDefaultBuilder(args)
                 .UseWindowsService()
                 .UseBinaryPathContentRoot()
+                .UseDefaultServiceProvider(c =>
+                {
+                    c.ValidateOnBuild = false;
+                })
                 .ConfigureAppConfiguration(c =>
                 {
                     c.AddJsonFile("appsettings.github.json", optional: true);

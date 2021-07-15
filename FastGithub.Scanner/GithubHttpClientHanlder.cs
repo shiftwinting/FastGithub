@@ -1,26 +1,22 @@
-﻿using FastGithub.Scanner;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.Scanner
 {
     /// <summary>
-    /// 使用于请求github的HttpClientHandler
+    /// 适用于请求github的HttpClientHandler
     /// </summary>
     [Service(ServiceLifetime.Transient)]
-    sealed class GithubHttpClientHanlder : DelegatingHandler
+    public class GithubHttpClientHanlder : DelegatingHandler
     {
         private readonly IGithubScanResults githubScanResults;
         private readonly ILogger<GithubHttpClientHanlder> logger;
-        private readonly IMemoryCache memoryCache;
 
         /// <summary>
         /// 请求github的HttpClientHandler
@@ -29,12 +25,10 @@ namespace FastGithub.ReverseProxy
         /// <param name="logger"></param>
         public GithubHttpClientHanlder(
             IGithubScanResults githubScanResults,
-            ILogger<GithubHttpClientHanlder> logger,
-            IMemoryCache memoryCache)
+            ILogger<GithubHttpClientHanlder> logger)
         {
             this.githubScanResults = githubScanResults;
             this.logger = logger;
-            this.memoryCache = memoryCache;
             this.InnerHandler = CreateNoneSniHttpHandler();
         }
 
@@ -82,7 +76,7 @@ namespace FastGithub.ReverseProxy
             var uri = request.RequestUri;
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
-                var address = this.Resolve(uri.Host);
+                var address = this.githubScanResults.FindBestAddress(uri.Host);
                 if (address != null)
                 {
                     this.logger.LogInformation($"使用{address} No SNI请求{uri.Host}");
@@ -95,21 +89,6 @@ namespace FastGithub.ReverseProxy
                 }
             }
             return await base.SendAsync(request, cancellationToken);
-        }
-
-        /// <summary>
-        /// 解析域名
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        private IPAddress? Resolve(string domain)
-        {
-            var key = $"domain:{domain}";
-            return this.memoryCache.GetOrCreate(key, e =>
-            {
-                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(1d));
-                return this.githubScanResults.FindBestAddress(domain);
-            });
         }
     }
 }

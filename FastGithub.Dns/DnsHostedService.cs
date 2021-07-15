@@ -50,7 +50,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            this.socket.Bind(new IPEndPoint(IPAddress.Loopback, 53));
+            this.socket.Bind(new IPEndPoint(IPAddress.Any, 53));
             if (OperatingSystem.IsWindows())
             {
                 this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);

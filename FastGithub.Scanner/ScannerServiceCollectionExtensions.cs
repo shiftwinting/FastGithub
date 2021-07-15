@@ -2,10 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Net.Sockets;
 
 namespace FastGithub
 {
@@ -34,29 +31,9 @@ namespace FastGithub
                     httpClient.DefaultRequestHeaders.Accept.TryParseAdd("*/*");
                     httpClient.DefaultRequestHeaders.UserAgent.Add(defaultUserAgent);
                 })
-                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                .ConfigurePrimaryHttpMessageHandler((serviceProvider) =>
                 {
-                    Proxy = null,
-                    UseProxy = false,
-                    AllowAutoRedirect = false,
-                    ConnectCallback = async (ctx, ct) =>
-                    {
-                        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        await socket.ConnectAsync(ctx.DnsEndPoint, ct);
-                        var stream = new NetworkStream(socket, ownsSocket: true);
-                        if (ctx.InitialRequestMessage.Headers.Host == null)
-                        {
-                            return stream;
-                        }
-
-                        var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
-                        await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
-                        {
-                            TargetHost = string.Empty,
-                            RemoteCertificateValidationCallback = delegate { return true; }
-                        }, ct);
-                        return sslStream;
-                    }
+                    return serviceProvider.GetRequiredService<GithubHttpClientHanlder>();
                 });
 
             return services
