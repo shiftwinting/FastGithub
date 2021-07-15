@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,20 +44,20 @@ namespace FastGithub.Dns
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
+        public Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
         {
-            var response = Response.FromRequest(request);
+            IResponse response = Response.FromRequest(request);
             var question = request.Questions.FirstOrDefault();
 
             if (question == null || question.Type != RecordType.A)
             {
-                return response;
+                return Task.FromResult(response);
             }
 
             var domain = question.Name.ToString();
             if (this.githubResolver.IsSupported(domain) == false)
             {
-                return response;
+                return Task.FromResult(response);
             }
 
             if (this.options.CurrentValue.UseGithubReverseProxy == false)
@@ -75,7 +73,7 @@ namespace FastGithub.Dns
             }
             else
             {
-                var address = await GetLocalHostAddress();
+                var address = this.options.CurrentValue.GithubReverseProxyIPAddress;
                 var record = new IPAddressResourceRecord(question.Name, address, TimeSpan.FromMinutes(1));
                 response.AnswerRecords.Add(record);
                 this.logger.LogInformation($"[{domain}->{address}]");
@@ -85,26 +83,7 @@ namespace FastGithub.Dns
             {
                 this.logger.LogWarning($"无法获得{domain}的最快ip");
             }
-            return response;
-        }
-
-        /// <summary>
-        /// 获取本机ip
-        /// </summary>
-        /// <returns></returns>
-        private static async Task<IPAddress> GetLocalHostAddress()
-        {
-            try
-            {
-                var localhost = System.Net.Dns.GetHostName();
-                var addresses = await System.Net.Dns.GetHostAddressesAsync(localhost);
-                var address = addresses.FirstOrDefault(item => item.AddressFamily == AddressFamily.InterNetwork);
-                return address ?? IPAddress.Loopback;
-            }
-            catch (Exception)
-            {
-                return IPAddress.Loopback;
-            }
+            return Task.FromResult(response);
         }
     }
 }

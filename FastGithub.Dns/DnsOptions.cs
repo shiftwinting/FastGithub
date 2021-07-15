@@ -28,5 +28,10 @@ namespace FastGithub.Dns
         /// 是否使用反向代理访问github
         /// </summary>
         public bool UseGithubReverseProxy { get; set; }
+
+        /// <summary>
+        /// dns响应的反向代理服务的ip
+        /// </summary>
+        public IPAddress GithubReverseProxyIPAddress { get; set; } = IPAddress.Loopback;
     }
 }

@@ -1,11 +1,12 @@
 ﻿# FastGithub
 github定制版的dns服务，解析github最优的ip
 
-### 本机使用
+### 本机使用[推荐]
 * 运行FastGithub程序，本机的网络适配器的dns会自动变成127.0.0.1
 * 如果网络适配器的dns没有变成127.0.0.1，请手工修改网络适配器的dns
 
 ### 局域网服务器使用
+* 修改appsettings.json文件的`Dns:GithubReverseProxyIPAddress`为局域网ip
 * 在局域网服务器运行FastGithub程序
 * 手工修改你电脑的网络适配器的dns，值为局域网服务器的ip
 * 在你的电脑安装FastGithub.cer到`将所有的证书都放入下载存储\受信任的根证书颁发机构`
