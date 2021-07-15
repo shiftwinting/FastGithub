@@ -20,7 +20,7 @@ namespace FastGithub
             var assembly = typeof(DnsServiceCollectionExtensions).Assembly;
             return services
                 .AddServiceAndOptions(assembly, configuration)
-                .AddHostedService<DnsHostedService>();
+                .AddHostedService<DnsServerHostedService>();
         }
     }
 }

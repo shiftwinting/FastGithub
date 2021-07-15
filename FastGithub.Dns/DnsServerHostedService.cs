@@ -14,13 +14,13 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns后台服务
     /// </summary>
-    sealed class DnsHostedService : BackgroundService
+    sealed class DnsServerHostedService : BackgroundService
     {
         private const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
 
         private readonly IRequestResolver requestResolver;
         private readonly IOptions<DnsOptions> options;
-        private readonly ILogger<DnsHostedService> logger;
+        private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private readonly byte[] buffer = new byte[ushort.MaxValue];
@@ -33,10 +33,10 @@ namespace FastGithub.Dns
         /// <param name="githubRequestResolver"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
-        public DnsHostedService(
+        public DnsServerHostedService(
             GithubRequestResolver githubRequestResolver,
             IOptions<DnsOptions> options,
-            ILogger<DnsHostedService> logger)
+            ILogger<DnsServerHostedService> logger)
         {
             this.options = options;
             this.logger = logger;
