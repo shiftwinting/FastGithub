@@ -40,7 +40,7 @@ namespace FastGithub.Dns
         {
             this.options = options;
             this.logger = logger;
-            this.requestResolver = new CompositeRequestResolver(options.Value.UpStream, githubRequestResolver);
+            this.requestResolver = new CompositeRequestResolver(IPAddress.Parse(options.Value.UpStream), githubRequestResolver);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, this.options.Value.UpStream);
+            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, IPAddress.Parse(this.options.Value.UpStream));
             return base.StartAsync(cancellationToken);
         }
 

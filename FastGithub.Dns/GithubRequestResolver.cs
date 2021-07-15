@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,16 +74,11 @@ namespace FastGithub.Dns
             }
             else
             {
-                var address = this.options.CurrentValue.GithubReverseProxyIPAddress;
+                var address = IPAddress.Parse(this.options.CurrentValue.GithubReverseProxyIPAddress);
                 var record = new IPAddressResourceRecord(question.Name, address, TimeSpan.FromMinutes(1));
                 response.AnswerRecords.Add(record);
                 this.logger.LogInformation($"[{domain}->{address}]");
-            }
-
-            if (response.AnswerRecords.Count == 0)
-            {
-                this.logger.LogWarning($"无法获得{domain}的最快ip");
-            }
+            } 
             return Task.FromResult(response);
         }
     }

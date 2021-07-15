@@ -12,7 +12,7 @@ namespace FastGithub.Dns
         /// <summary>
         /// 获取或设置上游ip地址
         /// </summary>
-        public IPAddress UpStream { get; set; } = IPAddress.Parse("114.114.114.114");
+        public string UpStream { get; set; } = "114.114.114.114";
 
         /// <summary>
         /// 获取或设置github相关域名的ip存活时长
@@ -27,11 +27,11 @@ namespace FastGithub.Dns
         /// <summary>
         /// 是否使用反向代理访问github
         /// </summary>
-        public bool UseGithubReverseProxy { get; set; }
+        public bool UseGithubReverseProxy { get; set; } = true;
 
         /// <summary>
         /// dns响应的反向代理服务的ip
         /// </summary>
-        public IPAddress GithubReverseProxyIPAddress { get; set; } = IPAddress.Loopback;
+        public string GithubReverseProxyIPAddress { get; set; } = IPAddress.Loopback.ToString();
     }
 }
