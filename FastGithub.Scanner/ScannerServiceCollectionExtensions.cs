@@ -39,7 +39,7 @@ namespace FastGithub
             return services
                 .AddMemoryCache()
                 .AddServiceAndOptions(assembly, configuration)
-                //.AddHostedService<GithubFullScanHostedService>()
+                .AddHostedService<GithubFullScanHostedService>()
                 .AddHostedService<GithubResultScanHostedService>();
             ;
         }
