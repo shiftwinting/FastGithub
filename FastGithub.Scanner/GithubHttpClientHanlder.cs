@@ -72,7 +72,7 @@ namespace FastGithub.Scanner
 
 
         /// <summary>
-        /// 查找最快的ip来发送消息
+        /// 替换github域名为ip
         /// </summary>
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
@@ -82,12 +82,14 @@ namespace FastGithub.Scanner
             var uri = request.RequestUri;
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
-                var address = this.Resolve(uri.Host);
-                if (address != null)
+                var githubAddress = this.ResolveGithub(uri.Host);
+                if (githubAddress != null)
                 {
                     var builder = new UriBuilder(uri)
                     {
-                        Host = address.ToString()
+                        Scheme = Uri.UriSchemeHttp,
+                        Host = githubAddress.ToString(),
+                        Port = 443
                     };
                     request.RequestUri = builder.Uri;
                     request.Headers.Host = uri.Host;
@@ -99,10 +101,11 @@ namespace FastGithub.Scanner
 
         /// <summary>
         /// 解析域名
+        /// 非github域名返回null
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
-        private IPAddress? Resolve(string domain)
+        private IPAddress? ResolveGithub(string domain)
         {
             // 非github的域名，返回null走上游dns
             if (this.githubResolver.IsSupported(domain) == false)
@@ -110,6 +113,7 @@ namespace FastGithub.Scanner
                 return default;
             }
 
+            // 缓存1s，避免做为公共服务后不必要的并发查询
             var key = $"domain:{domain}";
             var address = this.memoryCache.GetOrCreate(key, e =>
             {

@@ -92,7 +92,7 @@ namespace FastGithub.Scanner.LookupProviders
             catch (Exception)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                this.logger.LogWarning($"使用{metaUri}的副本数据");
+                this.logger.LogWarning($"使用副本数据{metaUri}");
                 return await httpClient.GetFromJsonAsync<Meta>(metaUri, cancellationToken);
             }
         }

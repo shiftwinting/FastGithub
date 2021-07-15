@@ -33,7 +33,7 @@ namespace FastGithub
                 else
                 {
                     var port = context.Request.Host.Port ?? 443;
-                    var destinationPrefix = $"http://{host}:{port}/";
+                    var destinationPrefix = $"https://{host}:{port}/";
                     var httpClient = new HttpMessageInvoker(httpClientHanlder, disposeHandler: false);
                     await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
                 }
