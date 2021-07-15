@@ -4,8 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<ApplicationIcon>app.ico</ApplicationIcon>
-		<ServerGarbageCollection>false</ServerGarbageCollection>
+		<ApplicationIcon>app.ico</ApplicationIcon> 
 		<IsWebConfigTransformDisabled>true</IsWebConfigTransformDisabled>
 	</PropertyGroup>
 

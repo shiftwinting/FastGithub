@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,14 +14,10 @@ namespace FastGithub.Scanner
     {
         private readonly object syncRoot = new();
         private readonly List<GithubContext> contexts = new();
-        private readonly IMemoryCache memoryCache;
         private readonly IOptionsMonitor<GithubLookupFactoryOptions> options;
 
-        public GithubScanResults(
-            IMemoryCache memoryCache,
-            IOptionsMonitor<GithubLookupFactoryOptions> options)
+        public GithubScanResults(IOptionsMonitor<GithubLookupFactoryOptions> options)
         {
-            this.memoryCache = memoryCache;
             this.options = options;
         }
 
@@ -58,29 +52,23 @@ namespace FastGithub.Scanner
         }
 
         /// <summary>
+        /// 是否支持指定域名
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        public bool Support(string domain)
+        {
+            return this.options.CurrentValue.Domains.Contains(domain);
+        }
+
+        /// <summary>
         /// 查找最优的ip
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
         public IPAddress? FindBestAddress(string domain)
         {
-            var key = $"domain:{domain}";
-            return this.memoryCache.GetOrCreate(key, e =>
-            {
-                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(1d));
-                return this.Resolve(domain);
-            });
-        }
-
-
-        /// <summary>
-        /// 解析域名
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        private IPAddress? Resolve(string domain)
-        {
-            if (this.options.CurrentValue.Domains.Contains(domain) == false)
+            if (this.Support(domain) == false)
             {
                 return default;
             }

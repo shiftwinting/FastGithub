@@ -23,13 +23,13 @@ namespace FastGithub
         {
             var httpForwarder = app.ApplicationServices.GetRequiredService<IHttpForwarder>();
             var httpClientHanlder = app.ApplicationServices.GetRequiredService<GithubHttpClientHanlder>();
-            var lookupOptions = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubLookupFactoryOptions>>();
+            var scanResults = app.ApplicationServices.GetRequiredService<IGithubScanResults>();
             var options = app.ApplicationServices.GetRequiredService<IOptionsMonitor<GithubReverseProxyOptions>>();
 
             app.Use(next => async context =>
             {
                 var host = context.Request.Host.Host;
-                if (lookupOptions.CurrentValue.Domains.Contains(host) == false)
+                if (scanResults.Support(host) == false)
                 {
                     await context.Response.WriteAsJsonAsync(new { message = $"不支持以{host}访问" });
                 }

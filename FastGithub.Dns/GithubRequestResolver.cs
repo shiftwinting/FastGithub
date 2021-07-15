@@ -23,7 +23,6 @@ namespace FastGithub.Dns
     {
         private readonly IGithubScanResults githubScanResults;
         private readonly IOptionsMonitor<DnsOptions> options;
-        private readonly IOptionsMonitor<GithubLookupFactoryOptions> lookupOptions;
         private readonly IOptionsMonitor<GithubReverseProxyOptions> reverseProxyOptions;
         private readonly ILogger<GithubRequestResolver> logger;
 
@@ -36,13 +35,11 @@ namespace FastGithub.Dns
         public GithubRequestResolver(
             IGithubScanResults githubScanResults,
             IOptionsMonitor<DnsOptions> options,
-            IOptionsMonitor<GithubLookupFactoryOptions> lookupOptions,
             IOptionsMonitor<GithubReverseProxyOptions> reverseProxyOptions,
             ILogger<GithubRequestResolver> logger)
         {
             this.githubScanResults = githubScanResults;
             this.options = options;
-            this.lookupOptions = lookupOptions;
             this.reverseProxyOptions = reverseProxyOptions;
             this.logger = logger;
         }
@@ -64,7 +61,7 @@ namespace FastGithub.Dns
             }
 
             var domain = question.Name.ToString();
-            if (this.lookupOptions.CurrentValue.Domains.Contains(domain) == false)
+            if (this.githubScanResults.Support(domain) == false)
             {
                 return response;
             }
@@ -82,7 +79,7 @@ namespace FastGithub.Dns
             }
             else
             {
-                var address = await this.GetLocalHostAddress();
+                var address = await GetLocalHostAddress();
                 var record = new IPAddressResourceRecord(question.Name, address, TimeSpan.FromMinutes(1));
                 response.AnswerRecords.Add(record);
                 this.logger.LogInformation($"[{domain}->{address}]");
@@ -100,7 +97,7 @@ namespace FastGithub.Dns
         /// 获取本机ip
         /// </summary>
         /// <returns></returns>
-        private async Task<IPAddress> GetLocalHostAddress()
+        private static async Task<IPAddress> GetLocalHostAddress()
         {
             try
             {

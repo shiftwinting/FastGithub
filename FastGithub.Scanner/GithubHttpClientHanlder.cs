@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -17,18 +19,22 @@ namespace FastGithub.Scanner
     {
         private readonly IGithubScanResults githubScanResults;
         private readonly ILogger<GithubHttpClientHanlder> logger;
+        private readonly IMemoryCache memoryCache;
 
         /// <summary>
         /// 请求github的HttpClientHandler
         /// </summary>
         /// <param name="githubScanResults"></param>
         /// <param name="logger"></param>
+        /// <param name="memoryCache"></param>
         public GithubHttpClientHanlder(
             IGithubScanResults githubScanResults,
-            ILogger<GithubHttpClientHanlder> logger)
+            ILogger<GithubHttpClientHanlder> logger,
+            IMemoryCache memoryCache)
         {
             this.githubScanResults = githubScanResults;
             this.logger = logger;
+            this.memoryCache = memoryCache;
             this.InnerHandler = CreateNoneSniHttpHandler();
         }
 
@@ -76,10 +82,9 @@ namespace FastGithub.Scanner
             var uri = request.RequestUri;
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
-                var address = this.githubScanResults.FindBestAddress(uri.Host);
+                var address = this.Resolve(uri.Host);
                 if (address != null)
                 {
-                    this.logger.LogInformation($"使用{address} No SNI请求{uri.Host}");
                     var builder = new UriBuilder(uri)
                     {
                         Host = address.ToString()
@@ -89,6 +94,35 @@ namespace FastGithub.Scanner
                 }
             }
             return await base.SendAsync(request, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// 解析域名
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        private IPAddress? Resolve(string domain)
+        {
+            if (this.githubScanResults.Support(domain) == false)
+            {
+                return default;
+            }
+
+            var key = $"domain:{domain}";
+            var address = this.memoryCache.GetOrCreate(key, e =>
+            {
+                e.SetAbsoluteExpiration(TimeSpan.FromSeconds(1d));
+                return this.githubScanResults.FindBestAddress(domain);
+            });
+
+            if (address == null)
+            {
+                throw new HttpRequestException($"无法解析{domain}的ip");
+            }
+
+            this.logger.LogInformation($"使用{address} No SNI请求{domain}");
+            return address;
         }
     }
 }
