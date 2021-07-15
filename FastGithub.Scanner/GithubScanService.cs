@@ -133,10 +133,11 @@ namespace FastGithub.Scanner
         }
 
         /// <summary>
-        /// 扫描曾经扫描到的结果
+        /// 扫描历史结果
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task ScanResultAsync()
+        public async Task ScanResultAsync(CancellationToken cancellationToken)
         {
             this.logger.LogInformation("结果扫描开始..");
 
@@ -161,6 +162,7 @@ namespace FastGithub.Scanner
             }
             this.dnsFlushService.FlushGithubResolverCache();
             this.logger.LogInformation($"结果扫描结束，共扫描{results.Length}条记录");
+            await this.scanResults.SaveDatasAsync(cancellationToken);
         }
     }
 }
