@@ -17,22 +17,22 @@ namespace FastGithub.Scanner
     [Service(ServiceLifetime.Transient)]
     public class GithubHttpClientHanlder : DelegatingHandler
     {
-        private readonly IGithubScanResults githubScanResults;
+        private readonly IGithubResolver githubResolver;
         private readonly ILogger<GithubHttpClientHanlder> logger;
         private readonly IMemoryCache memoryCache;
 
         /// <summary>
         /// 请求github的HttpClientHandler
         /// </summary>
-        /// <param name="githubScanResults"></param>
+        /// <param name="githubResolver"></param>
         /// <param name="logger"></param>
         /// <param name="memoryCache"></param>
         public GithubHttpClientHanlder(
-            IGithubScanResults githubScanResults,
+            IGithubResolver githubResolver,
             ILogger<GithubHttpClientHanlder> logger,
             IMemoryCache memoryCache)
         {
-            this.githubScanResults = githubScanResults;
+            this.githubResolver = githubResolver;
             this.logger = logger;
             this.memoryCache = memoryCache;
             this.InnerHandler = CreateNoneSniHttpHandler();
@@ -104,7 +104,8 @@ namespace FastGithub.Scanner
         /// <returns></returns>
         private IPAddress? Resolve(string domain)
         {
-            if (this.githubScanResults.Support(domain) == false)
+            // 非github的域名，返回null走上游dns
+            if (this.githubResolver.IsSupported(domain) == false)
             {
                 return default;
             }
@@ -113,7 +114,7 @@ namespace FastGithub.Scanner
             var address = this.memoryCache.GetOrCreate(key, e =>
             {
                 e.SetAbsoluteExpiration(TimeSpan.FromSeconds(1d));
-                return this.githubScanResults.FindBestAddress(domain);
+                return this.githubResolver.Resolve(domain);
             });
 
             if (address == null)

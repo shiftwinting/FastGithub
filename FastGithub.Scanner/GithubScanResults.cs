@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,16 +9,10 @@ namespace FastGithub.Scanner
     ///  GithubContext集合
     /// </summary>
     [Service(ServiceLifetime.Singleton)]
-    sealed class GithubScanResults : IGithubScanResults
+    sealed class GithubScanResults
     {
         private readonly object syncRoot = new();
         private readonly List<GithubContext> contexts = new();
-        private readonly IOptionsMonitor<GithubLookupFactoryOptions> options;
-
-        public GithubScanResults(IOptionsMonitor<GithubLookupFactoryOptions> options)
-        {
-            this.options = options;
-        }
 
         /// <summary>
         /// 添加GithubContext
@@ -49,17 +42,7 @@ namespace FastGithub.Scanner
             {
                 return this.contexts.ToArray();
             }
-        }
-
-        /// <summary>
-        /// 是否支持指定域名
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        public bool Support(string domain)
-        {
-            return this.options.CurrentValue.Domains.Contains(domain);
-        }
+        } 
 
         /// <summary>
         /// 查找最优的ip
@@ -67,12 +50,7 @@ namespace FastGithub.Scanner
         /// <param name="domain"></param>
         /// <returns></returns>
         public IPAddress? FindBestAddress(string domain)
-        {
-            if (this.Support(domain) == false)
-            {
-                return default;
-            }
-
+        { 
             lock (this.syncRoot)
             {
                 return this.contexts

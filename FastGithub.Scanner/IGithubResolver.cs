@@ -3,22 +3,22 @@
 namespace FastGithub.Scanner
 {
     /// <summary>
-    /// 定义扫描结果的接口
+    /// github解析器
     /// </summary>
-    public interface IGithubScanResults
+    public interface IGithubResolver
     {
         /// <summary>
-        /// 是否支持指定域名
+        /// 是否支持指定的域名
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
-        bool Support(string domain);
+        bool IsSupported(string domain);
 
         /// <summary>
-        /// 查找最优的ip
+        /// 解析指定的域名
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
-        IPAddress? FindBestAddress(string domain);
+        IPAddress? Resolve(string domain);
     }
 }

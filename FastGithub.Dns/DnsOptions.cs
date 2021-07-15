@@ -22,6 +22,11 @@ namespace FastGithub.Dns
         /// <summary>
         /// 是否设置本机使用此dns
         /// </summary>
-        public bool SetToLocalMachine { get; set; } = true; 
+        public bool SetToLocalMachine { get; set; } = true;
+
+        /// <summary>
+        /// 是否使用反向代理访问github
+        /// </summary>
+        public bool UseGithubReverseProxy { get; set; }
     }
 }

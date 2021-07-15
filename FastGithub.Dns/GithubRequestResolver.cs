@@ -1,7 +1,6 @@
 ﻿using DNS.Client.RequestResolver;
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
-using FastGithub.ReverseProxy;
 using FastGithub.Scanner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,26 +20,23 @@ namespace FastGithub.Dns
     [Service(ServiceLifetime.Singleton)]
     sealed class GithubRequestResolver : IRequestResolver
     {
-        private readonly IGithubScanResults githubScanResults;
+        private readonly IGithubResolver githubResolver;
         private readonly IOptionsMonitor<DnsOptions> options;
-        private readonly IOptionsMonitor<GithubReverseProxyOptions> reverseProxyOptions;
         private readonly ILogger<GithubRequestResolver> logger;
 
         /// <summary>
         /// github相关域名解析器
         /// </summary>
-        /// <param name="githubScanResults"></param>
+        /// <param name="githubResolver"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public GithubRequestResolver(
-            IGithubScanResults githubScanResults,
+            IGithubResolver githubResolver,
             IOptionsMonitor<DnsOptions> options,
-            IOptionsMonitor<GithubReverseProxyOptions> reverseProxyOptions,
             ILogger<GithubRequestResolver> logger)
         {
-            this.githubScanResults = githubScanResults;
+            this.githubResolver = githubResolver;
             this.options = options;
-            this.reverseProxyOptions = reverseProxyOptions;
             this.logger = logger;
         }
 
@@ -61,14 +57,14 @@ namespace FastGithub.Dns
             }
 
             var domain = question.Name.ToString();
-            if (this.githubScanResults.Support(domain) == false)
+            if (this.githubResolver.IsSupported(domain) == false)
             {
                 return response;
             }
 
-            if (this.reverseProxyOptions.CurrentValue.Enable == false)
+            if (this.options.CurrentValue.UseGithubReverseProxy == false)
             {
-                var address = this.githubScanResults.FindBestAddress(domain);
+                var address = this.githubResolver.Resolve(domain);
                 if (address != null)
                 {
                     var ttl = this.options.CurrentValue.GithubTTL;
@@ -89,7 +85,6 @@ namespace FastGithub.Dns
             {
                 this.logger.LogWarning($"无法获得{domain}的最快ip");
             }
-
             return response;
         }
 
