@@ -1,10 +1,6 @@
 ﻿# FastGithub
 github定制版的dns服务，解析github最优的ip
 
-### 安装根证书
-默认开启github反向代理功能，开启之后dns返回github的ip指向FastGithub自身。
-需要在浏览器所在的设备安装FastGithub.cer到`将所有的证书都放入下载存储\受信任的根证书颁发机构`
-
 ### 本机使用
 * 运行FastGithub程序，本机的网络适配器的dns会自动变成127.0.0.1
 * 如果网络适配器的dns没有变成127.0.0.1，请手工修改网络适配器的dns
@@ -12,6 +8,7 @@ github定制版的dns服务，解析github最优的ip
 ### 局域网服务器使用
 * 在局域网服务器运行FastGithub程序
 * 手工修改你电脑的网络适配器的dns，值为局域网服务器的ip
+* 在你的电脑安装FastGithub.cer到`将所有的证书都放入下载存储\受信任的根证书颁发机构`
 
 ### 以windows服务运行
 以管理员身份运行cmd，键入如下命令，其中D:\Softs为软件实际目录
