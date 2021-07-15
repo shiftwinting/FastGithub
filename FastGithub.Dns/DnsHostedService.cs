@@ -77,7 +77,7 @@ namespace FastGithub.Dns
                 var result = await this.socket.ReceiveFromAsync(this.buffer, SocketFlags.None, remoteEndPoint);
                 var datas = new byte[result.ReceivedBytes];
                 this.buffer.AsSpan(0, datas.Length).CopyTo(datas);
-                this.HandleRequestAsync(datas, (IPEndPoint)result.RemoteEndPoint, stoppingToken);
+                this.HandleRequestAsync(datas, result.RemoteEndPoint, stoppingToken);
             }
         }
 
@@ -87,12 +87,12 @@ namespace FastGithub.Dns
         /// <param name="datas"></param>
         /// <param name="remoteEndPoint"></param>
         /// <param name="cancellationToken"></param>
-        private async void HandleRequestAsync(byte[] datas, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+        private async void HandleRequestAsync(byte[] datas, EndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
             try
             {
                 var request = Request.FromArray(datas);
-                var remoteRequest = new RemoteRequest(request, remoteEndPoint.Address);
+                var remoteRequest = new RemoteRequest(request, remoteEndPoint);
                 var response = await this.requestResolver.Resolve(remoteRequest, cancellationToken);
                 await this.socket.SendToAsync(response.ToArray(), SocketFlags.None, remoteEndPoint);
             }
