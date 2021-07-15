@@ -124,7 +124,8 @@ namespace FastGithub.Scanner
             {
                 using var stream = File.OpenWrite(dataFile);
                 var datas = this.ToArray()
-                    .OrderByDescending(item => item.AvailableRate)
+                    .OrderBy(item => item.Domain)
+                    .ThenByDescending(item => item.AvailableRate)
                     .Select(item => GithubDomainAddress.From(item));
 
                 await JsonSerializer.SerializeAsync(stream, datas, cancellationToken: cancellationToken);

@@ -11,6 +11,6 @@ github定制版的dns服务，解析github最优的ip
 * 在你的电脑安装FastGithub.cer到`将所有的证书都放入下载存储\受信任的根证书颁发机构`
 
 ### 以windows服务运行
-以管理员身份运行cmd，键入如下命令，其中D:\Softs为软件实际目录
+运行cmd，键入如下命令，其中D:\Softs为软件实际目录
 * D:\Softs\FastGithub.exe start // 安装并启动服务
 * D:\Softs\FastGithub.exe stop  // 卸载并删除服务
