@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 
 namespace FastGithub.Dns
 {
@@ -27,11 +26,6 @@ namespace FastGithub.Dns
         /// <summary>
         /// 是否使用反向代理访问github
         /// </summary>
-        public bool UseGithubReverseProxy { get; set; } = true;
-
-        /// <summary>
-        /// dns响应的反向代理服务的ip
-        /// </summary>
-        public string GithubReverseProxyIPAddress { get; set; } = IPAddress.Loopback.ToString();
+        public bool UseGithubReverseProxy { get; set; } = true; 
     }
 }

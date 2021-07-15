@@ -48,38 +48,55 @@ namespace FastGithub.Dns
         public Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
         {
             IResponse response = Response.FromRequest(request);
-            var question = request.Questions.FirstOrDefault();
+            if (request is not RemoteRequest remoteRequest)
+            {
+                return Task.FromResult(response);
+            }
 
+            var question = request.Questions.FirstOrDefault();
             if (question == null || question.Type != RecordType.A)
             {
                 return Task.FromResult(response);
             }
 
-            var domain = question.Name.ToString();
-            if (this.githubResolver.IsSupported(domain) == false)
+            var domain = question.Name;
+            if (this.githubResolver.IsSupported(domain.ToString()) == false)
             {
                 return Task.FromResult(response);
             }
 
-            if (this.options.CurrentValue.UseGithubReverseProxy == false)
+            var record = this.GetAnswerRecord(remoteRequest, domain);
+            if (record != null)
             {
-                var address = this.githubResolver.Resolve(domain);
-                if (address != null)
-                {
-                    var ttl = this.options.CurrentValue.GithubTTL;
-                    var record = new IPAddressResourceRecord(question.Name, address, ttl);
-                    response.AnswerRecords.Add(record);
-                    this.logger.LogInformation($"[{domain}->{address}]");
-                }
-            }
-            else
-            {
-                var address = IPAddress.Parse(this.options.CurrentValue.GithubReverseProxyIPAddress);
-                var record = new IPAddressResourceRecord(question.Name, address, TimeSpan.FromMinutes(1));
+                this.logger.LogInformation($"[{domain}->{record.IPAddress}]");
                 response.AnswerRecords.Add(record);
-                this.logger.LogInformation($"[{domain}->{address}]");
-            } 
+            }
+
             return Task.FromResult(response);
+        }
+
+        /// <summary>
+        /// 获取答案
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        private IPAddressResourceRecord? GetAnswerRecord(RemoteRequest request, Domain domain)
+        {
+            if (this.options.CurrentValue.UseGithubReverseProxy == true)
+            {
+                var localAddress = request.GetLocalAddress() ?? IPAddress.Loopback;
+                return new IPAddressResourceRecord(domain, localAddress, TimeSpan.FromMinutes(1d));
+            }
+
+            var githubAddress = this.githubResolver.Resolve(domain.ToString());
+            if (githubAddress == null)
+            {
+                return default;
+            }
+
+            var ttl = this.options.CurrentValue.GithubTTL;
+            return new IPAddressResourceRecord(domain, githubAddress, ttl);
         }
     }
 }

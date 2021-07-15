@@ -40,7 +40,9 @@ namespace FastGithub.Dns
         {
             this.options = options;
             this.logger = logger;
-            this.requestResolver = new CompositeRequestResolver(IPAddress.Parse(options.Value.UpStream), githubRequestResolver);
+
+            var upStream = IPAddress.Parse(options.Value.UpStream);
+            this.requestResolver = new CompositeRequestResolver(upStream, githubRequestResolver);
         }
 
         /// <summary>
@@ -57,7 +59,8 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, IPAddress.Parse(this.options.Value.UpStream));
+            var upStream = IPAddress.Parse(options.Value.UpStream);
+            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, upStream);
             return base.StartAsync(cancellationToken);
         }
 
@@ -74,7 +77,7 @@ namespace FastGithub.Dns
                 var result = await this.socket.ReceiveFromAsync(this.buffer, SocketFlags.None, remoteEndPoint);
                 var datas = new byte[result.ReceivedBytes];
                 this.buffer.AsSpan(0, datas.Length).CopyTo(datas);
-                this.HandleRequestAsync(datas, result.RemoteEndPoint, stoppingToken);
+                this.HandleRequestAsync(datas, (IPEndPoint)result.RemoteEndPoint, stoppingToken);
             }
         }
 
@@ -84,12 +87,13 @@ namespace FastGithub.Dns
         /// <param name="datas"></param>
         /// <param name="remoteEndPoint"></param>
         /// <param name="cancellationToken"></param>
-        private async void HandleRequestAsync(byte[] datas, EndPoint remoteEndPoint, CancellationToken cancellationToken)
+        private async void HandleRequestAsync(byte[] datas, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
             try
             {
                 var request = Request.FromArray(datas);
-                var response = await this.requestResolver.Resolve(request, cancellationToken);
+                var remoteRequest = new RemoteRequest(request, remoteEndPoint.Address);
+                var response = await this.requestResolver.Resolve(remoteRequest, cancellationToken);
                 await this.socket.SendToAsync(response.ToArray(), SocketFlags.None, remoteEndPoint);
             }
             catch (Exception ex)
