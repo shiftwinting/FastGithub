@@ -1,5 +1,5 @@
 # FastGithub
-github定制版的dns服务，解析github最优的ip
+github加速神器
 
 ### 加速原理
 * 多种渠道获取github的ip(github公开的ip、各dns服务器提供的ip、ipaddress.com反查的ip)

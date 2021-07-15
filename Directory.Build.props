@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<Version>1.0.3</Version>
 		<Nullable>enable</Nullable>
-		<Description>github定制版的dns服务，解析github最优的ip</Description>
+		<Description>github加速神器</Description>
 		<Copyright>https://github.com/xljiulang/FastGithub</Copyright>
 	</PropertyGroup>
 
