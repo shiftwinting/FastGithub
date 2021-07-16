@@ -30,13 +30,25 @@ namespace FastGithub
                 if (options.CurrentValue.IsMatch(host) == false)
                 {
                     await context.Response.WriteAsJsonAsync(new { message = $"不支持以{host}访问" });
+                    return;
                 }
-                else
+
+                var port = context.Request.Host.Port ?? 443;
+                var destinationPrefix = $"https://{host}:{port}/";
+                var httpClient = new HttpMessageInvoker(httpClientHanlder, disposeHandler: false);
+                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
+
+                if (error != ForwarderError.None)
                 {
-                    var port = context.Request.Host.Port ?? 443;
-                    var destinationPrefix = $"https://{host}:{port}/";
-                    var httpClient = new HttpMessageInvoker(httpClientHanlder, disposeHandler: false);
-                    await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
+                    var errorFeature = context.GetForwarderErrorFeature();
+                    if (errorFeature != null)
+                    {
+                        await context.Response.WriteAsJsonAsync(new
+                        {
+                            error = error.ToString(),
+                            message = errorFeature.Exception?.Message
+                        });
+                    }
                 }
             });
 

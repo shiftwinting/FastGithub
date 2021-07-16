@@ -77,7 +77,7 @@ namespace FastGithub
                         store.Close();
                     }
                 }
-                catch (Exception  )
+                catch (Exception)
                 {
                     logger.LogError($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
                 }

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -44,23 +43,36 @@ namespace FastGithub.ReverseProxy
         {
             // 缓存以避免做不必要的并发查询
             var key = $"domain:{domain}";
-            var address = await this.memoryCache.GetOrCreateAsync(key, async e =>
+            var address = await this.memoryCache.GetOrCreateAsync(key, e =>
             {
                 e.SetAbsoluteExpiration(this.cacheTimeSpan);
-                var dnsClient = new DnsClient(this.options.CurrentValue.TrustedDns.ToIPEndPoint());
-                var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
-                return addresses?.FirstOrDefault();
+                return this.LookupAsync(domain, cancellationToken);
             });
-
-            if (address == null)
-            {
-                var message = $"无法解析{domain}的ip";
-                this.logger.LogWarning(message);
-                throw new HttpRequestException(message);
-            }
 
             this.logger.LogInformation($"[{address}->{domain}]");
             return address;
+        }
+
+        /// <summary>
+        /// 查找ip
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<IPAddress> LookupAsync(string domain, CancellationToken cancellationToken)
+        {
+            var endpoint = this.options.CurrentValue.TrustedDns.ToIPEndPoint();
+            try
+            {
+                var dnsClient = new DnsClient(endpoint);
+                var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
+                var address = addresses?.FirstOrDefault();
+                return address ?? throw new Exception($"解析不到{domain}的ip");
+            }
+            catch (Exception ex)
+            {
+                throw new ReverseProxyException($"dns({endpoint})：{ex.Message}", ex);
+            }
         }
     }
 }
