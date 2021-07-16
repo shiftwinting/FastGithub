@@ -1,38 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="DNS" Version="6.1.0" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
-    <PackageReference Include="Yarp.ReverseProxy" Version="1.0.0-preview.12.21328.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="DNS" Version="6.1.0" />
+		<PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
+		<PackageReference Include="Yarp.ReverseProxy" Version="1.0.0-preview.12.21328.2" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="dnscrypt-proxy.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="dnscrypt-proxy.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="dnscrypt-proxy">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <None Remove="dnscrypt-proxy" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <None Remove="dnscrypt-proxy.exe" />
-  </ItemGroup>
+	<ItemGroup >
+		<None Update="dnscrypt-proxy*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

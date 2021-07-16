@@ -50,11 +50,12 @@ namespace FastGithub.ReverseProxy
                         CreateNoWindow = true,
                         WindowStyle = ProcessWindowStyle.Hidden
                     });
-                };
+                    this.logger.LogInformation($"{dnscryptFile}启动成功");
+                }
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning(ex.Message);
+                this.logger.LogWarning($"{dnscryptFile}启动失败：{ex.Message}");
             }
             return Task.CompletedTask;
         }
