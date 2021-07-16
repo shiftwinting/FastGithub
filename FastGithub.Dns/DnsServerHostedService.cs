@@ -1,5 +1,4 @@
-﻿using DNS.Client.RequestResolver;
-using DNS.Protocol;
+﻿using DNS.Protocol;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,14 +17,13 @@ namespace FastGithub.Dns
     {
         private const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
 
-        private readonly IRequestResolver requestResolver;
-        private readonly IOptions<DnsOptions> options;
+        private readonly FastGihubResolver fastGihubResolver;
+        private readonly IOptions<FastGithubOptions> options;
         private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private readonly byte[] buffer = new byte[ushort.MaxValue];
         private IPAddress[]? dnsAddresses;
-
 
         /// <summary>
         /// dns后台服务
@@ -34,15 +32,13 @@ namespace FastGithub.Dns
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public DnsServerHostedService(
-            GithubRequestResolver githubRequestResolver,
-            IOptions<DnsOptions> options,
+            FastGihubResolver fastGihubResolver,
+            IOptions<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
+            this.fastGihubResolver = fastGihubResolver;
             this.options = options;
             this.logger = logger;
-
-            var upStream = IPAddress.Parse(options.Value.UpStream);
-            this.requestResolver = new CompositeRequestResolver(upStream, githubRequestResolver);
         }
 
         /// <summary>
@@ -59,7 +55,7 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            var upStream = IPAddress.Parse(options.Value.UpStream);
+            var upStream = IPAddress.Parse(options.Value.UntrustedDns.Address);
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, upStream);
             return base.StartAsync(cancellationToken);
         }
@@ -93,7 +89,7 @@ namespace FastGithub.Dns
             {
                 var request = Request.FromArray(datas);
                 var remoteRequest = new RemoteRequest(request, remoteEndPoint);
-                var response = await this.requestResolver.Resolve(remoteRequest, cancellationToken);
+                var response = await this.fastGihubResolver.Resolve(remoteRequest, cancellationToken);
                 await this.socket.SendToAsync(response.ToArray(), SocketFlags.None, remoteEndPoint);
             }
             catch (Exception ex)
@@ -126,7 +122,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         private IPAddress[]? SetNameServers(params IPAddress[] nameServers)
         {
-            if (this.options.Value.SetToLocalMachine && OperatingSystem.IsWindows())
+            if (OperatingSystem.IsWindows())
             {
                 try
                 {
@@ -140,34 +136,12 @@ namespace FastGithub.Dns
                     this.logger.LogWarning($"设置本机dns失败：{ex.Message}");
                 }
             }
+            else
+            {
+                this.logger.LogError("不支持自动为本机设备设置dns值");
+            }
 
             return default;
-        }
-
-        private class CompositeRequestResolver : IRequestResolver
-        {
-            private readonly IRequestResolver upStreamResolver;
-            private readonly IRequestResolver[] customResolvers;
-
-            public CompositeRequestResolver(IPAddress upStream, params IRequestResolver[] customResolvers)
-            {
-                this.upStreamResolver = new UdpRequestResolver(new IPEndPoint(upStream, 53));
-                this.customResolvers = customResolvers;
-            }
-
-            public async Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
-            {
-                foreach (IRequestResolver resolver in customResolvers)
-                {
-                    var response = await resolver.Resolve(request, cancellationToken);
-                    if (response.AnswerRecords.Count > 0)
-                    {
-                        return response;
-                    }
-                }
-
-                return await this.upStreamResolver.Resolve(request, cancellationToken);
-            }
         }
     }
 }

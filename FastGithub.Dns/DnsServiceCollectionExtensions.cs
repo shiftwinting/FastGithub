@@ -1,5 +1,4 @@
 ﻿using FastGithub.Dns;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FastGithub
@@ -12,14 +11,12 @@ namespace FastGithub
         /// <summary>
         /// 注册github的dns服务
         /// </summary>
-        /// <param name="services"></param>
-        /// <param name="configuration">配置</param>  
+        /// <param name="services"></param> 
         /// <returns></returns>
-        public static IServiceCollection AddGithubDns(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddGithubDns(this IServiceCollection services)
         {
-            var assembly = typeof(DnsServiceCollectionExtensions).Assembly;
             return services
-                .AddServiceAndOptions(assembly, configuration)
+                .AddSingleton<FastGihubResolver>()
                 .AddHostedService<DnsServerHostedService>();
         }
     }

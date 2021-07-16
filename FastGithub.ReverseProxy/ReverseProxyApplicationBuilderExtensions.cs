@@ -1,7 +1,8 @@
-﻿using FastGithub.Scanner;
+﻿using FastGithub.ReverseProxy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Net.Http;
 using Yarp.ReverseProxy.Forwarder;
 
@@ -21,12 +22,12 @@ namespace FastGithub
         {
             var httpForwarder = app.ApplicationServices.GetRequiredService<IHttpForwarder>();
             var httpClientHanlder = app.ApplicationServices.GetRequiredService<GithubHttpClientHanlder>();
-            var githubResolver = app.ApplicationServices.GetRequiredService<IGithubResolver>();
+            var options = app.ApplicationServices.GetRequiredService<IOptionsMonitor<FastGithubOptions>>();
 
             app.Use(next => async context =>
             {
                 var host = context.Request.Host.Host;
-                if (githubResolver.IsSupported(host) == false)
+                if (options.CurrentValue.IsMatch(host) == false)
                 {
                     await context.Response.WriteAsJsonAsync(new { message = $"不支持以{host}访问" });
                 }

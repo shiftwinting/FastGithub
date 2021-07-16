@@ -9,11 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Core", "FastGith
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Dns", "FastGithub.Dns\FastGithub.Dns.csproj", "{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Scanner", "FastGithub.Scanner\FastGithub.Scanner.csproj", "{7F24CD2F-07C0-4002-A534-80688DE95ECF}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Upgrade", "FastGithub.Upgrade\FastGithub.Upgrade.csproj", "{8239A077-A84C-4FDF-A204-02A2DE4243F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastGithub.ReverseProxy", "FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj", "{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.ReverseProxy", "FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj", "{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,10 +31,6 @@ Global
 		{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F24CD2F-07C0-4002-A534-80688DE95ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8239A077-A84C-4FDF-A204-02A2DE4243F3}.Release|Any CPU.ActiveCfg = Release|Any CPU

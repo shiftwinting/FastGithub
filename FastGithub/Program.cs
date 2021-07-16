@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace FastGithub
@@ -30,16 +30,14 @@ namespace FastGithub
                 {
                     c.ValidateOnBuild = false;
                 })
-                .ConfigureAppConfiguration(c =>
-                {
-                    c.AddJsonFile("appsettings.github.json", optional: true);
-                })
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddAppUpgrade();
-                    services.AddGithubDns(ctx.Configuration);
-                    services.AddGithubReverseProxy(ctx.Configuration);
-                    services.AddGithubScanner(ctx.Configuration);
+                    services.AddGithubDns();
+                    services.AddGithubReverseProxy();
+                    services.AddOptions<FastGithubOptions>()
+                        .Bind(ctx.Configuration.GetSection(nameof(FastGithub)))
+                        .Validate(opt => opt.TrustedDns.Validate() && opt.UntrustedDns.Validate(), "无效的Dns配置");
                 })
                 .ConfigureWebHostDefaults(web =>
                 {

@@ -6,6 +6,5 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj" />
-		<ProjectReference Include="..\FastGithub.Scanner\FastGithub.Scanner.csproj" />
 	</ItemGroup>
 </Project>

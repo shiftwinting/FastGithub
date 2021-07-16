@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using FastGithub.ReverseProxy;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FastGithub
@@ -11,15 +11,15 @@ namespace FastGithub
         /// <summary>
         /// gitub反向代理
         /// </summary>
-        /// <param name="services"></param>
-        /// <param name="configuration"></param>
+        /// <param name="services"></param> 
         /// <returns></returns>
-        public static IServiceCollection AddGithubReverseProxy(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddGithubReverseProxy(this IServiceCollection services)
         {
-            var assembly = typeof(ReverseProxyServiceCollectionExtensions).Assembly;
             return services
-                .AddServiceAndOptions(assembly, configuration)
-                .AddHttpForwarder();
+                .AddMemoryCache()
+                .AddHttpForwarder()
+                .AddSingleton<GithubResolver>()
+                .AddTransient<GithubHttpClientHanlder>();
         }
     }
 }
