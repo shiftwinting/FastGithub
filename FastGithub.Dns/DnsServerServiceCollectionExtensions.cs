@@ -6,7 +6,7 @@ namespace FastGithub
     /// <summary>
     /// 服务注册扩展
     /// </summary>
-    public static class DnsServiceCollectionExtensions
+    public static class DnsServerServiceCollectionExtensions
     {
         /// <summary>
         /// 注册github的dns服务
@@ -16,7 +16,7 @@ namespace FastGithub
         public static IServiceCollection AddGithubDns(this IServiceCollection services)
         {
             return services
-                .AddSingleton<FastGihubResolver>()
+                .AddSingleton<RequestResolver>()
                 .AddHostedService<DnsServerHostedService>();
         }
     }

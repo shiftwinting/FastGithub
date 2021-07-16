@@ -12,26 +12,27 @@ using System.Threading.Tasks;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// 反向代理解析器
+    /// dns解析者
     /// </summary> 
-    sealed class FastGihubResolver : IRequestResolver
+    sealed class RequestResolver : IRequestResolver
     {
-        private readonly IRequestResolver untrustedDnsResolver;
+        private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
+        private readonly IRequestResolver untrustedResolver;
         private readonly IOptionsMonitor<FastGithubOptions> options;
-        private readonly ILogger<FastGihubResolver> logger;
+        private readonly ILogger<RequestResolver> logger;
 
         /// <summary>
-        /// github相关域名解析器
+        /// dns解析者
         /// </summary> 
         /// <param name="options"></param>
         /// <param name="logger"></param>
-        public FastGihubResolver(
+        public RequestResolver(
             IOptionsMonitor<FastGithubOptions> options,
-            ILogger<FastGihubResolver> logger)
+            ILogger<RequestResolver> logger)
         {
             this.options = options;
             this.logger = logger;
-            this.untrustedDnsResolver = new UdpRequestResolver(options.CurrentValue.UntrustedDns.ToIPEndPoint());
+            this.untrustedResolver = new UdpRequestResolver(options.CurrentValue.UntrustedDns.ToIPEndPoint());
         }
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace FastGithub.Dns
         public async Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
         {
             var response = Response.FromRequest(request);
-            if (request is not RemoteRequest remoteRequest)
+            if (request is not RemoteEndPointRequest remoteEndPointRequest)
             {
                 return response;
             }
@@ -57,14 +58,15 @@ namespace FastGithub.Dns
             var domain = question.Name;
             if (this.options.CurrentValue.IsMatch(domain.ToString()) == true)
             {
-                var localAddress = remoteRequest.GetLocalAddress() ?? IPAddress.Loopback;
-                var record = new IPAddressResourceRecord(domain, localAddress, TimeSpan.FromMinutes(1d));
-                this.logger.LogInformation($"[{domain}->{localAddress}]");
+                var localAddress = remoteEndPointRequest.GetLocalAddress() ?? IPAddress.Loopback;
+                var record = new IPAddressResourceRecord(domain, localAddress, this.ttl);
                 response.AnswerRecords.Add(record);
+
+                this.logger.LogInformation($"[{domain}->{localAddress}]");
                 return response;
             }
 
-            return await this.untrustedDnsResolver.Resolve(request, cancellationToken);
+            return await this.untrustedResolver.Resolve(request, cancellationToken);
         }
     }
 }

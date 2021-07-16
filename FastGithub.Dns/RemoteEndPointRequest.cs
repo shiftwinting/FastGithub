@@ -6,12 +6,12 @@ using System.Net.Sockets;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// 远程请求
+    /// 带远程终节点的请求
     /// </summary>
-    sealed class RemoteRequest : Request
+    sealed class RemoteEndPointRequest : Request
     {
         /// <summary>
-        /// 获取远程地址
+        /// 获取程终节点
         /// </summary>
         public EndPoint RemoteEndPoint { get; }
 
@@ -20,7 +20,7 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="request"></param>
         /// <param name="remoteEndPoint"></param>
-        public RemoteRequest(Request request, EndPoint remoteEndPoint)
+        public RemoteEndPointRequest(Request request, EndPoint remoteEndPoint)
             : base(request)
         {
             this.RemoteEndPoint = remoteEndPoint;

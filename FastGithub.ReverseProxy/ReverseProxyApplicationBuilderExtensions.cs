@@ -21,7 +21,7 @@ namespace FastGithub
         public static IApplicationBuilder UseGithubReverseProxy(this IApplicationBuilder app)
         {
             var httpForwarder = app.ApplicationServices.GetRequiredService<IHttpForwarder>();
-            var httpClientHanlder = app.ApplicationServices.GetRequiredService<GithubHttpClientHanlder>();
+            var httpClientHanlder = app.ApplicationServices.GetRequiredService<NoSniHttpClientHanlder>();
             var options = app.ApplicationServices.GetRequiredService<IOptionsMonitor<FastGithubOptions>>();
 
             app.Use(next => async context =>

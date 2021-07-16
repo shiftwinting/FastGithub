@@ -9,10 +9,10 @@ using System.Runtime.Versioning;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// 域名服务工具
+    /// 系统域名服务工具
     /// </summary>
     [SupportedOSPlatform("windows")]
-    static class NameServiceUtil
+    static class SystemDnsUtil
     {
         /// <summary>
         /// www.baidu.com的ip

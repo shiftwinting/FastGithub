@@ -8,19 +8,19 @@ using System.Threading.Tasks;
 namespace FastGithub.ReverseProxy
 {
     /// <summary>
-    /// 适用于请求github的HttpClientHandler
+    /// 不发送NoSni的HttpClientHandler
     /// </summary> 
-    class GithubHttpClientHanlder : DelegatingHandler
+    class NoSniHttpClientHanlder : DelegatingHandler
     {
-        private readonly GithubResolver githubResolver;
+        private readonly TrustedResolver trustedDomainResolver;
 
         /// <summary>
-        /// 请求github的HttpClientHandler
+        /// 不发送NoSni的HttpClientHandler
         /// </summary>
-        /// <param name="githubResolver"></param> 
-        public GithubHttpClientHanlder(GithubResolver githubResolver)
+        /// <param name="trustedDomainResolver"></param> 
+        public NoSniHttpClientHanlder(TrustedResolver trustedDomainResolver)
         {
-            this.githubResolver = githubResolver;
+            this.trustedDomainResolver = trustedDomainResolver;
             this.InnerHandler = CreateNoneSniHttpHandler();
         }
 
@@ -58,7 +58,7 @@ namespace FastGithub.ReverseProxy
 
 
         /// <summary>
-        /// 替换github域名为ip
+        /// 替换域名为ip
         /// </summary>
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
@@ -68,7 +68,7 @@ namespace FastGithub.ReverseProxy
             var uri = request.RequestUri;
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
-                var address = await this.githubResolver.ResolveAsync(uri.Host, cancellationToken);
+                var address = await this.trustedDomainResolver.ResolveAsync(uri.Host, cancellationToken);
                 var builder = new UriBuilder(uri)
                 {
                     Scheme = Uri.UriSchemeHttp,

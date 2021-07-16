@@ -15,9 +15,7 @@ namespace FastGithub.Dns
     /// </summary>
     sealed class DnsServerHostedService : BackgroundService
     {
-        private const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
-
-        private readonly FastGihubResolver fastGihubResolver;
+        private readonly RequestResolver requestResolver;
         private readonly IOptions<FastGithubOptions> options;
         private readonly ILogger<DnsServerHostedService> logger;
 
@@ -28,15 +26,15 @@ namespace FastGithub.Dns
         /// <summary>
         /// dns后台服务
         /// </summary>
-        /// <param name="githubRequestResolver"></param>
+        /// <param name="requestResolver"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public DnsServerHostedService(
-            FastGihubResolver fastGihubResolver,
+            RequestResolver requestResolver,
             IOptions<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
-            this.fastGihubResolver = fastGihubResolver;
+            this.requestResolver = requestResolver;
             this.options = options;
             this.logger = logger;
         }
@@ -51,12 +49,13 @@ namespace FastGithub.Dns
             this.socket.Bind(new IPEndPoint(IPAddress.Any, 53));
             if (OperatingSystem.IsWindows())
             {
+                const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
                 this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            var upStream = IPAddress.Parse(options.Value.UntrustedDns.Address);
-            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, upStream);
+            var secondary = IPAddress.Parse(options.Value.UntrustedDns.IPAddress);
+            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, secondary);
             return base.StartAsync(cancellationToken);
         }
 
@@ -88,8 +87,8 @@ namespace FastGithub.Dns
             try
             {
                 var request = Request.FromArray(datas);
-                var remoteRequest = new RemoteRequest(request, remoteEndPoint);
-                var response = await this.fastGihubResolver.Resolve(remoteRequest, cancellationToken);
+                var remoteEndPointRequest = new RemoteEndPointRequest(request, remoteEndPoint);
+                var response = await this.requestResolver.Resolve(remoteEndPointRequest, cancellationToken);
                 await this.socket.SendToAsync(response.ToArray(), SocketFlags.None, remoteEndPoint);
             }
             catch (Exception ex)
@@ -126,7 +125,7 @@ namespace FastGithub.Dns
             {
                 try
                 {
-                    var results = NameServiceUtil.SetNameServers(nameServers);
+                    var results = SystemDnsUtil.SetNameServers(nameServers);
                     this.logger.LogInformation($"设置本机dns成功");
                     return results;
                 }

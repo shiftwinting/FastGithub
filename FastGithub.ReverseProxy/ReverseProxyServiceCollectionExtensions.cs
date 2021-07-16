@@ -18,8 +18,8 @@ namespace FastGithub
             return services
                 .AddMemoryCache()
                 .AddHttpForwarder()
-                .AddSingleton<GithubResolver>()
-                .AddTransient<GithubHttpClientHanlder>();
+                .AddSingleton<TrustedResolver>()
+                .AddTransient<NoSniHttpClientHanlder>();
         }
     }
 }
