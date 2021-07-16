@@ -65,9 +65,11 @@ namespace FastGithub.ReverseProxy
                 {
                     throw new Exception($"解析不到{domain}的ip");
                 }
+
+                // 如果解析到的ip为本机ip，会产生反向代理请求死循环
                 if (address.Equals(IPAddress.Loopback))
                 {
-                    throw new Exception($"dns受干扰，解析{domain}的ip为{IPAddress.Loopback}");
+                    throw new Exception($"dns受干扰，解析{domain}的ip为{address}");
                 }
                 return address;
             }
