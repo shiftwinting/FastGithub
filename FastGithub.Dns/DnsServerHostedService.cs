@@ -130,7 +130,6 @@ namespace FastGithub.Dns
                     this.logger.LogInformation($"设置本机dns成功");
                     return results;
                 }
-
                 catch (Exception ex)
                 {
                     this.logger.LogWarning($"设置本机dns失败：{ex.Message}");
@@ -138,7 +137,7 @@ namespace FastGithub.Dns
             }
             else
             {
-                this.logger.LogError("不支持自动为本机设备设置dns值");
+                this.logger.LogError("不支持自动设置dns，请手动设置网卡的dns为127.0.0.1");
             }
 
             return default;
