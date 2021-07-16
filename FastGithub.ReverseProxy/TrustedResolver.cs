@@ -1,6 +1,5 @@
 ﻿using DNS.Client;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
@@ -18,7 +17,6 @@ namespace FastGithub.ReverseProxy
         private readonly IMemoryCache memoryCache;
         private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
         private readonly IOptionsMonitor<FastGithubOptions> options;
-        private readonly ILogger<TrustedResolver> logger;
 
         /// <summary>
         /// 受信任的域名解析器
@@ -26,12 +24,10 @@ namespace FastGithub.ReverseProxy
         /// <param name="options"></param>
         public TrustedResolver(
             IMemoryCache memoryCache,
-            IOptionsMonitor<FastGithubOptions> options,
-            ILogger<TrustedResolver> logger)
+            IOptionsMonitor<FastGithubOptions> options)
         {
             this.memoryCache = memoryCache;
             this.options = options;
-            this.logger = logger;
         }
 
         /// <summary>
@@ -48,8 +44,6 @@ namespace FastGithub.ReverseProxy
                 e.SetAbsoluteExpiration(this.cacheTimeSpan);
                 return this.LookupAsync(domain, cancellationToken);
             });
-
-            this.logger.LogInformation($"[{address}->{domain}]");
             return address;
         }
 
