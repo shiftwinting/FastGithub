@@ -67,7 +67,15 @@ namespace FastGithub.ReverseProxy
                 var dnsClient = new DnsClient(endpoint);
                 var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
                 var address = addresses?.FirstOrDefault();
-                return address ?? throw new Exception($"解析不到{domain}的ip");
+                if (address == null)
+                {
+                    throw new Exception($"解析不到{domain}的ip");
+                }
+                if (address.Equals(IPAddress.Loopback))
+                {
+                    throw new Exception($"dns受干扰，解析{domain}的ip为{IPAddress.Loopback}");
+                }
+                return address;
             }
             catch (Exception ex)
             {
