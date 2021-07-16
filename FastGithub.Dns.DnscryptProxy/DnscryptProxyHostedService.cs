@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.Dns.DnscryptProxy
 {
     /// <summary>
     /// DnscryptProxy后台服务

@@ -19,6 +19,7 @@
 	<ItemGroup>
 		<PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
+		<ProjectReference Include="..\FastGithub.Dns.DnscryptProxy\FastGithub.Dns.DnscryptProxy.csproj" />
 		<ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
 		<ProjectReference Include="..\FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj" />
 		<ProjectReference Include="..\FastGithub.Upgrade\FastGithub.Upgrade.csproj" />

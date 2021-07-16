@@ -15,10 +15,4 @@
 		<ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
 	</ItemGroup>
 
-	<ItemGroup >
-		<None Update="dnscrypt-proxy*">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
 </Project>

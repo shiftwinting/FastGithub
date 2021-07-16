@@ -32,17 +32,19 @@ namespace FastGithub
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddAppUpgrade();
-                    services.AddGithubDns();
-                    services.AddGithubReverseProxy();
-                    services.AddOptions<FastGithubOptions>()
-                        .Bind(ctx.Configuration.GetSection(nameof(FastGithub)))
-                        .Validate(opt => opt.TrustedDns.Validate() && opt.UntrustedDns.Validate(), "无效的Dns配置");
+                    services
+                        .AddAppUpgrade()
+                        .AddDnsServer()
+                        .AddReverseProxy()
+                        .AddDnscryptProxy()
+                        .AddOptions<FastGithubOptions>()
+                            .Bind(ctx.Configuration.GetSection(nameof(FastGithub)))
+                            .Validate(opt => opt.TrustedDns.Validate() && opt.UntrustedDns.Validate(), "无效的Dns配置");
                 })
                 .ConfigureWebHostDefaults(web =>
                 {
-                    web.Configure(app => app.UseGithubReverseProxy());
-                    web.UseKestrel(kestrel => kestrel.ListenGithubReverseProxy("FastGithub.cer", "FastGithub.key"));
+                    web.Configure(app => app.UseHttpsReverseProxy());
+                    web.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy("FastGithub.cer", "FastGithub.key"));
                 });
         }
     }

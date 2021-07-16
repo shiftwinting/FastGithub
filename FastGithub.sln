@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Upgrade", "FastG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.ReverseProxy", "FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj", "{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastGithub.Dns.DnscryptProxy", "FastGithub.Dns.DnscryptProxy\FastGithub.Dns.DnscryptProxy.csproj", "{CA5B4643-DD1B-42D1-BAF0-589FB0A0D4A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA5B4643-DD1B-42D1-BAF0-589FB0A0D4A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA5B4643-DD1B-42D1-BAF0-589FB0A0D4A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA5B4643-DD1B-42D1-BAF0-589FB0A0D4A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA5B4643-DD1B-42D1-BAF0-589FB0A0D4A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

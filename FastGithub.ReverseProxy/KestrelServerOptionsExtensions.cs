@@ -21,12 +21,12 @@ namespace FastGithub
         private static readonly ConcurrentDictionary<string, Lazy<X509Certificate2>> domainCerts = new();
 
         /// <summary>
-        /// 监听github的反向代理
+        /// 监听https的反向代理
         /// </summary>
         /// <param name="kestrel"></param>
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
-        public static void ListenGithubReverseProxy(this KestrelServerOptions kestrel, string caPublicCerPath, string caPrivateKeyPath)
+        public static void ListenHttpsReverseProxy(this KestrelServerOptions kestrel, string caPublicCerPath, string caPrivateKeyPath)
         {
             var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
@@ -37,7 +37,7 @@ namespace FastGithub
                     https.ServerCertificateSelector = (ctx, domain) =>
                         GetOrCreateCert(domain)));
 
-            logger.LogInformation("反向代理服务启动成功");
+            logger.LogInformation("https反向代理服务启动成功");
 
 
             X509Certificate2 GetOrCreateCert(string key)

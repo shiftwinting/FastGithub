@@ -9,16 +9,16 @@ using Yarp.ReverseProxy.Forwarder;
 namespace FastGithub
 {
     /// <summary>
-    /// gitub反向代理的中间件扩展
+    /// https反向代理的中间件扩展
     /// </summary>
     public static class ReverseProxyApplicationBuilderExtensions
     {
         /// <summary>
-        /// 使用gitub反向代理中间件
+        /// 使用https反向代理中间件
         /// </summary>
         /// <param name="app"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseGithubReverseProxy(this IApplicationBuilder app)
+        public static IApplicationBuilder UseHttpsReverseProxy(this IApplicationBuilder app)
         {
             var httpForwarder = app.ApplicationServices.GetRequiredService<IHttpForwarder>();
             var httpClientHanlder = app.ApplicationServices.GetRequiredService<NoSniHttpClientHanlder>();
