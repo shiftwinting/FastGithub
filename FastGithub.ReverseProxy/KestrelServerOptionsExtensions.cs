@@ -29,7 +29,7 @@ namespace FastGithub
         public static void ListenGithubReverseProxy(this KestrelServerOptions kestrel, string caPublicCerPath, string caPrivateKeyPath)
         {
             var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}{nameof(ReverseProxy)}");
+            var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
             TryInstallCaCert(caPublicCerPath, logger);
 
             kestrel.ListenAnyIP(443, listen =>
