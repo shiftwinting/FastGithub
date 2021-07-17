@@ -8,16 +8,16 @@ namespace FastGithub
     sealed class DomainMatch
     {
         private readonly Regex regex;
-        private readonly string pattern;
+        private readonly string domainPattern;
 
         /// <summary>
         /// 域名匹配
         /// </summary>
-        /// <param name="pattern">域名表达式</param>
-        public DomainMatch(string pattern)
+        /// <param name="domainPattern">域名表达式</param>
+        public DomainMatch(string domainPattern)
         {
-            this.pattern = pattern;
-            var regexPattern = Regex.Escape(pattern).Replace(@"\*", ".*");
+            this.domainPattern = domainPattern;
+            var regexPattern = Regex.Escape(domainPattern).Replace(@"\*", ".*");
             this.regex = new Regex($"^{regexPattern}$", RegexOptions.IgnoreCase);
         }
 
@@ -37,7 +37,7 @@ namespace FastGithub
         /// <returns></returns>
         public override string ToString()
         {
-            return this.pattern;
+            return this.domainPattern;
         }
     }
 }

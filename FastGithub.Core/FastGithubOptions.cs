@@ -28,9 +28,9 @@ namespace FastGithub
         public IPEndPointOptions UntrustedDns { get; set; } = new IPEndPointOptions { IPAddress = "114.114.114.114", Port = 53 };
 
         /// <summary>
-        /// 代理的域名匹配
+        /// 代理的域名表达式
         /// </summary>
-        public HashSet<string> DomainMatches { get; set; } = new();
+        public HashSet<string> DomainPatterns { get; set; } = new();
 
         /// <summary>
         /// 验证选项值
@@ -40,7 +40,7 @@ namespace FastGithub
         {
             this.trustedDnsEndPoint = this.TrustedDns.ToIPEndPoint();
             this.unTrustedDnsEndPoint = this.UntrustedDns.ToIPEndPoint();
-            this.domainMatches = this.DomainMatches.Select(item => new DomainMatch(item)).ToArray();
+            this.domainMatches = this.DomainPatterns.Select(item => new DomainMatch(item)).ToArray();
         }
 
 
