@@ -47,18 +47,19 @@ namespace FastGithub.ReverseProxy
                     error = ForwarderError.NoAvailableDestinations.ToString(),
                     message = $"不支持https反向代理{host}这个域名"
                 });
-                return;
             }
+            else
+            {
+                var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
+                var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
 
-            var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
-            var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
+                var httpClient = domainConfig.TlsSni
+                   ? new HttpMessageInvoker(this.sniHttpClientHanlder, disposeHandler: false)
+                   : new HttpMessageInvoker(this.noSniHttpClientHanlder, disposeHandler: false);
 
-            var httpClient = domainConfig.TlsSni
-               ? new HttpMessageInvoker(this.sniHttpClientHanlder, disposeHandler: false)
-               : new HttpMessageInvoker(this.noSniHttpClientHanlder, disposeHandler: false);
-
-            var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
-            await ResponseErrorAsync(context, error);
+                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
+                await ResponseErrorAsync(context, error);
+            }
         }
 
         /// <summary>

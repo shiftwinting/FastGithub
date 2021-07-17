@@ -64,25 +64,21 @@ namespace FastGithub
         /// <param name="logger"></param>
         private static void TryInstallCaCert(string caPublicCerPath, ILogger logger)
         {
-            if (OperatingSystem.IsWindows())
+            try
             {
-                try
+                var caCert = new X509Certificate2(caPublicCerPath);
+                using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
                 {
-                    var caCert = new X509Certificate2(caPublicCerPath);
-                    using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-                    store.Open(OpenFlags.ReadWrite);
-                    if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
-                    {
-                        store.Add(caCert);
-                        store.Close();
-                    }
-                }
-                catch (Exception)
-                {
-                    logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+                    store.Add(caCert);
+                    store.Close();
                 }
             }
+            catch (Exception)
+            {
+                logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+            }
         }
-
     }
 }
