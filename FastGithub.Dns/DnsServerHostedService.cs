@@ -169,6 +169,7 @@ namespace FastGithub.Dns
             {
                 this.SetNameServers(this.dnsAddresses);
             }
+            FlushResolverCache();
             return base.StopAsync(cancellationToken);
         }
 
