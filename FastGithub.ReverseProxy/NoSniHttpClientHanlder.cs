@@ -13,7 +13,7 @@ namespace FastGithub.ReverseProxy
     /// </summary> 
     class NoSniHttpClientHanlder : DelegatingHandler
     {
-        private readonly TrustedResolver trustedDomainResolver;
+        private readonly DomainResolver trustedDomainResolver;
         private readonly ILogger<NoSniHttpClientHanlder> logger;
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace FastGithub.ReverseProxy
         /// </summary>
         /// <param name="trustedDomainResolver"></param> 
         public NoSniHttpClientHanlder(
-            TrustedResolver trustedDomainResolver,
+            DomainResolver trustedDomainResolver,
             ILogger<NoSniHttpClientHanlder> logger)
         {
             this.trustedDomainResolver = trustedDomainResolver;

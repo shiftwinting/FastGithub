@@ -12,7 +12,7 @@ namespace FastGithub.ReverseProxy
     /// <summary>
     /// 受信任的域名解析器
     /// </summary> 
-    sealed class TrustedResolver
+    sealed class DomainResolver
     {
         private readonly IMemoryCache memoryCache;
         private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
@@ -22,7 +22,7 @@ namespace FastGithub.ReverseProxy
         /// 受信任的域名解析器
         /// </summary> 
         /// <param name="options"></param>
-        public TrustedResolver(
+        public DomainResolver(
             IMemoryCache memoryCache,
             IOptionsMonitor<FastGithubOptions> options)
         {
@@ -66,6 +66,7 @@ namespace FastGithub.ReverseProxy
                     throw new Exception($"解析不到{domain}的ip");
                 }
 
+                // 受干扰的dns，常常返回127.0.0.1来阻断请求
                 // 如果解析到的ip为本机ip，会产生反向代理请求死循环
                 if (address.Equals(IPAddress.Loopback))
                 {

@@ -18,7 +18,7 @@ namespace FastGithub
             return services
                 .AddMemoryCache()
                 .AddHttpForwarder()
-                .AddSingleton<TrustedResolver>()
+                .AddSingleton<DomainResolver>()
                 .AddTransient<NoSniHttpClientHanlder>();
         }
     }

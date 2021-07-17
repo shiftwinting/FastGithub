@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Net.NetworkInformation;
 
 namespace FastGithub
 {
@@ -29,14 +30,43 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 验证
+        /// 验证dns
+        /// 防止使用自己使用自己来解析域名造成死循环
         /// </summary>
         /// <returns></returns>
         public bool Validate()
         {
-            return System.Net.IPAddress.TryParse(this.IPAddress, out var address)
-                ? !(address.Equals(System.Net.IPAddress.Loopback) && this.Port == 53)
-                : false;
+            if (System.Net.IPAddress.TryParse(this.IPAddress, out var address) == false)
+            {
+                return false;
+            }
+
+            if (this.Port == 53 && IsLocalMachineIPAddress(address))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 是否为本机ip
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private static bool IsLocalMachineIPAddress(IPAddress address)
+        {
+            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                foreach (var addressInfo in @interface.GetIPProperties().UnicastAddresses)
+                {
+                    if (addressInfo.Address.Equals(address))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }
