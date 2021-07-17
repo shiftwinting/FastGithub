@@ -195,7 +195,7 @@ namespace FastGithub.Dns
             }
             else
             {
-                this.logger.LogError("不支持自动设置dns，请手动设置网卡的dns为127.0.0.1");
+                this.logger.LogWarning("不支持自动设置dns，请手动设置网卡的dns为127.0.0.1");
             }
 
             return default;
