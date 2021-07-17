@@ -1,4 +1,6 @@
-﻿namespace FastGithub
+﻿using System;
+
+namespace FastGithub
 {
     /// <summary>
     /// 域名配置
@@ -12,9 +14,8 @@
 
         /// <summary>
         /// 目的地
-        /// 支持ip或域名
-        /// 留空则本域名
+        /// 格式为相对或绝对uri
         /// </summary>
-        public string? Destination { get; set; }
+        public Uri? Destination { get; set; }
     }
 }

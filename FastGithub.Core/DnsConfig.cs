@@ -18,7 +18,7 @@ namespace FastGithub
         /// <summary>
         /// 端口
         /// </summary>
-        public int Port { get; set; }
+        public int Port { get; set; } = 53;
 
         /// <summary>
         /// 转换为IPEndPoint

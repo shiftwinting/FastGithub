@@ -32,7 +32,7 @@ namespace FastGithub.Dns
         {
             this.options = options;
             this.logger = logger;
-            this.untrustedResolver = new UdpRequestResolver(options.CurrentValue.GetTrustedDns());
+            this.untrustedResolver = new UdpRequestResolver(options.CurrentValue.Config.TrustedDns);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace FastGithub.Dns
             }
 
             var domain = question.Name;
-            if (this.options.CurrentValue.IsMatch(domain.ToString()) == true)
+            if (this.options.CurrentValue.Config.IsMatch(domain.ToString()) == true)
             {
                 var localAddress = remoteEndPointRequest.GetLocalAddress() ?? IPAddress.Loopback;
                 var record = new IPAddressResourceRecord(domain, localAddress, this.ttl);

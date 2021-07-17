@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Collections.Generic;
 
 namespace FastGithub
 {
@@ -10,13 +7,6 @@ namespace FastGithub
     /// </summary>
     public class FastGithubOptions
     {
-        /// <summary>
-        /// 域名
-        /// </summary>
-        private DomainMatch[]? domainMatches;
-        private IPEndPoint? trustedDnsIPEndPoint;
-        private IPEndPoint? unTrustedDnsIPEndPoint;
-
         /// <summary>
         /// 受信任的dns服务
         /// </summary>
@@ -28,50 +18,29 @@ namespace FastGithub
         public DnsConfig UntrustedDns { get; set; } = new DnsConfig { IPAddress = "114.114.114.114", Port = 53 };
 
         /// <summary>
-        /// 代理的域名表达式
+        /// 代理的域名配置
         /// </summary>
-        public HashSet<string> DomainPatterns { get; set; } = new();
+        public Dictionary<string, DomainConfig> DomainConfigs { get; set; } = new();
+
+
 
         /// <summary>
-        /// 验证选项值
+        /// 初始化选项为配置
         /// </summary>
         /// <exception cref="FastGithubException"></exception>
-        public void Validate()
+        public void InitConfig()
         {
-            this.trustedDnsIPEndPoint = this.TrustedDns.ToIPEndPoint();
-            this.unTrustedDnsIPEndPoint = this.UntrustedDns.ToIPEndPoint();
-            this.domainMatches = this.DomainPatterns.Select(item => new DomainMatch(item)).ToArray();
-        }
-
-
-        /// <summary>
-        /// 受信任的dns服务节点
-        /// </summary>
-        public IPEndPoint GetTrustedDns()
-        {
-            return this.trustedDnsIPEndPoint ?? throw new InvalidOperationException();
+            this.fastGithubConfig = new FastGithubConfig(this);
         }
 
         /// <summary>
-        /// 不受信任的dns服务节点
+        /// 配置
         /// </summary>
-        public IPEndPoint GetUnTrustedDns()
-        {
-            return this.unTrustedDnsIPEndPoint ?? throw new InvalidOperationException();
-        }
+        private FastGithubConfig? fastGithubConfig;
 
         /// <summary>
-        /// 是否匹配指定的域名
+        /// 获取配置
         /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        public bool IsMatch(string domain)
-        {
-            if (this.domainMatches == null)
-            {
-                throw new InvalidOperationException();
-            }
-            return this.domainMatches.Any(item => item.IsMatch(domain));
-        }
+        public FastGithubConfig Config => this.fastGithubConfig!;
     }
 }

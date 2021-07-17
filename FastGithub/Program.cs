@@ -39,7 +39,7 @@ namespace FastGithub
                         .AddDnscryptProxy()
                         .AddOptions<FastGithubOptions>()
                             .Bind(ctx.Configuration.GetSection(nameof(FastGithub)))
-                            .PostConfigure(opt => opt.Validate());
+                            .PostConfigure(opt => opt.InitConfig());
                 })
                 .ConfigureWebHostDefaults(web =>
                 {
