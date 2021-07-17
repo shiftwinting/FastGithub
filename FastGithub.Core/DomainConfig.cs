@@ -13,6 +13,11 @@ namespace FastGithub
         public bool TlsSni { get; set; }
 
         /// <summary>
+        /// 请求超时时长
+        /// </summary>
+        public TimeSpan? Timeout { get; set; }
+
+        /// <summary>
         /// 目的地
         /// 格式为相对或绝对uri
         /// </summary>
