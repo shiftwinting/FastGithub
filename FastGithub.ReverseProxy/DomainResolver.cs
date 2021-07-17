@@ -57,7 +57,7 @@ namespace FastGithub.ReverseProxy
         {
             try
             {
-                var dns = this.fastGithubConfig.TrustedDns;
+                var dns = this.fastGithubConfig.PureDns;
                 var dnsClient = new DnsClient(dns);
                 var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
                 var address = addresses?.FirstOrDefault();
@@ -80,7 +80,7 @@ namespace FastGithub.ReverseProxy
             }
             catch (Exception ex)
             {
-                var dns = this.fastGithubConfig.TrustedDns;
+                var dns = this.fastGithubConfig.PureDns;
                 throw new FastGithubException($"dns({dns})：{ex.Message}", ex);
             }
         }

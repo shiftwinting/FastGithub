@@ -8,14 +8,14 @@ namespace FastGithub
     public class FastGithubOptions
     {
         /// <summary>
-        /// 受信任的dns服务
+        /// 未污染的dns
         /// </summary>
-        public DnsConfig TrustedDns { get; set; } = new DnsConfig { IPAddress = "127.0.0.1", Port = 5533 };
+        public DnsConfig PureDns { get; set; } = new DnsConfig { IPAddress = "127.0.0.1", Port = 5533 };
 
         /// <summary>
-        /// 不受信任的dns服务
+        /// 速度快的dns
         /// </summary>
-        public DnsConfig UntrustedDns { get; set; } = new DnsConfig { IPAddress = "114.114.114.114", Port = 53 };
+        public DnsConfig FastDns { get; set; } = new DnsConfig { IPAddress = "114.114.114.114", Port = 53 };
 
         /// <summary>
         /// 代理的域名配置

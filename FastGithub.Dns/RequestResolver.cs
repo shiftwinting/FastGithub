@@ -36,12 +36,12 @@ namespace FastGithub.Dns
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
 
-            this.requestResolver = new UdpRequestResolver(fastGithubConfig.UnTrustedDns);
-            options.OnChange(opt => DnsConfigChanged(opt.UntrustedDns));
+            this.requestResolver = new UdpRequestResolver(fastGithubConfig.FastDns);
+            options.OnChange(opt => OptionsChanged(opt));
 
-            void DnsConfigChanged(DnsConfig config)
+            void OptionsChanged(FastGithubOptions opt)
             {
-                var dns = config.ToIPEndPoint();
+                var dns = opt.FastDns.ToIPEndPoint();
                 this.requestResolver = new UdpRequestResolver(dns);
             }
         }

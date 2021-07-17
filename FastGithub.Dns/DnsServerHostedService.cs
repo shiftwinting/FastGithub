@@ -82,7 +82,7 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            var secondary = this.fastGithubConfig.UnTrustedDns.Address;
+            var secondary = this.fastGithubConfig.FastDns.Address;
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, secondary);
             FlushResolverCache();
 

@@ -47,9 +47,9 @@ namespace FastGithub.ReverseProxy
             }
 
             var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
-            var httpClient = domainConfig.NoSni
-               ? new HttpMessageInvoker(this.noSniHttpClientHanlder, disposeHandler: false)
-               : new HttpMessageInvoker(this.sniHttpClientHanlder, disposeHandler: false);
+            var httpClient = domainConfig.TlsSni
+               ? new HttpMessageInvoker(this.sniHttpClientHanlder, disposeHandler: false)
+               : new HttpMessageInvoker(this.noSniHttpClientHanlder, disposeHandler: false);
 
             var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
             await ResponseErrorAsync(context, error);

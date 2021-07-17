@@ -8,9 +8,9 @@ namespace FastGithub
     public class DomainConfig
     {
         /// <summary>
-        /// 是否不发送SNI
+        /// 是否发送SNI
         /// </summary>
-        public bool NoSni { get; set; } = true;
+        public bool TlsSni { get; set; }
 
         /// <summary>
         /// 目的地

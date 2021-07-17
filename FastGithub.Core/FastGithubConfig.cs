@@ -20,16 +20,16 @@ namespace FastGithub
 
 
         /// <summary>
-        /// 获取信任dns
+        /// 未污染的dns
         /// </summary>
         [AllowNull]
-        public IPEndPoint TrustedDns { get; private set; }
+        public IPEndPoint PureDns { get; private set; }
 
         /// <summary>
-        /// 获取非信任dns
+        /// 速度快的dns
         /// </summary>
         [AllowNull]
-        public IPEndPoint UnTrustedDns { get; private set; }
+        public IPEndPoint FastDns { get; private set; }
 
         /// <summary>
         /// 获取域名配置
@@ -54,8 +54,8 @@ namespace FastGithub
         private void Init(FastGithubOptions options)
         {
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
-            this.TrustedDns = options.TrustedDns.ToIPEndPoint();
-            this.UnTrustedDns = options.UntrustedDns.ToIPEndPoint();
+            this.PureDns = options.PureDns.ToIPEndPoint();
+            this.FastDns = options.FastDns.ToIPEndPoint();
             this.DomainConfigs = options.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
         }
 
