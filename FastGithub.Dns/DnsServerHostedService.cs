@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -46,7 +47,13 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            this.socket.Bind(new IPEndPoint(IPAddress.Any, 53));
+            const int DNS_PORT = 53;
+            if (OperatingSystem.IsWindows() && UdpTable.TryGetOwnerProcessId(DNS_PORT, out var processId))
+            {
+                Process.GetProcessById(processId).Kill();
+            }
+
+            this.socket.Bind(new IPEndPoint(IPAddress.Any, DNS_PORT));
             if (OperatingSystem.IsWindows())
             {
                 const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
