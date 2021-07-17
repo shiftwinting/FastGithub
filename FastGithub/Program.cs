@@ -41,7 +41,7 @@ namespace FastGithub
                 })
                 .ConfigureWebHostDefaults(web =>
                 {
-                    web.Configure(app => app.UseHttpsReverseProxy());
+                    web.Configure(app => app.UseHttpsReverseProxy("README.html"));
                     web.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy("FastGithub.cer", "FastGithub.key"));
                 });
         }

@@ -1,5 +1,5 @@
 ﻿# FastGithub
-github定制版的dns服务，解析github最优的ip
+github加速神器
 
 ### 本机使用[推荐]
 * 运行FastGithub程序，自动本机的网络适配器的dns会为127.0.0.1和安装FastGithub.cer
@@ -12,12 +12,11 @@ github定制版的dns服务，解析github最优的ip
 * 在你的电脑安装FastGithub.cer到`将所有的证书都放入下载存储\受信任的根证书颁发机构`
 
 ### 以windows服务运行
-运行cmd，键入如下命令，其中D:\Softs为软件实际目录
-* D:\Softs\FastGithub.exe start // 安装并启动服务
-* D:\Softs\FastGithub.exe stop  // 卸载并删除服务
+* FastGithub.exe start // 安装并启动服务
+* FastGithub.exe stop  // 卸载并删除服务
 
 ### git ssl验证不通过
-使用https反向代理之后，git请求时会遇到SSL certificate problem: unable to get local issuer certificate
+使用FastGithub之后，git请求时会遇到SSL certificate problem: unable to get local issuer certificate
 需要关闭git的证书验证：
 ```
 git config --global http.sslverify false

@@ -13,11 +13,12 @@ namespace FastGithub
         /// 使用https反向代理中间件
         /// </summary>
         /// <param name="app"></param>
+        /// <param name="fallbackFile"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseHttpsReverseProxy(this IApplicationBuilder app)
+        public static IApplicationBuilder UseHttpsReverseProxy(this IApplicationBuilder app, string fallbackFile)
         {
             var middleware = app.ApplicationServices.GetRequiredService<ReverseProxyMiddleware>();
-            return app.Use(next => context => middleware.InvokeAsync(context));
+            return app.Use(next => context => middleware.InvokeAsync(context, fallbackFile));
         }
     }
 }

@@ -36,17 +36,15 @@ namespace FastGithub.ReverseProxy
         /// 处理请求
         /// </summary>
         /// <param name="context"></param>
+        /// <param name="fallbackFile"></param>
         /// <returns></returns>
-        public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, string fallbackFile)
         {
             var host = context.Request.Host.Host;
             if (this.fastGithubConfig.TryGetDomainConfig(host, out var domainConfig) == false)
             {
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    error = ForwarderError.NoAvailableDestinations.ToString(),
-                    message = $"不支持https反向代理{host}这个域名"
-                });
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync(fallbackFile);
             }
             else
             {

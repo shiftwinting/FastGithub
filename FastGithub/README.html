@@ -1,0 +1,40 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href=" https://cdn.jsdelivr.net/npm/@bootcss/v3.bootcss.com@1.0.10/dist/css/bootstrap.min.css">
+    <title>FastGithub--github加速神器</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>FastGithub</h1>
+
+        <p>github加速神器</p>
+
+        <h3>本机使用[推荐]</h3>
+
+        <ul><li>运行FastGithub程序，自动本机的网络适配器的dns会为127.0.0.1和安装FastGithub.cer</li><li>如果网络适配器的dns没有变成127.0.0.1，请手工修改网络适配器的dns</li><li>如果浏览器提示无效的证书，请手工安装FastGithub.cer到<code>将所有的证书都放入下载存储\受信任的根证书颁发机构</code></li></ul>
+
+        <h3>局域网服务器使用</h3>
+
+        <ul><li>在局域网服务器运行FastGithub程序</li><li>手工修改你电脑的网络适配器的dns，值为局域网服务器的ip</li><li>在你的电脑安装FastGithub.cer到<code>将所有的证书都放入下载存储\受信任的根证书颁发机构</code></li></ul>
+
+        <h3>以windows服务运行</h3>
+
+        <ul><li>FastGithub.exe start // 安装并启动服务</li><li>FastGithub.exe stop  // 卸载并删除服务</li></ul>
+
+        <h3>git ssl验证不通过</h3>
+
+        <p>
+            使用FastGithub之后，git请求时会遇到SSL certificate problem: unable to get local issuer certificate
+            需要关闭git的证书验证：
+            <code>
+                git config --global http.sslverify false
+            </code>
+        </p>
+    </div>
+</body>
+</html>
