@@ -1,6 +1,5 @@
 ﻿using DNS.Client;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Net;
@@ -10,24 +9,25 @@ using System.Threading.Tasks;
 namespace FastGithub.ReverseProxy
 {
     /// <summary>
-    /// 受信任的域名解析器
+    /// 域名解析器
     /// </summary> 
     sealed class DomainResolver
     {
         private readonly IMemoryCache memoryCache;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
-        private readonly IOptionsMonitor<FastGithubOptions> options;
 
         /// <summary>
-        /// 受信任的域名解析器
-        /// </summary> 
-        /// <param name="options"></param>
+        /// 域名解析器
+        /// </summary>
+        /// <param name="memoryCache"></param>
+        /// <param name="fastGithubConfig"></param>
         public DomainResolver(
             IMemoryCache memoryCache,
-            IOptionsMonitor<FastGithubOptions> options)
+            FastGithubConfig fastGithubConfig)
         {
             this.memoryCache = memoryCache;
-            this.options = options;
+            this.fastGithubConfig = fastGithubConfig;
         }
 
         /// <summary>
@@ -55,22 +55,22 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         private async Task<IPAddress> LookupAsync(string domain, CancellationToken cancellationToken)
         {
-            var endpoint = this.options.CurrentValue.TrustedDns.ToIPEndPoint();
             try
             {
-                var dnsClient = new DnsClient(endpoint);
+                var dns = this.fastGithubConfig.TrustedDns;
+                var dnsClient = new DnsClient(dns);
                 var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
                 var address = addresses?.FirstOrDefault();
                 if (address == null)
                 {
-                    throw new FastGithubException($"dns({endpoint})：解析不到{domain}的ip");
+                    throw new FastGithubException($"dns({dns})：解析不到{domain}的ip");
                 }
 
                 // 受干扰的dns，常常返回127.0.0.1来阻断请求
                 // 如果解析到的ip为本机ip，会产生反向代理请求死循环
                 if (address.Equals(IPAddress.Loopback))
                 {
-                    throw new FastGithubException($"dns({endpoint})：解析{domain}被干扰为{address}");
+                    throw new FastGithubException($"dns({dns})：解析{domain}被干扰为{address}");
                 }
                 return address;
             }
@@ -80,7 +80,8 @@ namespace FastGithub.ReverseProxy
             }
             catch (Exception ex)
             {
-                throw new FastGithubException($"dns({endpoint})：{ex.Message}", ex);
+                var dns = this.fastGithubConfig.TrustedDns;
+                throw new FastGithubException($"dns({dns})：{ex.Message}", ex);
             }
         }
     }

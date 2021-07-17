@@ -16,23 +16,34 @@ namespace FastGithub.Dns
     /// </summary> 
     sealed class RequestResolver : IRequestResolver
     {
+        private IRequestResolver requestResolver;
+
         private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
-        private readonly IRequestResolver untrustedResolver;
-        private readonly IOptionsMonitor<FastGithubOptions> options;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<RequestResolver> logger;
 
         /// <summary>
         /// dns解析者
-        /// </summary> 
+        /// </summary>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public RequestResolver(
+            FastGithubConfig fastGithubConfig,
             IOptionsMonitor<FastGithubOptions> options,
             ILogger<RequestResolver> logger)
         {
-            this.options = options;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
-            this.untrustedResolver = new UdpRequestResolver(options.CurrentValue.Config.TrustedDns);
+
+            this.requestResolver = new UdpRequestResolver(fastGithubConfig.UnTrustedDns);
+            options.OnChange(opt => DnsConfigChanged(opt.UntrustedDns));
+
+            void DnsConfigChanged(DnsConfig config)
+            {
+                var dns = config.ToIPEndPoint();
+                this.requestResolver = new UdpRequestResolver(dns);
+            }
         }
 
         /// <summary>
@@ -55,8 +66,9 @@ namespace FastGithub.Dns
                 return response;
             }
 
+            // 解析匹配的域名指向本机ip
             var domain = question.Name;
-            if (this.options.CurrentValue.Config.IsMatch(domain.ToString()) == true)
+            if (this.fastGithubConfig.IsMatch(domain.ToString()) == true)
             {
                 var localAddress = remoteEndPointRequest.GetLocalAddress() ?? IPAddress.Loopback;
                 var record = new IPAddressResourceRecord(domain, localAddress, this.ttl);
@@ -66,7 +78,7 @@ namespace FastGithub.Dns
                 return response;
             }
 
-            return await this.untrustedResolver.Resolve(request, cancellationToken);
+            return await this.requestResolver.Resolve(request, cancellationToken);
         }
     }
 }

@@ -21,26 +21,5 @@ namespace FastGithub
         /// 代理的域名配置
         /// </summary>
         public Dictionary<string, DomainConfig> DomainConfigs { get; set; } = new();
-
-
-
-        /// <summary>
-        /// 初始化选项为配置
-        /// </summary>
-        /// <exception cref="FastGithubException"></exception>
-        public void InitConfig()
-        {
-            this.fastGithubConfig = new FastGithubConfig(this);
-        }
-
-        /// <summary>
-        /// 配置
-        /// </summary>
-        private FastGithubConfig? fastGithubConfig;
-
-        /// <summary>
-        /// 获取配置
-        /// </summary>
-        public FastGithubConfig Config => this.fastGithubConfig!;
     }
 }

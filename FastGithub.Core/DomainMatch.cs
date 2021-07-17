@@ -5,7 +5,7 @@ namespace FastGithub
     /// <summary>
     /// 域名匹配
     /// </summary>
-    sealed class DomainMatch
+    public class DomainMatch
     {
         private readonly Regex regex;
         private readonly string domainPattern;

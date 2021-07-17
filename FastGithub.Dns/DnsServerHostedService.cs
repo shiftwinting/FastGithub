@@ -19,7 +19,7 @@ namespace FastGithub.Dns
     sealed class DnsServerHostedService : BackgroundService
     {
         private readonly RequestResolver requestResolver;
-        private readonly IOptionsMonitor<FastGithubOptions> options;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -28,21 +28,23 @@ namespace FastGithub.Dns
 
         [SupportedOSPlatform("windows")]
         [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
-        private static extern uint DnsFlushResolverCache();
+        private static extern void DnsFlushResolverCache();
 
         /// <summary>
         /// dns后台服务
         /// </summary>
         /// <param name="requestResolver"></param>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public DnsServerHostedService(
             RequestResolver requestResolver,
+            FastGithubConfig fastGithubConfig,
             IOptionsMonitor<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
             this.requestResolver = requestResolver;
-            this.options = options;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
             options.OnChange(opt => FlushResolverCache());
         }
@@ -80,7 +82,7 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            var secondary = options.CurrentValue.Config.UnTrustedDns.Address;
+            var secondary = this.fastGithubConfig.UnTrustedDns.Address;
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, secondary);
             FlushResolverCache();
 
@@ -108,7 +110,7 @@ namespace FastGithub.Dns
                 {
                     if (i == 0)
                     {
-                        throw;
+                        throw new FastGithubException($"无法监听{localEndPoint}，{localEndPoint.Port}的udp端口已被其它程序占用");
                     }
                     await Task.Delay(delay, cancellationToken);
                 }

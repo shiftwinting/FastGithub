@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,18 +14,18 @@ namespace FastGithub.ReverseProxy
         private readonly IHttpForwarder httpForwarder;
         private readonly SniHttpClientHanlder sniHttpClientHanlder;
         private readonly NoSniHttpClientHanlder noSniHttpClientHanlder;
-        private readonly IOptionsMonitor<FastGithubOptions> options;
+        private readonly FastGithubConfig fastGithubConfig;
 
         public ReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
             SniHttpClientHanlder sniHttpClientHanlder,
             NoSniHttpClientHanlder noSniHttpClientHanlder,
-            IOptionsMonitor<FastGithubOptions> options)
+            FastGithubConfig fastGithubConfig)
         {
             this.httpForwarder = httpForwarder;
             this.sniHttpClientHanlder = sniHttpClientHanlder;
             this.noSniHttpClientHanlder = noSniHttpClientHanlder;
-            this.options = options;
+            this.fastGithubConfig = fastGithubConfig;
         }
 
         /// <summary>
@@ -37,7 +36,7 @@ namespace FastGithub.ReverseProxy
         public async Task InvokeAsync(HttpContext context)
         {
             var host = context.Request.Host.Host;
-            if (this.options.CurrentValue.Config.TryGetDomainConfig(host, out var domainConfig) == false)
+            if (this.fastGithubConfig.TryGetDomainConfig(host, out var domainConfig) == false)
             {
                 await context.Response.WriteAsJsonAsync(new
                 {

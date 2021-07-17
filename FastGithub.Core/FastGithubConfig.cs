@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -10,27 +12,51 @@ namespace FastGithub
     /// </summary>
     public class FastGithubConfig
     {
-        private readonly Dictionary<DomainMatch, DomainConfig> domainConfigs;
+        /// <summary>
+        /// 域名与配置缓存
+        /// </summary>
+        [AllowNull]
+        private ConcurrentDictionary<string, DomainConfig?> domainConfigCache;
+
 
         /// <summary>
         /// 获取信任dns
         /// </summary>
-        public IPEndPoint TrustedDns { get; }
+        [AllowNull]
+        public IPEndPoint TrustedDns { get; private set; }
 
         /// <summary>
         /// 获取非信任dns
         /// </summary>
-        public IPEndPoint UnTrustedDns { get; }
+        [AllowNull]
+        public IPEndPoint UnTrustedDns { get; private set; }
+
+        /// <summary>
+        /// 获取域名配置
+        /// </summary>
+        [AllowNull]
+        public Dictionary<DomainMatch, DomainConfig> DomainConfigs { get; private set; }
 
         /// <summary>
         /// FastGithub配置
+        /// </summary> 
+        /// <param name="options"></param>
+        public FastGithubConfig(IOptionsMonitor<FastGithubOptions> options)
+        {
+            this.Init(options.CurrentValue);
+            options.OnChange(opt => this.Init(opt));
+        }
+
+        /// <summary>
+        /// 初始化
         /// </summary>
         /// <param name="options"></param>
-        public FastGithubConfig(FastGithubOptions options)
+        private void Init(FastGithubOptions options)
         {
+            this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
             this.TrustedDns = options.TrustedDns.ToIPEndPoint();
             this.UnTrustedDns = options.UntrustedDns.ToIPEndPoint();
-            this.domainConfigs = options.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
+            this.DomainConfigs = options.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
         }
 
         /// <summary>
@@ -40,24 +66,25 @@ namespace FastGithub
         /// <returns></returns>
         public bool IsMatch(string domain)
         {
-            return this.domainConfigs.Keys.Any(item => item.IsMatch(domain));
+            return this.TryGetDomainConfig(domain, out _);
         }
 
         /// <summary>
         /// 尝试获取域名配置
         /// </summary>
         /// <param name="domain"></param>
-        /// <param name="domainConfig"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryGetDomainConfig(string domain, [MaybeNullWhen(false)] out DomainConfig domainConfig)
+        public bool TryGetDomainConfig(string domain, [MaybeNullWhen(false)] out DomainConfig value)
         {
-            var key = this.domainConfigs.Keys.FirstOrDefault(item => item.IsMatch(domain));
-            if (key == null)
+            value = this.domainConfigCache.GetOrAdd(domain, GetDomainConfig);
+            return value != null;
+
+            DomainConfig? GetDomainConfig(string domain)
             {
-                domainConfig = default;
-                return false;
+                var key = this.DomainConfigs.Keys.FirstOrDefault(item => item.IsMatch(domain));
+                return key == null ? null : this.DomainConfigs[key];
             }
-            return this.domainConfigs.TryGetValue(key, out domainConfig);
         }
     }
 }
