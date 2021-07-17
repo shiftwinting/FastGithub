@@ -38,7 +38,7 @@
 		<None Update="FastGithub.key">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="README.MD">
+		<None Update="使用说明.MD">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
