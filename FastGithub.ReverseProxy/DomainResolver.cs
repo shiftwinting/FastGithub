@@ -35,6 +35,7 @@ namespace FastGithub.ReverseProxy
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
+        /// <exception cref="FastGithubException"></exception>
         public async Task<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken)
         {
             // 缓存以避免做不必要的并发查询
@@ -53,6 +54,7 @@ namespace FastGithub.ReverseProxy
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
+        /// <exception cref="FastGithubException">
         private async Task<IPAddress> LookupAsync(string domain, CancellationToken cancellationToken)
         {
             try
@@ -70,7 +72,7 @@ namespace FastGithub.ReverseProxy
                 // 如果解析到的ip为本机ip，会产生反向代理请求死循环
                 if (address.Equals(IPAddress.Loopback))
                 {
-                    throw new FastGithubException($"dns({dns})：解析{domain}被干扰为{address}");
+                    throw new FastGithubException($"dns({dns})被污染：解析{domain}为{address}");
                 }
                 return address;
             }
@@ -81,7 +83,7 @@ namespace FastGithub.ReverseProxy
             catch (Exception ex)
             {
                 var dns = this.fastGithubConfig.PureDns;
-                throw new FastGithubException($"dns({dns})：{ex.Message}", ex);
+                throw new FastGithubException($"dns({dns})服务器异常：{ex.Message}", ex);
             }
         }
     }

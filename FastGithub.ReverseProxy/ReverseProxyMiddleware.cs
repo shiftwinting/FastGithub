@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,17 +16,20 @@ namespace FastGithub.ReverseProxy
         private readonly SniHttpClientHanlder sniHttpClientHanlder;
         private readonly NoSniHttpClientHanlder noSniHttpClientHanlder;
         private readonly FastGithubConfig fastGithubConfig;
+        private readonly ILogger<ReverseProxyMiddleware> logger;
 
         public ReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
             SniHttpClientHanlder sniHttpClientHanlder,
             NoSniHttpClientHanlder noSniHttpClientHanlder,
-            FastGithubConfig fastGithubConfig)
+            FastGithubConfig fastGithubConfig,
+            ILogger<ReverseProxyMiddleware> logger)
         {
             this.httpForwarder = httpForwarder;
             this.sniHttpClientHanlder = sniHttpClientHanlder;
             this.noSniHttpClientHanlder = noSniHttpClientHanlder;
             this.fastGithubConfig = fastGithubConfig;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -63,7 +67,7 @@ namespace FastGithub.ReverseProxy
         /// <param name="host"></param> 
         /// <param name="destination"></param>
         /// <returns></returns>
-        private static string GetDestinationPrefix(string host, Uri? destination)
+        private string GetDestinationPrefix(string host, Uri? destination)
         {
             var defaultValue = $"https://{host}/";
             if (destination == null)
@@ -72,7 +76,10 @@ namespace FastGithub.ReverseProxy
             }
 
             var baseUri = new Uri(defaultValue);
-            return new Uri(baseUri, destination).ToString();
+            var result = new Uri(baseUri, destination).ToString();
+            this.logger.LogInformation($"[{defaultValue}->{result}]");
+
+            return result;
         }
 
         /// <summary>

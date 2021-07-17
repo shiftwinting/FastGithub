@@ -13,18 +13,18 @@ namespace FastGithub.ReverseProxy
     /// </summary> 
     class NoSniHttpClientHanlder : DelegatingHandler
     {
-        private readonly DomainResolver trustedDomainResolver;
+        private readonly DomainResolver domainResolver;
         private readonly ILogger<NoSniHttpClientHanlder> logger;
 
         /// <summary>
         /// 不发送NoSni的HttpClientHandler
         /// </summary>
-        /// <param name="trustedDomainResolver"></param> 
+        /// <param name="domainResolver"></param> 
         public NoSniHttpClientHanlder(
-            DomainResolver trustedDomainResolver,
+            DomainResolver domainResolver,
             ILogger<NoSniHttpClientHanlder> logger)
         {
-            this.trustedDomainResolver = trustedDomainResolver;
+            this.domainResolver = domainResolver;
             this.logger = logger;
             this.InnerHandler = CreateNoneSniHttpHandler();
         }
@@ -73,7 +73,7 @@ namespace FastGithub.ReverseProxy
             var uri = request.RequestUri;
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
-                var address = await this.trustedDomainResolver.ResolveAsync(uri.Host, cancellationToken);
+                var address = await this.domainResolver.ResolveAsync(uri.Host, cancellationToken);
                 this.logger.LogInformation($"[{address}--NoSni->{uri.Host}]");
 
                 var builder = new UriBuilder(uri)

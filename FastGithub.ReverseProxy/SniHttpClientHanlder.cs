@@ -12,7 +12,7 @@ namespace FastGithub.ReverseProxy
     class SniHttpClientHanlder : DelegatingHandler
     {
         private readonly DomainResolver domainResolver;
-        private readonly ILogger<NoSniHttpClientHanlder> logger;
+        private readonly ILogger<SniHttpClientHanlder> logger;
 
         /// <summary>
         /// 携带Sni的HttpClientHandler
@@ -20,7 +20,7 @@ namespace FastGithub.ReverseProxy
         /// <param name="domainResolver"></param> 
         public SniHttpClientHanlder(
             DomainResolver domainResolver,
-            ILogger<NoSniHttpClientHanlder> logger)
+            ILogger<SniHttpClientHanlder> logger)
         {
             this.domainResolver = domainResolver;
             this.logger = logger;
