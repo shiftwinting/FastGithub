@@ -5,9 +5,9 @@ using System.Net.NetworkInformation;
 namespace FastGithub
 {
     /// <summary>
-    /// dns的终节点
+    /// dns配置
     /// </summary>
-    public class IPEndPointOptions
+    public class DnsConfig
     {
         /// <summary>
         /// IP地址

@@ -32,7 +32,7 @@ namespace FastGithub.Dns
         {
             this.options = options;
             this.logger = logger;
-            this.untrustedResolver = new UdpRequestResolver(options.CurrentValue.UntrustedDns.ToIPEndPoint());
+            this.untrustedResolver = new UdpRequestResolver(options.CurrentValue.GetTrustedDns());
         }
 
         /// <summary>

@@ -14,18 +14,18 @@ namespace FastGithub
         /// 域名
         /// </summary>
         private DomainMatch[]? domainMatches;
-        private IPEndPoint? trustedDnsEndPoint;
-        private IPEndPoint? unTrustedDnsEndPoint;
+        private IPEndPoint? trustedDnsIPEndPoint;
+        private IPEndPoint? unTrustedDnsIPEndPoint;
 
         /// <summary>
         /// 受信任的dns服务
         /// </summary>
-        public IPEndPointOptions TrustedDns { get; set; } = new IPEndPointOptions { IPAddress = "127.0.0.1", Port = 5533 };
+        public DnsConfig TrustedDns { get; set; } = new DnsConfig { IPAddress = "127.0.0.1", Port = 5533 };
 
         /// <summary>
         /// 不受信任的dns服务
         /// </summary>
-        public IPEndPointOptions UntrustedDns { get; set; } = new IPEndPointOptions { IPAddress = "114.114.114.114", Port = 53 };
+        public DnsConfig UntrustedDns { get; set; } = new DnsConfig { IPAddress = "114.114.114.114", Port = 53 };
 
         /// <summary>
         /// 代理的域名表达式
@@ -38,8 +38,8 @@ namespace FastGithub
         /// <exception cref="FastGithubException"></exception>
         public void Validate()
         {
-            this.trustedDnsEndPoint = this.TrustedDns.ToIPEndPoint();
-            this.unTrustedDnsEndPoint = this.UntrustedDns.ToIPEndPoint();
+            this.trustedDnsIPEndPoint = this.TrustedDns.ToIPEndPoint();
+            this.unTrustedDnsIPEndPoint = this.UntrustedDns.ToIPEndPoint();
             this.domainMatches = this.DomainPatterns.Select(item => new DomainMatch(item)).ToArray();
         }
 
@@ -49,7 +49,7 @@ namespace FastGithub
         /// </summary>
         public IPEndPoint GetTrustedDns()
         {
-            return this.trustedDnsEndPoint ?? throw new InvalidOperationException();
+            return this.trustedDnsIPEndPoint ?? throw new InvalidOperationException();
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace FastGithub
         /// </summary>
         public IPEndPoint GetUnTrustedDns()
         {
-            return this.unTrustedDnsEndPoint ?? throw new InvalidOperationException();
+            return this.unTrustedDnsIPEndPoint ?? throw new InvalidOperationException();
         }
 
         /// <summary>
