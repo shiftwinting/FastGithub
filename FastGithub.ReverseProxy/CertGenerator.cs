@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using X509Certificate2 = System.Security.Cryptography.X509Certificates.X509Certificate2;
 
@@ -114,7 +115,17 @@ namespace FastGithub.ReverseProxy
                 certGenerator.AddExtension(X509Extensions.BasicConstraints, extension.IsCritical, extension.GetParsedValue());
             }
 
-            var names = domains.Select(domain => new GeneralName(GeneralName.DnsName, domain)).ToArray();
+            var names = domains.Select(domain =>
+            {
+                var nameType = GeneralName.DnsName;
+                if (IPAddress.TryParse(domain, out _))
+                {
+                    nameType = GeneralName.IPAddress;
+                }
+                return new GeneralName(nameType, domain);
+
+            }).ToArray();
+
             var subjectAltName = new GeneralNames(names);
             certGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, subjectAltName);
             return certGenerator.Generate(signatureFactory);

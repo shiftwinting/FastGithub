@@ -5,6 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
@@ -35,25 +40,58 @@ namespace FastGithub
             kestrel.ListenAnyIP(443, listen =>
                 listen.UseHttps(https =>
                     https.ServerCertificateSelector = (ctx, domain) =>
-                        GetOrCreateCert(domain)));
+                        GetDomainCert(domain, caPublicCerPath, caPrivateKeyPath)));
 
             logger.LogInformation("https反向代理服务启动成功");
+        }
 
+        /// <summary>
+        /// 获取颁发给指定域名的证书
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="caPublicCerPath"></param>
+        /// <param name="caPrivateKeyPath"></param>
+        /// <returns></returns>
+        private static X509Certificate2 GetDomainCert(string domain, string caPublicCerPath, string caPrivateKeyPath)
+        {
+            return domainCerts.GetOrAdd(domain, GetOrCreateCert).Value;
 
-            X509Certificate2 GetOrCreateCert(string key)
+            Lazy<X509Certificate2> GetOrCreateCert(string host)
             {
-                if (key == string.Empty)
+                return new Lazy<X509Certificate2>(() =>
                 {
-                    key = "github.com";
-                }
-
-                return domainCerts.GetOrAdd(key, domain => new Lazy<X509Certificate2>(() =>
-                {
-                    var domains = new[] { domain };
+                    var domains = GetDomains(host).Distinct();
                     var validFrom = DateTime.Today.AddYears(-1);
                     var validTo = DateTime.Today.AddYears(10);
                     return CertGenerator.Generate(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
-                }, LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+                }, LazyThreadSafetyMode.ExecutionAndPublication);
+            }
+        }
+
+        /// <summary>
+        /// 获取域名
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
+        private static IEnumerable<string> GetDomains(string host)
+        {
+            if (string.IsNullOrEmpty(host) == false)
+            {
+                yield return host;
+            }
+
+            yield return Environment.MachineName;
+            yield return IPAddress.Loopback.ToString();
+
+            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                foreach (var addressInfo in @interface.GetIPProperties().UnicastAddresses)
+                {
+                    if (addressInfo.Address.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        yield return addressInfo.Address.ToString();
+                    }
+                }
             }
         }
 
