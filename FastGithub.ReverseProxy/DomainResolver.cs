@@ -63,20 +63,24 @@ namespace FastGithub.ReverseProxy
                 var address = addresses?.FirstOrDefault();
                 if (address == null)
                 {
-                    throw new Exception($"解析不到{domain}的ip");
+                    throw new FastGithubException($"dns({endpoint})：解析不到{domain}的ip");
                 }
 
                 // 受干扰的dns，常常返回127.0.0.1来阻断请求
                 // 如果解析到的ip为本机ip，会产生反向代理请求死循环
                 if (address.Equals(IPAddress.Loopback))
                 {
-                    throw new Exception($"dns受干扰，解析{domain}的ip为{address}");
+                    throw new FastGithubException($"dns({endpoint})：解析{domain}被干扰为{address}");
                 }
                 return address;
             }
+            catch (FastGithubException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                throw new ReverseProxyException($"dns({endpoint})：{ex.Message}", ex);
+                throw new FastGithubException($"dns({endpoint})：{ex.Message}", ex);
             }
         }
     }

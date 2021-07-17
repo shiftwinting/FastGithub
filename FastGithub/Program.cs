@@ -39,7 +39,7 @@ namespace FastGithub
                         .AddDnscryptProxy()
                         .AddOptions<FastGithubOptions>()
                             .Bind(ctx.Configuration.GetSection(nameof(FastGithub)))
-                            .Validate(opt => opt.TrustedDns.Validate() && opt.UntrustedDns.Validate(), "无效的Dns配置");
+                            .PostConfigure(opt => opt.Validate());
                 })
                 .ConfigureWebHostDefaults(web =>
                 {

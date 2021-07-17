@@ -7,7 +7,7 @@ namespace FastGithub
     /// <summary>
     /// dns的终节点
     /// </summary>
-    public class DnsIPEndPoint
+    public class IPEndPointOptions
     {
         /// <summary>
         /// IP地址
@@ -24,29 +24,20 @@ namespace FastGithub
         /// 转换为IPEndPoint
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="FastGithubException"></exception>
         public IPEndPoint ToIPEndPoint()
-        {
-            return new IPEndPoint(System.Net.IPAddress.Parse(this.IPAddress), this.Port);
-        }
-
-        /// <summary>
-        /// 验证dns
-        /// 防止使用自己使用自己来解析域名造成死循环
-        /// </summary>
-        /// <returns></returns>
-        public bool Validate()
         {
             if (System.Net.IPAddress.TryParse(this.IPAddress, out var address) == false)
             {
-                return false;
+                throw new FastGithubException($"无效的ip：{this.IPAddress}");
             }
 
             if (this.Port == 53 && IsLocalMachineIPAddress(address))
             {
-                return false;
+                throw new FastGithubException($"配置的dns值不能指向{nameof(FastGithub)}自身：{this.IPAddress}:{this.Port}");
             }
 
-            return true;
+            return new IPEndPoint(address, this.Port);
         }
 
         /// <summary>
