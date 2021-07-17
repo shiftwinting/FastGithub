@@ -66,7 +66,7 @@ namespace FastGithub
         /// <returns></returns>
         public bool IsMatch(string domain)
         {
-            return this.TryGetDomainConfig(domain, out _);
+            return this.DomainConfigs.Keys.Any(item => item.IsMatch(domain));
         }
 
         /// <summary>
