@@ -6,6 +6,8 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,12 +19,16 @@ namespace FastGithub.Dns
     sealed class DnsServerHostedService : BackgroundService
     {
         private readonly RequestResolver requestResolver;
-        private readonly IOptions<FastGithubOptions> options;
+        private readonly IOptionsMonitor<FastGithubOptions> options;
         private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private readonly byte[] buffer = new byte[ushort.MaxValue];
         private IPAddress[]? dnsAddresses;
+
+        [SupportedOSPlatform("windows")]
+        [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
+        private static extern uint DnsFlushResolverCache();
 
         /// <summary>
         /// dns后台服务
@@ -32,12 +38,24 @@ namespace FastGithub.Dns
         /// <param name="logger"></param>
         public DnsServerHostedService(
             RequestResolver requestResolver,
-            IOptions<FastGithubOptions> options,
+            IOptionsMonitor<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
             this.requestResolver = requestResolver;
             this.options = options;
             this.logger = logger;
+            options.OnChange(opt => FlushResolverCache());
+        }
+
+        /// <summary>
+        /// 刷新dns缓存
+        /// </summary>
+        private static void FlushResolverCache()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                DnsFlushResolverCache();
+            }
         }
 
         /// <summary>
@@ -45,7 +63,7 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             const int DNS_PORT = 53;
             if (OperatingSystem.IsWindows() && UdpTable.TryGetOwnerProcessId(DNS_PORT, out var processId))
@@ -53,7 +71,8 @@ namespace FastGithub.Dns
                 Process.GetProcessById(processId).Kill();
             }
 
-            this.socket.Bind(new IPEndPoint(IPAddress.Any, DNS_PORT));
+            await BindAsync(this.socket, new IPEndPoint(IPAddress.Any, DNS_PORT), cancellationToken);
+
             if (OperatingSystem.IsWindows())
             {
                 const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
@@ -61,9 +80,39 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation("dns服务启动成功");
-            var secondary = IPAddress.Parse(options.Value.UntrustedDns.IPAddress);
+            var secondary = IPAddress.Parse(options.CurrentValue.UntrustedDns.IPAddress);
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, secondary);
-            return base.StartAsync(cancellationToken);
+            FlushResolverCache();
+
+            await base.StartAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// 尝试多次绑定
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="localEndPoint"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private static async Task BindAsync(Socket socket, IPEndPoint localEndPoint, CancellationToken cancellationToken)
+        {
+            var delay = TimeSpan.FromMilliseconds(100d);
+            for (var i = 10; i >= 0; i--)
+            {
+                try
+                {
+                    socket.Bind(localEndPoint);
+                    break;
+                }
+                catch (Exception)
+                {
+                    if (i == 0)
+                    {
+                        throw;
+                    }
+                    await Task.Delay(delay, cancellationToken);
+                }
+            }
         }
 
         /// <summary>
