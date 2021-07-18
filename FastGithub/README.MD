@@ -1,4 +1,4 @@
-﻿# FastGithub
+# FastGithub
 github加速神器
 
 ### 本机使用[推荐]
