@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 using System.IO;
 
 namespace FastGithub
@@ -51,7 +52,7 @@ namespace FastGithub
                 .ConfigureWebHostDefaults(web =>
                 {
                     web.Configure(app => app.UseHttpsReverseProxy("README.html"));
-                    web.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy("FastGithub.cer", "FastGithub.key"));
+                    web.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy($"FastGithub_{Environment.MachineName}.cer", $"FastGithub_{Environment.MachineName}.key"));
                 });
         }
     }

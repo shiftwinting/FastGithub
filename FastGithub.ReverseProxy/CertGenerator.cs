@@ -30,6 +30,31 @@ namespace FastGithub.ReverseProxy
         private static readonly SecureRandom secureRandom = new();
 
         /// <summary>
+        /// 生成自签名证书
+        /// </summary>
+        /// <param name="domains"></param>
+        /// <param name="keySizeBits"></param>
+        /// <param name="validFrom"></param>
+        /// <param name="validTo"></param>
+        /// <param name="caPublicCerPath"></param>
+        /// <param name="caPrivateKeyPath"></param>
+        public static void GenerateBySelf(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath)
+        {
+            var keys = GenerateRsaKeyPair(keySizeBits);
+            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, domains.First(), null, keys.Private, null);
+
+            using var priWriter = new StreamWriter(caPrivateKeyPath);
+            var priPemWriter = new PemWriter(priWriter);
+            priPemWriter.WriteObject(keys.Private);
+            priPemWriter.Writer.Flush();
+
+            using var pubWriter = new StreamWriter(caPublicCerPath);
+            var pubPemWriter = new PemWriter(pubWriter);
+            pubPemWriter.WriteObject(cert);
+            pubPemWriter.Writer.Flush();
+        }
+
+        /// <summary>
         /// 生成CA签名证书
         /// </summary>
         /// <param name="domains"></param>
@@ -39,7 +64,7 @@ namespace FastGithub.ReverseProxy
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
         /// <returns></returns>
-        public static X509Certificate2 Generate(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath, string? password = default)
+        public static X509Certificate2 GenerateByCa(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath, string? password = default)
         {
             if (File.Exists(caPublicCerPath) == false)
             {
@@ -90,7 +115,7 @@ namespace FastGithub.ReverseProxy
         /// <param name="issuerPrivate"></param>
         /// <param name="CA_PathLengthConstraint"></param>
         /// <returns></returns>
-        private static X509Certificate GenerateCertificate(IEnumerable<string> domains, AsymmetricKeyParameter subjectPublic, DateTime validFrom, DateTime validTo, string issuerName, AsymmetricKeyParameter issuerPublic, AsymmetricKeyParameter issuerPrivate, int? CA_PathLengthConstraint)
+        private static X509Certificate GenerateCertificate(IEnumerable<string> domains, AsymmetricKeyParameter subjectPublic, DateTime validFrom, DateTime validTo, string issuerName, AsymmetricKeyParameter? issuerPublic, AsymmetricKeyParameter issuerPrivate, int? CA_PathLengthConstraint)
         {
             var signatureFactory = issuerPrivate is ECPrivateKeyParameters
                 ? new Asn1SignatureFactory(X9ObjectIdentifiers.ECDsaWithSha256.ToString(), issuerPrivate)

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -35,7 +36,9 @@ namespace FastGithub
         {
             var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
-            TryInstallCaCert(caPublicCerPath, logger);
+
+            GeneratorCaCert(caPublicCerPath, caPrivateKeyPath);
+            InstallCaCert(caPublicCerPath, logger);
 
             kestrel.ListenAnyIP(443, listen =>
                 listen.UseHttps(https =>
@@ -43,6 +46,51 @@ namespace FastGithub
                         GetDomainCert(domain, caPublicCerPath, caPrivateKeyPath)));
 
             logger.LogInformation("https反向代理服务启动成功");
+        }
+
+        /// <summary>
+        /// 生成根证书
+        /// </summary>
+        /// <param name="caPublicCerPath"></param>
+        /// <param name="caPrivateKeyPath"></param>
+        private static void GeneratorCaCert(string caPublicCerPath, string caPrivateKeyPath)
+        {
+            if (File.Exists(caPublicCerPath) && File.Exists(caPublicCerPath))
+            {
+                return;
+            }
+
+            File.Delete(caPublicCerPath);
+            File.Delete(caPrivateKeyPath);
+
+            var validFrom = DateTime.Today.AddYears(-10);
+            var validTo = DateTime.Today.AddYears(50);
+            CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
+        }
+
+
+        /// <summary>
+        /// 安装根证书
+        /// </summary>
+        /// <param name="caPublicCerPath"></param>
+        /// <param name="logger"></param>
+        private static void InstallCaCert(string caPublicCerPath, ILogger logger)
+        {
+            try
+            {
+                var caCert = new X509Certificate2(caPublicCerPath);
+                using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
+                {
+                    store.Add(caCert);
+                    store.Close();
+                }
+            }
+            catch (Exception)
+            {
+                logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+            }
         }
 
         /// <summary>
@@ -63,7 +111,7 @@ namespace FastGithub
                     var domains = GetDomains(host).Distinct();
                     var validFrom = DateTime.Today.AddYears(-1);
                     var validTo = DateTime.Today.AddYears(10);
-                    return CertGenerator.Generate(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
+                    return CertGenerator.GenerateByCa(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
                 }, LazyThreadSafetyMode.ExecutionAndPublication);
             }
         }
@@ -92,30 +140,6 @@ namespace FastGithub
                         yield return addressInfo.Address.ToString();
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// 安装根证书
-        /// </summary>
-        /// <param name="caPublicCerPath"></param>
-        /// <param name="logger"></param>
-        private static void TryInstallCaCert(string caPublicCerPath, ILogger logger)
-        {
-            try
-            {
-                var caCert = new X509Certificate2(caPublicCerPath);
-                using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-                store.Open(OpenFlags.ReadWrite);
-                if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
-                {
-                    store.Add(caCert);
-                    store.Close();
-                }
-            }
-            catch (Exception)
-            {
-                logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
             }
         }
     }
