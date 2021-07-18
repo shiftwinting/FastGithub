@@ -30,12 +30,15 @@ namespace FastGithub
         /// 监听https的反向代理
         /// </summary>
         /// <param name="kestrel"></param>
-        /// <param name="caPublicCerPath"></param>
-        /// <param name="caPrivateKeyPath"></param>
-        public static void ListenHttpsReverseProxy(this KestrelServerOptions kestrel, string caPublicCerPath, string caPrivateKeyPath)
+        public static void ListenHttpsReverseProxy(this KestrelServerOptions kestrel)
         {
             var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
+
+            const string CAPATH = "CACert";
+            Directory.CreateDirectory(CAPATH);
+            var caPublicCerPath = $"{CAPATH}/{Environment.MachineName}.cer";
+            var caPrivateKeyPath = $"{CAPATH}/{Environment.MachineName}.key";
 
             GeneratorCaCert(caPublicCerPath, caPrivateKeyPath);
             InstallCaCert(caPublicCerPath, logger);
