@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.IO;
 
 namespace FastGithub
 {
@@ -29,6 +31,13 @@ namespace FastGithub
                 .UseDefaultServiceProvider(c =>
                 {
                     c.ValidateOnBuild = false;
+                })
+                .ConfigureAppConfiguration(c =>
+                {
+                    foreach (var jsonFile in Directory.GetFiles(".", "appsettings.*.json"))
+                    {
+                        c.AddJsonFile(jsonFile, optional: true);
+                    }
                 })
                 .ConfigureServices((ctx, services) =>
                 {
