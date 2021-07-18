@@ -46,6 +46,15 @@ namespace FastGithub.ReverseProxy
                 context.Response.ContentType = "text/html";
                 await context.Response.SendFileAsync(fallbackFile);
             }
+            else if (domainConfig.Response != null)
+            {
+                context.Response.StatusCode = domainConfig.Response.StatusCode;
+                context.Response.ContentType = domainConfig.Response.ContentType;
+                if (domainConfig.Response.ContentValue != null)
+                {
+                    await context.Response.WriteAsync(domainConfig.Response.ContentValue);
+                }
+            }
             else
             {
                 var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
