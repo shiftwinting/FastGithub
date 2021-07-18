@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
@@ -13,21 +12,18 @@ namespace FastGithub.ReverseProxy
     sealed class ReverseProxyMiddleware
     {
         private readonly IHttpForwarder httpForwarder;
-        private readonly SniHttpClientHanlder sniHttpClientHanlder;
-        private readonly NoSniHttpClientHanlder noSniHttpClientHanlder;
+        private readonly HttpClientHanlder httpClientHanlder;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<ReverseProxyMiddleware> logger;
 
         public ReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
-            SniHttpClientHanlder sniHttpClientHanlder,
-            NoSniHttpClientHanlder noSniHttpClientHanlder,
+            HttpClientHanlder httpClientHanlder,
             FastGithubConfig fastGithubConfig,
             ILogger<ReverseProxyMiddleware> logger)
         {
             this.httpForwarder = httpForwarder;
-            this.sniHttpClientHanlder = sniHttpClientHanlder;
-            this.noSniHttpClientHanlder = noSniHttpClientHanlder;
+            this.httpClientHanlder = httpClientHanlder;
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
@@ -59,10 +55,7 @@ namespace FastGithub.ReverseProxy
             {
                 var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
                 var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
-
-                var httpClient = domainConfig.TlsSni
-                   ? new HttpMessageInvoker(this.sniHttpClientHanlder, disposeHandler: false)
-                   : new HttpMessageInvoker(this.noSniHttpClientHanlder, disposeHandler: false);
+                var httpClient = new HttpClient(this.httpClientHanlder, false, domainConfig.TlsSni);
 
                 var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
                 await ResponseErrorAsync(context, error);

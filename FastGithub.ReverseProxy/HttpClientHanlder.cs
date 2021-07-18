@@ -9,20 +9,20 @@ using System.Threading.Tasks;
 namespace FastGithub.ReverseProxy
 {
     /// <summary>
-    /// 不发送NoSni的HttpClientHandler
+    /// YARP的HttpClientHandler
     /// </summary> 
-    class NoSniHttpClientHanlder : DelegatingHandler
+    class HttpClientHanlder : DelegatingHandler
     {
         private readonly DomainResolver domainResolver;
-        private readonly ILogger<NoSniHttpClientHanlder> logger;
+        private readonly ILogger<HttpClientHanlder> logger;
 
         /// <summary>
-        /// 不发送NoSni的HttpClientHandler
+        /// YARP的HttpClientHandler
         /// </summary>
         /// <param name="domainResolver"></param> 
-        public NoSniHttpClientHanlder(
+        public HttpClientHanlder(
             DomainResolver domainResolver,
-            ILogger<NoSniHttpClientHanlder> logger)
+            ILogger<HttpClientHanlder> logger)
         {
             this.domainResolver = domainResolver;
             this.logger = logger;
@@ -45,7 +45,8 @@ namespace FastGithub.ReverseProxy
                     var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                     await socket.ConnectAsync(ctx.DnsEndPoint, ct);
                     var stream = new NetworkStream(socket, ownsSocket: true);
-                    if (ctx.InitialRequestMessage.Headers.Host == null)
+                    var sniContext = ctx.InitialRequestMessage.GetSniContext();
+                    if (sniContext.IsHttps == false)
                     {
                         return stream;
                     }
@@ -53,7 +54,7 @@ namespace FastGithub.ReverseProxy
                     var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
                     await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
                     {
-                        TargetHost = string.Empty,
+                        TargetHost = sniContext.TlsSniValue,
                         RemoteCertificateValidationCallback = delegate { return true; }
                     }, ct);
                     return sslStream;
@@ -74,16 +75,25 @@ namespace FastGithub.ReverseProxy
             if (uri != null && uri.HostNameType == UriHostNameType.Dns)
             {
                 var address = await this.domainResolver.ResolveAsync(uri.Host, cancellationToken);
-                this.logger.LogInformation($"[{address}--NoSni->{uri.Host}]");
-
                 var builder = new UriBuilder(uri)
                 {
                     Scheme = Uri.UriSchemeHttp,
                     Host = address.ToString(),
-                    Port = 443
                 };
                 request.RequestUri = builder.Uri;
                 request.Headers.Host = uri.Host;
+
+                // 计算Sni
+                var context = request.GetSniContext();
+                if (context.IsHttps && context.TlsSni)
+                {
+                    context.TlsSniValue = uri.Host;
+                    this.logger.LogInformation($"[{address}--Sni->{uri.Host}]");
+                }
+                else
+                {
+                    this.logger.LogInformation($"[{address}--NoSni->{uri.Host}]");
+                }
             }
             return await base.SendAsync(request, cancellationToken);
         }
