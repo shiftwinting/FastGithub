@@ -37,7 +37,7 @@ namespace FastGithub
                 {
                     foreach (var jsonFile in Directory.GetFiles(".", "appsettings.*.json"))
                     {
-                        c.AddJsonFile(jsonFile, optional: true);
+                        c.AddJsonFile(jsonFile, optional: true, reloadOnChange: true);
                     }
                 })
                 .ConfigureServices((ctx, services) =>
