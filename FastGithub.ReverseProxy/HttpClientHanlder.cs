@@ -26,14 +26,14 @@ namespace FastGithub.ReverseProxy
         {
             this.domainResolver = domainResolver;
             this.logger = logger;
-            this.InnerHandler = CreateNoneSniHttpHandler();
+            this.InnerHandler = CreateSocketsHttpHandler();
         }
 
         /// <summary>
-        /// 创建无Sni发送的httpHandler
+        /// 创建转发代理的httpHandler
         /// </summary>
         /// <returns></returns>
-        private static HttpMessageHandler CreateNoneSniHttpHandler()
+        private static SocketsHttpHandler CreateSocketsHttpHandler()
         {
             return new SocketsHttpHandler
             {
@@ -83,11 +83,9 @@ namespace FastGithub.ReverseProxy
                 request.RequestUri = builder.Uri;
                 request.Headers.Host = uri.Host;
 
-                // 计算Sni
                 var context = request.GetSniContext();
-                if (context.IsHttps && context.TlsSni)
+                if (context.IsHttps && context.TlsSniValue.Length > 0)
                 {
-                    context.TlsSniValue = uri.Host;
                     this.logger.LogInformation($"[{address}--Sni->{uri.Host}]");
                 }
                 else

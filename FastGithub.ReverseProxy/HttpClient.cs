@@ -10,18 +10,18 @@ namespace FastGithub.ReverseProxy
     /// </summary>
     class HttpClient : HttpMessageInvoker
     {
-        private readonly bool tlsSni;
+        private readonly string tlsSniValue;
 
         /// <summary>
         /// YARP的HttpClient
         /// </summary>
         /// <param name="handler"></param>
+        /// <param name="tlsSniValue"></param>
         /// <param name="disposeHandler"></param>
-        /// <param name="tlsSni"></param>
-        public HttpClient(HttpMessageHandler handler, bool disposeHandler, bool tlsSni) :
+        public HttpClient(HttpMessageHandler handler, string tlsSniValue, bool disposeHandler = false) :
             base(handler, disposeHandler)
         {
-            this.tlsSni = tlsSni;
+            this.tlsSniValue = tlsSniValue;
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace FastGithub.ReverseProxy
         public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var isHttps = request.RequestUri?.Scheme == Uri.UriSchemeHttps;
-            request.SetSniContext(new SniContext(isHttps, this.tlsSni));
+            request.SetSniContext(new SniContext(isHttps, this.tlsSniValue));
             return base.SendAsync(request, cancellationToken);
         }
     }

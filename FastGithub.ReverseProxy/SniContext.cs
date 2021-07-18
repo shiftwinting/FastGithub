@@ -6,29 +6,24 @@
     sealed class SniContext
     {
         /// <summary>
-        /// 获取请求是否为https
+        /// 获取是否为https请求
         /// </summary>
         public bool IsHttps { get; }
 
         /// <summary>
-        /// 获取是否发送Sni
+        /// 获取Sni值
         /// </summary>
-        public bool TlsSni { get; }
-
-        /// <summary>
-        /// Sni值
-        /// </summary>
-        public string TlsSniValue { get; set; } = string.Empty;
+        public string TlsSniValue { get; }
 
         /// <summary>
         /// Sni上下文
         /// </summary>
         /// <param name="isHttps"></param>
-        /// <param name="tlsSni"></param>
-        public SniContext(bool isHttps, bool tlsSni)
+        /// <param name="tlsSniValue"></param>
+        public SniContext(bool isHttps, string tlsSniValue)
         {
             this.IsHttps = isHttps;
-            this.TlsSni = tlsSni;
+            this.TlsSniValue = tlsSniValue;
         }
     }
 }
