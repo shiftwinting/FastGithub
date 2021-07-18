@@ -127,10 +127,17 @@ namespace FastGithub.Dns
             var remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             while (stoppingToken.IsCancellationRequested == false)
             {
-                var result = await this.socket.ReceiveFromAsync(this.buffer, SocketFlags.None, remoteEndPoint);
-                var datas = new byte[result.ReceivedBytes];
-                this.buffer.AsSpan(0, datas.Length).CopyTo(datas);
-                this.HandleRequestAsync(datas, result.RemoteEndPoint, stoppingToken);
+                try
+                {
+                    var result = await this.socket.ReceiveFromAsync(this.buffer, SocketFlags.None, remoteEndPoint);
+                    var datas = new byte[result.ReceivedBytes];
+                    this.buffer.AsSpan(0, datas.Length).CopyTo(datas);
+                    this.HandleRequestAsync(datas, result.RemoteEndPoint, stoppingToken);
+                }
+                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.OperationAborted)
+                {
+                    break;
+                }
             }
         }
 
