@@ -80,7 +80,7 @@ namespace FastGithub.ReverseProxy
 
             var baseUri = new Uri(defaultValue);
             var result = new Uri(baseUri, destination).ToString();
-            this.logger.LogInformation($"[{defaultValue}->{result}]");
+            this.logger.LogInformation($"[{defaultValue} <-> {result}]");
             return result;
         }
 
