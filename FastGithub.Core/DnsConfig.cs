@@ -40,6 +40,11 @@ namespace FastGithub
             return new IPEndPoint(address, this.Port);
         }
 
+        public override string ToString()
+        {
+            return $"{this.IPAddress}:{this.Port}";
+        }
+
         /// <summary>
         /// 是否为本机ip
         /// </summary>
