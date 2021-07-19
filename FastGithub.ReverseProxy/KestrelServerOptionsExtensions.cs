@@ -92,7 +92,14 @@ namespace FastGithub
             }
             catch (Exception)
             {
-                logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+                if (OperatingSystem.IsWindows())
+                {
+                    logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+                }
+                else
+                {
+                    logger.LogWarning($"安装根证书{caPublicCerPath}失败：请根据你的系统平台要求安装和信任根证书");
+                }
             }
         }
 

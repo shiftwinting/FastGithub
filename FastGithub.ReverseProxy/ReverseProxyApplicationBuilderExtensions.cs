@@ -10,6 +10,17 @@ namespace FastGithub
     public static class ReverseProxyApplicationBuilderExtensions
     {
         /// <summary>
+        /// 使用请求日志中间件
+        /// </summary>
+        /// <param name="app"></param> 
+        /// <returns></returns>
+        public static IApplicationBuilder UseRequestLogging(this IApplicationBuilder app)
+        {
+            var middlware = app.ApplicationServices.GetRequiredService<RequestLoggingMilldeware>();
+            return app.Use(next => context => middlware.InvokeAsync(context, next));
+        }
+
+        /// <summary>
         /// 使用https反向代理中间件
         /// </summary>
         /// <param name="app"></param>

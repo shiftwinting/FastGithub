@@ -1,5 +1,6 @@
 ﻿using DNS.Client;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Net;
@@ -15,6 +16,7 @@ namespace FastGithub.ReverseProxy
     {
         private readonly IMemoryCache memoryCache;
         private readonly FastGithubConfig fastGithubConfig;
+        private readonly ILogger<DomainResolver> logger;
         private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
 
         /// <summary>
@@ -24,10 +26,12 @@ namespace FastGithub.ReverseProxy
         /// <param name="fastGithubConfig"></param>
         public DomainResolver(
             IMemoryCache memoryCache,
-            FastGithubConfig fastGithubConfig)
+            FastGithubConfig fastGithubConfig,
+            ILogger<DomainResolver> logger)
         {
             this.memoryCache = memoryCache;
             this.fastGithubConfig = fastGithubConfig;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -74,6 +78,8 @@ namespace FastGithub.ReverseProxy
                 {
                     throw new FastGithubException($"dns({dns})被污染：解析{domain}为{address}");
                 }
+
+                this.logger.LogInformation($"[{domain}->{address}]");
                 return address;
             }
             catch (FastGithubException)

@@ -1,0 +1,58 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
+namespace FastGithub.ReverseProxy
+{
+    /// <summary>
+    /// 请求日志中间件
+    /// </summary>
+    sealed class RequestLoggingMilldeware
+    {
+        private readonly ILogger<RequestLoggingMilldeware> logger;
+
+        /// <summary>
+        /// 请求日志中间件
+        /// </summary>
+        /// <param name="logger"></param>
+        public RequestLoggingMilldeware(ILogger<RequestLoggingMilldeware> logger)
+        {
+            this.logger = logger;
+        }
+
+        /// <summary>
+        /// 执行请求
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="next"></param>
+        /// <returns></returns>
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            try
+            {
+                await next(context);
+            }
+            finally
+            {
+                stopwatch.Stop();
+            }
+
+            var request = context.Request;
+            var response = context.Response;
+            var message = $"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms";
+
+            if (500 <= response.StatusCode && response.StatusCode <= 599)
+            {
+                this.logger.LogError(message);
+            }
+            else
+            {
+                this.logger.LogInformation(message);
+            }
+        }
+    }
+}

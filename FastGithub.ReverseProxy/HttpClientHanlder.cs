@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -14,18 +13,14 @@ namespace FastGithub.ReverseProxy
     class HttpClientHanlder : DelegatingHandler
     {
         private readonly DomainResolver domainResolver;
-        private readonly ILogger<HttpClientHanlder> logger;
 
         /// <summary>
         /// YARP的HttpClientHandler
         /// </summary>
         /// <param name="domainResolver"></param> 
-        public HttpClientHanlder(
-            DomainResolver domainResolver,
-            ILogger<HttpClientHanlder> logger)
+        public HttpClientHanlder(DomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
-            this.logger = logger;
             this.InnerHandler = CreateSocketsHttpHandler();
         }
 
@@ -62,7 +57,6 @@ namespace FastGithub.ReverseProxy
             };
         }
 
-
         /// <summary>
         /// 替换域名为ip
         /// </summary>
@@ -82,16 +76,6 @@ namespace FastGithub.ReverseProxy
                 };
                 request.RequestUri = builder.Uri;
                 request.Headers.Host = uri.Host;
-
-                var context = request.GetSniContext();
-                if (context.IsHttps && context.TlsSniValue.Length > 0)
-                {
-                    this.logger.LogInformation($"[{address}--Sni->{uri.Host}]");
-                }
-                else
-                {
-                    this.logger.LogInformation($"[{address}--NoSni->{uri.Host}]");
-                }
             }
             return await base.SendAsync(request, cancellationToken);
         }
