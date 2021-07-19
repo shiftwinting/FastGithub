@@ -17,6 +17,7 @@ namespace FastGithub
         {
             return services
                 .AddSingleton<RequestResolver>()
+                .AddSingleton<HostsValidator>()
                 .AddHostedService<DnsServerHostedService>();
         }
     }

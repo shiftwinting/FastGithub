@@ -20,6 +20,7 @@ namespace FastGithub.Dns
     {
         private readonly RequestResolver requestResolver;
         private readonly FastGithubConfig fastGithubConfig;
+        private readonly HostsValidator hostsValidator;
         private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -40,11 +41,13 @@ namespace FastGithub.Dns
         public DnsServerHostedService(
             RequestResolver requestResolver,
             FastGithubConfig fastGithubConfig,
+            HostsValidator hostsValidator,
             IOptionsMonitor<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
             this.requestResolver = requestResolver;
             this.fastGithubConfig = fastGithubConfig;
+            this.hostsValidator = hostsValidator;
             this.logger = logger;
             options.OnChange(opt => FlushResolverCache());
         }
@@ -74,18 +77,21 @@ namespace FastGithub.Dns
             }
 
             await BindAsync(this.socket, new IPEndPoint(IPAddress.Any, DNS_PORT), cancellationToken);
-
             if (OperatingSystem.IsWindows())
             {
                 const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
                 this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
             }
 
-            this.logger.LogInformation("dns服务启动成功");
+            // 验证host文件 
+            await this.hostsValidator.ValidateAsync();
+
+            // 设置网关的dns
             var secondary = this.fastGithubConfig.FastDns.Address;
             this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, secondary);
             FlushResolverCache();
 
+            this.logger.LogInformation("dns服务启动成功");
             await base.StartAsync(cancellationToken);
         }
 

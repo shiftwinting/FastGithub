@@ -4,7 +4,7 @@
 		<TargetFramework>net5.0</TargetFramework>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup> 
-
+	
 	<ItemGroup>
 		<ProjectReference Include="..\FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj" />
 	</ItemGroup>
