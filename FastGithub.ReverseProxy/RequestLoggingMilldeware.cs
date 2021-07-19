@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -45,13 +46,14 @@ namespace FastGithub.ReverseProxy
             var response = context.Response;
             var message = $"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms";
 
-            if (500 <= response.StatusCode && response.StatusCode <= 599)
+            var exception = context.GetForwarderErrorFeature()?.Exception;
+            if (exception == null)
             {
-                this.logger.LogError(message);
+                this.logger.LogInformation(message);
             }
             else
             {
-                this.logger.LogInformation(message);
+                this.logger.LogError($"{message}{Environment.NewLine}{exception.Message}");
             }
         }
     }

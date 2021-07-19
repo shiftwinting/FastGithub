@@ -60,7 +60,7 @@ namespace FastGithub.ReverseProxy
                 using var httpClient = new HttpClient(this.httpClientHanlder, tlsSniPattern);
 
                 var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
-                await ResponseErrorAsync(context, error);
+                await HandleErrorAsync(context, error);
             }
         }
 
@@ -85,12 +85,12 @@ namespace FastGithub.ReverseProxy
         }
 
         /// <summary>
-        /// 写入错误信息
+        /// 处理错误信息
         /// </summary>
         /// <param name="context"></param>
         /// <param name="error"></param>
         /// <returns></returns>
-        private static async Task ResponseErrorAsync(HttpContext context, ForwarderError error)
+        private static async Task HandleErrorAsync(HttpContext context, ForwarderError error)
         {
             if (error == ForwarderError.None)
             {
