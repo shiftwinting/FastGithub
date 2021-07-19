@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,9 +52,15 @@ namespace FastGithub.ReverseProxy
                     await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
                     {
                         TargetHost = tlsSniContext.TlsSniPattern.Value,
-                        RemoteCertificateValidationCallback = delegate { return true; }
+                        RemoteCertificateValidationCallback = ValidateServerCertificate
                     }, cancellationToken);
                     return sslStream;
+
+                    // 这里最好需要验证证书的使用者和所有使用者可选名称
+                    static bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
+                    {
+                        return errors == SslPolicyErrors.None || errors == SslPolicyErrors.RemoteCertificateNameMismatch;
+                    }
                 }
             };
         }
