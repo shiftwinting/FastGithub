@@ -59,7 +59,7 @@ namespace FastGithub.Upgrade
         /// <returns></returns>
         public async Task<GiteeRelease?> GetLastedReleaseAsync(CancellationToken cancellationToken)
         {
-            using var httpClient = new HttpClient();
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5d) };
             var releases = await httpClient.GetFromJsonAsync<GiteeRelease[]>(ReleasesUri, cancellationToken);
             return releases?.FirstOrDefault();
         }
