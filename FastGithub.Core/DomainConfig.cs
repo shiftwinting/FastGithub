@@ -13,6 +13,11 @@ namespace FastGithub
         public bool TlsSni { get; init; }
 
         /// <summary>
+        /// 自定义SNI值的表达式
+        /// </summary>
+        public string? TlsSniPattern { get; init; }
+
+        /// <summary>
         /// 请求超时时长
         /// </summary>
         public TimeSpan? Timeout { get; init; }
@@ -27,5 +32,22 @@ namespace FastGithub
         /// 自定义响应
         /// </summary>
         public ResponseConfig? Response { get; init; }
+
+        /// <summary>
+        /// 获取TlsSniPattern
+        /// </summary>
+        /// <returns></returns>
+        public TlsSniPattern GetTlsSniPattern()
+        {
+            if (this.TlsSni == false)
+            {
+                return FastGithub.TlsSniPattern.None;
+            }
+            if (string.IsNullOrEmpty(this.TlsSniPattern))
+            {
+                return FastGithub.TlsSniPattern.Domain;
+            }
+            return new TlsSniPattern(this.TlsSniPattern);
+        }
     }
 }

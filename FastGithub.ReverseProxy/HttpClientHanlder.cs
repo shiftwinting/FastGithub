@@ -35,13 +35,14 @@ namespace FastGithub.ReverseProxy
                 Proxy = null,
                 UseProxy = false,
                 AllowAutoRedirect = false,
-                ConnectCallback = async (ctx, ct) =>
+                ConnectCallback = async (context, cancellationToken) =>
                 {
                     var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                    await socket.ConnectAsync(ctx.DnsEndPoint, ct);
+                    await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
                     var stream = new NetworkStream(socket, ownsSocket: true);
-                    var sniContext = ctx.InitialRequestMessage.GetSniContext();
-                    if (sniContext.IsHttps == false)
+
+                    var tlsSniContext = context.InitialRequestMessage.GetTlsSniContext();
+                    if (tlsSniContext.IsHttps == false)
                     {
                         return stream;
                     }
@@ -49,9 +50,9 @@ namespace FastGithub.ReverseProxy
                     var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
                     await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
                     {
-                        TargetHost = sniContext.TlsSniValue,
+                        TargetHost = tlsSniContext.TlsSniPattern.Value,
                         RemoteCertificateValidationCallback = delegate { return true; }
-                    }, ct);
+                    }, cancellationToken);
                     return sslStream;
                 }
             };
@@ -76,6 +77,9 @@ namespace FastGithub.ReverseProxy
                 };
                 request.RequestUri = builder.Uri;
                 request.Headers.Host = uri.Host;
+
+                var context = request.GetTlsSniContext();
+                context.TlsSniPattern = context.TlsSniPattern.WithDomain(uri.Host).WithIPAddress(address).WithRandom();
             }
             return await base.SendAsync(request, cancellationToken);
         }

@@ -56,10 +56,10 @@ namespace FastGithub.ReverseProxy
                 var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
                 var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
 
-                var tlsSniValue = domainConfig.TlsSni ? destinationPrefix.Host : string.Empty;
-                using var httpClient = new HttpClient(this.httpClientHanlder, tlsSniValue);
+                var tlsSniPattern = domainConfig.GetTlsSniPattern();
+                using var httpClient = new HttpClient(this.httpClientHanlder, tlsSniPattern);
 
-                var error = await httpForwarder.SendAsync(context, destinationPrefix.ToString(), httpClient, requestConfig);
+                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
                 await ResponseErrorAsync(context, error);
             }
         }
@@ -70,15 +70,16 @@ namespace FastGithub.ReverseProxy
         /// <param name="host"></param> 
         /// <param name="destination"></param>
         /// <returns></returns>
-        private Uri GetDestinationPrefix(string host, Uri? destination)
+        private string GetDestinationPrefix(string host, Uri? destination)
         {
-            var defaultValue = new Uri($"https://{host}/");
+            var defaultValue = $"https://{host}/";
             if (destination == null)
             {
                 return defaultValue;
             }
 
-            var result = new Uri(defaultValue, destination);
+            var baseUri = new Uri(defaultValue);
+            var result = new Uri(baseUri, destination).ToString();
             this.logger.LogInformation($"[{defaultValue}->{result}]");
             return result;
         }

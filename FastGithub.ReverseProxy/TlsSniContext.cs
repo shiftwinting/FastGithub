@@ -3,7 +3,7 @@
     /// <summary>
     /// Sni上下文
     /// </summary>
-    sealed class SniContext
+    sealed class TlsSniContext
     {
         /// <summary>
         /// 获取是否为https请求
@@ -11,19 +11,19 @@
         public bool IsHttps { get; }
 
         /// <summary>
-        /// 获取Sni值
+        /// 获取或设置Sni值的表达式 
         /// </summary>
-        public string TlsSniValue { get; }
+        public TlsSniPattern TlsSniPattern { get; set; }
 
         /// <summary>
         /// Sni上下文
         /// </summary>
         /// <param name="isHttps"></param>
-        /// <param name="tlsSniValue"></param>
-        public SniContext(bool isHttps, string tlsSniValue)
+        /// <param name="tlsSniPattern"></param>
+        public TlsSniContext(bool isHttps, TlsSniPattern tlsSniPattern)
         {
             this.IsHttps = isHttps;
-            this.TlsSniValue = tlsSniValue;
+            this.TlsSniPattern = tlsSniPattern;
         }
     }
 }
