@@ -16,7 +16,7 @@ github加速神器
 * *.githubapp.com
 * *.githubassets.com
 * *.githubusercontent.com
-* *github*.s3.amazonaws.com
+* \*github\*.s3.amazonaws.com
 
 #### stackoverflow
 * ajax.googleapis.com -> gapis.geekzu.org/ajax
