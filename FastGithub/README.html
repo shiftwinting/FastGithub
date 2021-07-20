@@ -10,23 +10,42 @@
 
 <body>
     <div class="container">
+
         <h1>FastGithub</h1>
 
         <p>github加速神器</p>
 
-        <h3>本机使用[推荐]</h3>
+        <h3>运行方式</h3>
 
-        <ul><li>运行FastGithub程序，自动将本机的网络适配器的dns设为127.0.0.1和安装CA证书</li><li>如果网络适配器的dns没有变成127.0.0.1，请手工修改网络适配器的dns</li><li>如果浏览器提示无效的证书，请手工安装CA证书到<code>将所有的证书都放入下载存储\受信任的根证书颁发机构</code></li></ul>
+        <h4>windows本机</h4>
 
-        <h3>局域网服务器使用</h3>
+        <ul>
+            <li>双击运行FastGithub.exe程序</li>
+            <li>程序自动设置网络适配器的主DNS为127.0.0.1</li>
+            <li>程序自动安装CA证书到<code>将所有的证书都放入下载存储\受信任的根证书颁发机构</code> </li>
+            <li>FastGithub.exe start // 安装并启动服务</li>
+            <li>FastGithub.exe stop  // 卸载并删除服务</li>
+        </ul>
 
-        <ul><li>在局域网服务器运行FastGithub程序</li><li>手工修改你电脑的网络适配器的dns，值为局域网服务器的ip</li><li>在你的电脑安装CA证书到<code>将所有的证书都放入下载存储\受信任的根证书颁发机构</code></li></ul>
+        <h4>linux本机</h4>
 
-        <h3>以windows服务运行</h3>
+        <ul>
+            <li>执行./FastGithub运行程序</li>
+            <li>手工将你的电脑的主DNS设置为127.0.0.1</li>
+            <li>手工在你的电脑安装CA证书到系统根证书存储区</li>
+        </ul>
 
-        <ul><li>FastGithub.exe start // 安装并启动服务</li><li>FastGithub.exe stop  // 卸载并删除服务</li></ul>
+        <h4>局域网服务器</h4>
 
-        <h3>git ssl验证不通过</h3>
+        <ul>
+            <li>在局域网服务器运行FastGithub程序</li>
+            <li>手工将你的电脑的主DNS设置为局域网服务器的ip</li>
+            <li>手工在你的电脑安装CA证书到系统根证书存储区</li>
+        </ul>
+
+        <h3>证书验证</h3>
+
+        <h4>git ssl验证不通过</h4>
 
         <p>
             使用FastGithub之后，git请求时会遇到SSL certificate problem: unable to get local issuer certificate
@@ -35,6 +54,7 @@
                 git config --global http.sslverify false
             </code>
         </p>
+
     </div>
 </body>
 </html>
