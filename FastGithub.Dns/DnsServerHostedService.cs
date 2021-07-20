@@ -56,9 +56,10 @@ namespace FastGithub.Dns
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await this.BindAsync(cancellationToken);
-            await this.hostsValidator.ValidateAsync();
+            this.logger.LogInformation("DNS服务启动成功");
+
             this.SetAsPrimitiveNameServer();
-            this.logger.LogInformation("dns服务启动成功");
+            await this.hostsValidator.ValidateAsync();
 
             await base.StartAsync(cancellationToken);
         }
@@ -113,16 +114,16 @@ namespace FastGithub.Dns
                 {
                     SystemDnsUtil.DnsSetPrimitive(IPAddress.Loopback);
                     SystemDnsUtil.DnsFlushResolverCache();
-                    this.logger.LogInformation($"设置为本机dns成功");
+                    this.logger.LogInformation($"设置为本机主DNS成功");
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning($"设置为本机dns失败：{ex.Message}");
+                    this.logger.LogWarning($"设置为本机主DNS失败：{ex.Message}");
                 }
             }
             else
             {
-                this.logger.LogWarning("平台不支持自动设置dns，请手动设置网卡的主dns为127.0.0.1");
+                this.logger.LogWarning("平台不支持自动设置DNS，请手动设置网卡的主DNS为127.0.0.1");
             }
         }
 
@@ -167,7 +168,7 @@ namespace FastGithub.Dns
             }
             catch (Exception ex)
             {
-                this.logger.LogTrace($"处理dns异常：{ex.Message}");
+                this.logger.LogTrace($"处理DNS异常：{ex.Message}");
             }
         }
 
@@ -179,7 +180,7 @@ namespace FastGithub.Dns
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             this.socket.Dispose();
-            this.logger.LogInformation("dns服务已终止");
+            this.logger.LogInformation("DNS服务已停止");
 
             if (OperatingSystem.IsWindows())
             {

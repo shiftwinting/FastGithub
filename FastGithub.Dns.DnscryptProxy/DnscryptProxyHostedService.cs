@@ -70,6 +70,7 @@ namespace FastGithub.Dns.DnscryptProxy
             if (this.dnscryptProcess != null)
             {
                 this.dnscryptProcess.Kill();
+                this.logger.LogInformation($"{dnscryptFile}已停止");
             }
             return Task.CompletedTask;
         }
