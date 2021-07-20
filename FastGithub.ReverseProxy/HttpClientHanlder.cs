@@ -94,10 +94,13 @@ namespace FastGithub.ReverseProxy
             {
                 if (subject is IList list)
                 {
-                    var type = (int)list[0]!;
-                    if (type == 2) // DNS
+                    if (list.Count >= 2 && list[0] is int nameType && nameType == 2)
                     {
-                        yield return list[list.Count - 1]!.ToString()!;
+                        var dnsName = list[1]?.ToString();
+                        if(dnsName!=null)
+                        {
+                            yield return dnsName;
+                        }
                     }
                 }
             }
