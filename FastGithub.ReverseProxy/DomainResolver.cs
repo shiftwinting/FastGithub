@@ -25,7 +25,8 @@ namespace FastGithub.ReverseProxy
         /// 域名解析器
         /// </summary>
         /// <param name="memoryCache"></param>
-        /// <param name="fastGithubConfig"></param>
+        /// <param name="options"></param>
+        /// <param name="logger"></param>
         public DomainResolver(
             IMemoryCache memoryCache,
             IOptionsMonitor<FastGithubOptions> options,
@@ -45,16 +46,15 @@ namespace FastGithub.ReverseProxy
         /// <param name="domain"></param>
         /// <returns></returns>
         /// <exception cref="FastGithubException"></exception>
-        public async Task<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken)
+        public Task<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken)
         {
             // 缓存以避免做不必要的并发查询
-            var key = $"domain:{domain}";
-            var address = await this.memoryCache.GetOrCreateAsync(key, e =>
+            var key = $"{nameof(DomainResolver)}:{domain}";
+            return this.memoryCache.GetOrCreateAsync(key, e =>
             {
                 e.SetAbsoluteExpiration(this.cacheTimeSpan);
                 return this.LookupAsync(domain, cancellationToken);
             });
-            return address;
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace FastGithub.ReverseProxy
                 }
 
                 // 受干扰的dns，常常返回127.0.0.1来阻断请求
-                // 如果解析到的ip为本机ip，会产生反向代理请求死循环
+                // 虽然DnscryptProxy的抗干扰能力，但它仍然可能降级到不安全的普通dns上游
                 if (address.Equals(IPAddress.Loopback))
                 {
                     throw new Exception($"dns被污染，解析{domain}为{address}");
