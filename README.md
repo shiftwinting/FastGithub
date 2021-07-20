@@ -6,7 +6,7 @@ github加速神器
 * 解析匹配的域名为FastGithub自身的ip
 * 请求不受污染的dns服务(dnscrypt-proxy)获取域名的ip
 * 使用得到的ip进行无或有SNI的https反向代理
-
+ 
 ### 加速站点
 #### github
 * github.com
@@ -28,9 +28,6 @@ github加速神器
 * i.stack.imgur.com => 404
 * lh*.googleusercontent.com => 404
 * www.google.com => 404
-
-### 程序下载
-[下载最新发布版本](https://github.com/xljiulang/FastGithub/releases) 
 
 ### 安全性说明
 FastGithub生成自签名CA证书，要求安装到本机设备。FastGithub为每台不同设备生成的CA不同的证书，保存在CACert文件夹下，请不要将证书私钥泄露给他人，以免造成损失。
