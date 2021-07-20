@@ -6,8 +6,6 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,49 +17,36 @@ namespace FastGithub.Dns
     sealed class DnsServerHostedService : BackgroundService
     {
         private readonly RequestResolver requestResolver;
-        private readonly FastGithubConfig fastGithubConfig;
         private readonly HostsValidator hostsValidator;
         private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private readonly byte[] buffer = new byte[ushort.MaxValue];
-        private IPAddress[]? dnsAddresses;
 
-        [SupportedOSPlatform("windows")]
-        [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
-        private static extern void DnsFlushResolverCache();
 
         /// <summary>
         /// dns后台服务
         /// </summary>
         /// <param name="requestResolver"></param>
-        /// <param name="fastGithubConfig"></param>
+        /// <param name="hostsValidator"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public DnsServerHostedService(
             RequestResolver requestResolver,
-            FastGithubConfig fastGithubConfig,
             HostsValidator hostsValidator,
             IOptionsMonitor<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
             this.requestResolver = requestResolver;
-            this.fastGithubConfig = fastGithubConfig;
             this.hostsValidator = hostsValidator;
             this.logger = logger;
-            options.OnChange(opt => FlushResolverCache());
-        }
 
-        /// <summary>
-        /// 刷新dns缓存
-        /// </summary>
-        private static void FlushResolverCache()
-        {
             if (OperatingSystem.IsWindows())
             {
-                DnsFlushResolverCache();
+                options.OnChange(opt => SystemDnsUtil.DnsFlushResolverCache());
             }
         }
+
 
         /// <summary>
         /// 启动dns
@@ -70,56 +55,74 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            const int DNS_PORT = 53;
-            if (OperatingSystem.IsWindows() && UdpTable.TryGetOwnerProcessId(DNS_PORT, out var processId))
-            {
-                Process.GetProcessById(processId).Kill();
-            }
-
-            await BindAsync(this.socket, new IPEndPoint(IPAddress.Any, DNS_PORT), cancellationToken);
-            if (OperatingSystem.IsWindows())
-            {
-                const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
-                this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
-            }
-
-            // 验证host文件 
+            await this.BindAsync(cancellationToken);
             await this.hostsValidator.ValidateAsync();
-
-            // 设置网关的dns
-            var secondary = this.fastGithubConfig.FastDns.Address;
-            this.dnsAddresses = this.SetNameServers(IPAddress.Loopback, secondary);
-            FlushResolverCache();
-
+            this.SetAsPrimitiveNameServer();
             this.logger.LogInformation("dns服务启动成功");
+
             await base.StartAsync(cancellationToken);
         }
 
         /// <summary>
         /// 尝试多次绑定
         /// </summary>
-        /// <param name="socket"></param>
-        /// <param name="localEndPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private static async Task BindAsync(Socket socket, IPEndPoint localEndPoint, CancellationToken cancellationToken)
+        private async Task BindAsync(CancellationToken cancellationToken)
         {
+            const int DNS_PORT = 53;
+            if (OperatingSystem.IsWindows() && UdpTable.TryGetOwnerProcessId(DNS_PORT, out var processId))
+            {
+                Process.GetProcessById(processId).Kill();
+            }
+
+            var localEndPoint = new IPEndPoint(IPAddress.Any, DNS_PORT);
             var delay = TimeSpan.FromMilliseconds(100d);
             for (var i = 10; i >= 0; i--)
             {
                 try
                 {
-                    socket.Bind(localEndPoint);
+                    this.socket.Bind(localEndPoint);
                     break;
                 }
                 catch (Exception)
                 {
                     if (i == 0)
                     {
-                        throw new FastGithubException($"无法监听{localEndPoint}，{localEndPoint.Port}的udp端口已被其它程序占用");
+                        throw new FastGithubException($"无法监听{localEndPoint}，udp端口已被其它程序占用");
                     }
                     await Task.Delay(delay, cancellationToken);
                 }
+            }
+
+            if (OperatingSystem.IsWindows())
+            {
+                const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
+                this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
+            }
+        }
+
+        /// <summary>
+        /// 设置自身为主dns
+        /// </summary>
+        private void SetAsPrimitiveNameServer()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                try
+                {
+                    SystemDnsUtil.DnsSetPrimitive(IPAddress.Loopback);
+                    SystemDnsUtil.DnsFlushResolverCache();
+                    this.logger.LogInformation($"设置为本机dns成功");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning($"设置为本机dns失败：{ex.Message}");
+                }
+            }
+            else
+            {
+                this.logger.LogWarning("平台不支持自动设置dns，请手动设置网卡的主dns为127.0.0.1");
             }
         }
 
@@ -178,40 +181,20 @@ namespace FastGithub.Dns
             this.socket.Dispose();
             this.logger.LogInformation("dns服务已终止");
 
-            if (this.dnsAddresses != null)
-            {
-                this.SetNameServers(this.dnsAddresses);
-            }
-            FlushResolverCache();
-            return base.StopAsync(cancellationToken);
-        }
-
-        /// <summary>
-        /// 设置dns
-        /// </summary>
-        /// <param name="nameServers"></param>
-        /// <returns></returns>
-        private IPAddress[]? SetNameServers(params IPAddress[] nameServers)
-        {
             if (OperatingSystem.IsWindows())
             {
                 try
                 {
-                    var results = SystemDnsUtil.SetNameServers(nameServers);
-                    this.logger.LogInformation($"设置本机dns成功");
-                    return results;
+                    SystemDnsUtil.DnsFlushResolverCache();
+                    SystemDnsUtil.DnsRemovePrimitive(IPAddress.Loopback);
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning($"设置本机dns失败：{ex.Message}");
+                    this.logger.LogWarning($"恢复DNS记录失败：{ex.Message}");
                 }
             }
-            else
-            {
-                this.logger.LogWarning("不支持自动设置dns，请手动设置网卡的dns为127.0.0.1");
-            }
 
-            return default;
+            return base.StopAsync(cancellationToken);
         }
     }
 }
