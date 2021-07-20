@@ -18,6 +18,12 @@ namespace FastGithub
         public string? TlsSniPattern { get; init; }
 
         /// <summary>
+        /// 是否忽略服务器证书域名不匹配
+        /// 当不发送SNI时服务器可能发回域名不匹配的证书
+        /// </summary>
+        public bool TlsIgnoreNameMismatch { get; init; }
+
+        /// <summary>
         /// 请求超时时长
         /// </summary>
         public TimeSpan? Timeout { get; init; }

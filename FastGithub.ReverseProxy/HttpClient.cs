@@ -11,6 +11,7 @@ namespace FastGithub.ReverseProxy
     class HttpClient : HttpMessageInvoker
     {
         private readonly TlsSniPattern tlsSniPattern;
+        private readonly bool tlsIgnoreNameMismatch;
 
         /// <summary>
         /// YARP的HttpClient
@@ -18,10 +19,14 @@ namespace FastGithub.ReverseProxy
         /// <param name="handler"></param>
         /// <param name="tlsSniPattern"></param>
         /// <param name="disposeHandler"></param>
-        public HttpClient(HttpMessageHandler handler, TlsSniPattern tlsSniPattern, bool disposeHandler = false) :
-            base(handler, disposeHandler)
+        public HttpClient(
+            HttpMessageHandler handler,
+            TlsSniPattern tlsSniPattern,
+            bool tlsIgnoreNameMismatch,
+            bool disposeHandler = false) : base(handler, disposeHandler)
         {
             this.tlsSniPattern = tlsSniPattern;
+            this.tlsIgnoreNameMismatch = tlsIgnoreNameMismatch;
         }
 
         /// <summary>
@@ -37,6 +42,7 @@ namespace FastGithub.ReverseProxy
                 Host = request.RequestUri?.Host,
                 IsHttps = request.RequestUri?.Scheme == Uri.UriSchemeHttps,
                 TlsSniPattern = this.tlsSniPattern,
+                TlsIgnoreNameMismatch = this.tlsIgnoreNameMismatch
             });
             return base.SendAsync(request, cancellationToken);
         }

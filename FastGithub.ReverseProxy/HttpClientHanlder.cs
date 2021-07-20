@@ -64,6 +64,11 @@ namespace FastGithub.ReverseProxy
                     {
                         if (errors == SslPolicyErrors.RemoteCertificateNameMismatch)
                         {
+                            if (requestContext.TlsIgnoreNameMismatch == true)
+                            {
+                                return true;
+                            }
+
                             var host = requestContext.Host;
                             var dnsNames = ReadDnsNames(cert);
                             return dnsNames.Any(dns => IsMatch(dns, host));
@@ -97,7 +102,7 @@ namespace FastGithub.ReverseProxy
                     if (list.Count >= 2 && list[0] is int nameType && nameType == 2)
                     {
                         var dnsName = list[1]?.ToString();
-                        if(dnsName!=null)
+                        if (dnsName != null)
                         {
                             yield return dnsName;
                         }

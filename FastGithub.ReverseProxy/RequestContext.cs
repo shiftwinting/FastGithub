@@ -19,5 +19,10 @@
         /// 获取或设置Sni值的表达式 
         /// </summary>
         public TlsSniPattern TlsSniPattern { get; set; }
+
+        /// <summary>
+        /// 是否忽略服务器证书域名不匹配
+        /// </summary>
+        public bool TlsIgnoreNameMismatch { get; set; }
     }
 }

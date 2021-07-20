@@ -57,7 +57,7 @@ namespace FastGithub.ReverseProxy
                 var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
 
                 var tlsSniPattern = domainConfig.GetTlsSniPattern();
-                using var httpClient = new HttpClient(this.httpClientHanlder, tlsSniPattern);
+                using var httpClient = new HttpClient(this.httpClientHanlder, tlsSniPattern, domainConfig.TlsIgnoreNameMismatch);
 
                 var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
                 await HandleErrorAsync(context, error);
