@@ -32,8 +32,12 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var isHttps = request.RequestUri?.Scheme == Uri.UriSchemeHttps;
-            request.SetTlsSniContext(new TlsSniContext(isHttps, this.tlsSniPattern));
+            request.SetRequestContext(new RequestContext
+            {
+                Host = request.RequestUri?.Host,
+                IsHttps = request.RequestUri?.Scheme == Uri.UriSchemeHttps,
+                TlsSniPattern = this.tlsSniPattern,
+            });
             return base.SendAsync(request, cancellationToken);
         }
     }

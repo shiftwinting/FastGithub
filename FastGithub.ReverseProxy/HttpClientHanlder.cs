@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -42,8 +45,8 @@ namespace FastGithub.ReverseProxy
                     await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
                     var stream = new NetworkStream(socket, ownsSocket: true);
 
-                    var tlsSniContext = context.InitialRequestMessage.GetTlsSniContext();
-                    if (tlsSniContext.IsHttps == false)
+                    var requestContext = context.InitialRequestMessage.GetRequestContext();
+                    if (requestContext.IsHttps == false)
                     {
                         return stream;
                     }
@@ -51,18 +54,76 @@ namespace FastGithub.ReverseProxy
                     var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
                     await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
                     {
-                        TargetHost = tlsSniContext.TlsSniPattern.Value,
+                        TargetHost = requestContext.TlsSniPattern.Value,
                         RemoteCertificateValidationCallback = ValidateServerCertificate
                     }, cancellationToken);
                     return sslStream;
 
-                    // 这里最好需要验证证书的使用者和所有使用者可选名称
-                    static bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
+
+                    bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
                     {
-                        return errors == SslPolicyErrors.None || errors == SslPolicyErrors.RemoteCertificateNameMismatch;
+                        if (errors == SslPolicyErrors.RemoteCertificateNameMismatch)
+                        {
+                            var host = requestContext.Host;
+                            var dnsNames = ReadDnsNames(cert);
+                            return dnsNames.Any(dns => IsMatch(dns, host));
+                        }
+
+                        return errors == SslPolicyErrors.None;
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// 读取使用的DNS名称
+        /// </summary>
+        /// <param name="cert"></param>
+        /// <returns></returns>
+        private static IEnumerable<string> ReadDnsNames(X509Certificate? cert)
+        {
+            if (cert == null)
+            {
+                yield break;
+            }
+            var parser = new Org.BouncyCastle.X509.X509CertificateParser();
+            var x509Cert = parser.ReadCertificate(cert.GetRawCertData());
+            var subjects = x509Cert.GetSubjectAlternativeNames();
+
+            foreach (var subject in subjects)
+            {
+                if (subject is IList list)
+                {
+                    var type = (int)list[0]!;
+                    if (type == 2) // DNS
+                    {
+                        yield return list[list.Count - 1]!.ToString()!;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 比较域名
+        /// </summary>
+        /// <param name="dnsName"></param>
+        /// <param name="host"></param>
+        /// <returns></returns>
+        private static bool IsMatch(string dnsName, string? host)
+        {
+            if (host == null)
+            {
+                return false;
+            }
+            if (dnsName == host)
+            {
+                return true;
+            }
+            if (dnsName[0] == '*')
+            {
+                return host.EndsWith(dnsName[1..]);
+            }
+            return false;
         }
 
         /// <summary>
@@ -85,7 +146,7 @@ namespace FastGithub.ReverseProxy
                 request.RequestUri = builder.Uri;
                 request.Headers.Host = uri.Host;
 
-                var context = request.GetTlsSniContext();
+                var context = request.GetRequestContext();
                 context.TlsSniPattern = context.TlsSniPattern.WithDomain(uri.Host).WithIPAddress(address).WithRandom();
             }
             return await base.SendAsync(request, cancellationToken);

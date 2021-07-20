@@ -40,9 +40,9 @@ namespace FastGithub
         /// Sni自定义值表达式
         /// </summary>
         /// <param name="value">表示式值</param>
-        public TlsSniPattern(string value)
+        public TlsSniPattern(string? value)
         {
-            this.Value = value;
+            this.Value = value ?? string.Empty;
         }
 
         /// <summary>
