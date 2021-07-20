@@ -32,10 +32,10 @@ namespace FastGithub
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddAppUpgrade();
                     services.AddDnsServer();
                     services.AddReverseProxy();
                     services.AddDnscryptProxy();
+                    services.AddAppUpgrade();
                     services.AddSingleton<FastGithubConfig>();
                     services.Configure<FastGithubOptions>(ctx.Configuration.GetSection(nameof(FastGithub)));
                 })

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -7,13 +8,19 @@ namespace FastGithub.Upgrade
     /// <summary>
     /// 发行记录
     /// </summary>
-    sealed class GiteeRelease
+    sealed class GithubRelease
     {
         /// <summary>
         /// 标签名
         /// </summary>
         [JsonPropertyName("tag_name")]
         public string TagName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 是否预览版本
+        /// </summary>
+        [JsonPropertyName("prerelease")]
+        public bool Prerelease { get; set; }
 
         /// <summary>
         /// 发行说明
@@ -27,6 +34,13 @@ namespace FastGithub.Upgrade
 
         [JsonPropertyName("created_at")]
         public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// 下载页面
+        /// </summary>
+        [AllowNull]
+        [JsonPropertyName("html_url")]
+        public Uri HtmlUrl { get; set; }
 
 
         /// <summary>

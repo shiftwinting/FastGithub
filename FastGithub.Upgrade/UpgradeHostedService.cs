@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -10,46 +9,47 @@ namespace FastGithub.Upgrade
     /// <summary>
     /// 升级后台服务
     /// </summary>
-    sealed class UpgradeHostedService : IHostedService
+    sealed class UpgradeHostedService : BackgroundService
     {
-        private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly UpgradeService upgradeService;
         private readonly ILogger<UpgradeHostedService> logger;
 
         /// <summary>
         /// 升级后台服务
         /// </summary>
-        /// <param name="serviceScopeFactory"></param>
         /// <param name="logger"></param>
         public UpgradeHostedService(
-            IServiceScopeFactory serviceScopeFactory,
+            UpgradeService upgradeService,
             ILogger<UpgradeHostedService> logger)
         {
-            this.serviceScopeFactory = serviceScopeFactory;
+            this.upgradeService = upgradeService;
             this.logger = logger;
         }
 
         /// <summary>
         /// 检测版本
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
+            var maxTryCount = 3;
+            for (var i = 1; i <= maxTryCount; i++)
             {
-                using var scope = this.serviceScopeFactory.CreateScope();
-                var upgradeService = scope.ServiceProvider.GetRequiredService<UpgradeService>();
-                await upgradeService.UpgradeAsync(cancellationToken);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2d), stoppingToken);
+                    await this.upgradeService.UpgradeAsync(stoppingToken);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (i == maxTryCount)
+                    {
+                        this.logger.LogWarning($"升级失败：{ex.Message}");
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"升级失败：{ex.Message}");
-            }
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
         }
     }
 }

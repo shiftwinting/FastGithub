@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,8 +15,7 @@ namespace FastGithub.Upgrade
     sealed class UpgradeService
     {
         private readonly ILogger<UpgradeService> logger;
-        private const string DownloadPage = "https://gitee.com/jiulang/fast-github/releases";
-        private const string ReleasesUri = "https://gitee.com/api/v5/repos/jiulang/fast-github/releases?page=1&per_page=1&direction=desc";
+        private const string ReleasesUri = "https://api.github.com/repos/xljiulang/fastgithub/releases";
 
         /// <summary>
         /// 升级服务
@@ -48,7 +48,7 @@ namespace FastGithub.Upgrade
             var lastedVersion = lastRelease.GetProductionVersion();
             if (lastedVersion.CompareTo(currentVersion) > 0)
             {
-                this.logger.LogInformation($"您正在使用{currentVersion}版本{Environment.NewLine}请前往{DownloadPage}下载新版本");
+                this.logger.LogInformation($"您正在使用{currentVersion}版本{Environment.NewLine}请前往{lastRelease.HtmlUrl}下载新版本");
                 this.logger.LogInformation(lastRelease.ToString());
             }
         }
@@ -57,11 +57,14 @@ namespace FastGithub.Upgrade
         /// 获取最新发布
         /// </summary>
         /// <returns></returns>
-        public async Task<GiteeRelease?> GetLastedReleaseAsync(CancellationToken cancellationToken)
+        public async Task<GithubRelease?> GetLastedReleaseAsync(CancellationToken cancellationToken)
         {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5d) };
-            var releases = await httpClient.GetFromJsonAsync<GiteeRelease[]>(ReleasesUri, cancellationToken);
-            return releases?.FirstOrDefault();
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30d) };
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(nameof(FastGithub), "1.0"));
+
+            var releases = await httpClient.GetFromJsonAsync<GithubRelease[]>(ReleasesUri, cancellationToken);
+            return releases?.FirstOrDefault(item => item.Prerelease == false);
         }
     }
 }
