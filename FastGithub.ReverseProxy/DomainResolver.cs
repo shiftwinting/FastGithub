@@ -35,8 +35,8 @@ namespace FastGithub.ReverseProxy
             this.options = options;
             this.logger = logger;
 
-            this.dnsClient = new DnsClient(options.CurrentValue.FastDns.ToIPEndPoint());
-            options.OnChange(opt => this.dnsClient = new DnsClient(opt.FastDns.ToIPEndPoint()));
+            this.dnsClient = new DnsClient(options.CurrentValue.PureDns.ToIPEndPoint());
+            options.OnChange(opt => this.dnsClient = new DnsClient(opt.PureDns.ToIPEndPoint()));
         }
 
         /// <summary>
