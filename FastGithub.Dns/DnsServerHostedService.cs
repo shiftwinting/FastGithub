@@ -41,12 +41,14 @@ namespace FastGithub.Dns
             this.hostsValidator = hostsValidator;
             this.logger = logger;
 
-            if (OperatingSystem.IsWindows())
+            options.OnChange(opt =>
             {
-                options.OnChange(opt => SystemDnsUtil.DnsFlushResolverCache());
-            }
+                if (OperatingSystem.IsWindows())
+                {
+                    SystemDnsUtil.DnsFlushResolverCache();
+                }
+            });
         }
-
 
         /// <summary>
         /// 启动dns
