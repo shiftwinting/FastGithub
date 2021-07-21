@@ -19,7 +19,7 @@ namespace FastGithub
                 .AddMemoryCache()
                 .AddHttpForwarder()
                 .AddSingleton<DomainResolver>()
-                .AddTransient<HttpClientHanlder>()
+                .AddTransient<HttpClientFactory>()
                 .AddSingleton<RequestLoggingMilldeware>()
                 .AddSingleton<ReverseProxyMiddleware>();
         }

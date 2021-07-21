@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,9 +12,8 @@ namespace FastGithub.Dns.DnscryptProxy
     /// </summary>
     sealed class DnscryptProxyHostedService : IHostedService
     {
-        private const string dnscryptFile = "dnscrypt-proxy";
+        private const string dnscryptProxyFile = "dnscrypt-proxy";
         private readonly ILogger<DnscryptProxyHostedService> logger;
-        private Process? dnscryptProcess;
 
         /// <summary>
         /// DnscryptProxy后台服务
@@ -35,27 +33,20 @@ namespace FastGithub.Dns.DnscryptProxy
         {
             try
             {
-                var fileName = dnscryptFile;
                 if (OperatingSystem.IsWindows())
                 {
-                    fileName = $"{dnscryptFile}.exe";
+                    StartDnscryptProxy("-service install", waitForExit: true);
+                    StartDnscryptProxy("-service start", waitForExit: true);
                 }
-
-                if (File.Exists(fileName) == true)
+                else
                 {
-                    this.dnscryptProcess = Process.Start(new ProcessStartInfo
-                    {
-                        FileName = fileName,
-                        UseShellExecute = true,
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden
-                    });
-                    this.logger.LogInformation($"{dnscryptFile}启动成功");
+                    StartDnscryptProxy(string.Empty, waitForExit: false);
                 }
+                this.logger.LogInformation($"{dnscryptProxyFile}启动成功");
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"{dnscryptFile}启动失败：{ex.Message}");
+                this.logger.LogWarning($"{dnscryptProxyFile}启动失败：{ex.Message}");
             }
             return Task.CompletedTask;
         }
@@ -67,12 +58,48 @@ namespace FastGithub.Dns.DnscryptProxy
         /// <returns></returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            if (this.dnscryptProcess != null)
+            try
             {
-                this.dnscryptProcess.Kill();
-                this.logger.LogInformation($"{dnscryptFile}已停止");
+                if (OperatingSystem.IsWindows())
+                {
+                    StartDnscryptProxy("-service stop", waitForExit: true);
+                    StartDnscryptProxy("-service uninstall", waitForExit: true);
+                }
+
+                foreach (var process in Process.GetProcessesByName(dnscryptProxyFile))
+                {
+                    process.Kill();
+                }
+                this.logger.LogInformation($"{dnscryptProxyFile}已停止");
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"{dnscryptProxyFile}停止失败：{ex.Message}");
             }
             return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// 启动DnscryptProxy进程
+        /// </summary>
+        /// <param name="arguments"></param>
+        /// <param name="waitForExit"></param> 
+        private static void StartDnscryptProxy(string arguments, bool waitForExit)
+        {
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = OperatingSystem.IsWindows() ? $"{dnscryptProxyFile}.exe" : dnscryptProxyFile,
+                Arguments = arguments,
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            });
+
+            if (waitForExit && process != null)
+            {
+                process.WaitForExit();
+            }
         }
     }
 }
