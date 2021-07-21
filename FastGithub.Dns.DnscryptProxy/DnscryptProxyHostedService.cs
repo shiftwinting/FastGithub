@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,23 +34,16 @@ namespace FastGithub.Dns.DnscryptProxy
         {
             try
             {
-                var fileName = dnscryptFile;
-                if (OperatingSystem.IsWindows())
+                if (OperatingSystem.IsWindows() && Process.GetCurrentProcess().SessionId == 0)
                 {
-                    fileName = $"{dnscryptFile}.exe";
+                    StartDnscrypt("-service install")?.WaitForExit();
+                    StartDnscrypt("-service start")?.WaitForExit();
                 }
-
-                if (File.Exists(fileName) == true)
+                else
                 {
-                    this.dnscryptProcess = Process.Start(new ProcessStartInfo
-                    {
-                        FileName = fileName,
-                        UseShellExecute = true,
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden
-                    });
-                    this.logger.LogInformation($"{dnscryptFile}启动成功");
+                    this.dnscryptProcess = StartDnscrypt(string.Empty);
                 }
+                this.logger.LogInformation($"{dnscryptFile}启动成功");
             }
             catch (Exception ex)
             {
@@ -72,7 +64,29 @@ namespace FastGithub.Dns.DnscryptProxy
                 this.dnscryptProcess.Kill();
                 this.logger.LogInformation($"{dnscryptFile}已停止");
             }
+            else if (OperatingSystem.IsWindows())
+            {
+                StartDnscrypt("-service stop")?.WaitForExit();
+                StartDnscrypt("-service uninstall")?.WaitForExit();
+                this.logger.LogInformation($"{dnscryptFile}已停止");
+            }
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 启动Dnscrypt
+        /// </summary>
+        /// <param name="arguments"></param>
+        private static Process? StartDnscrypt(string arguments)
+        {
+            return Process.Start(new ProcessStartInfo
+            {
+                FileName = OperatingSystem.IsWindows() ? $"{dnscryptFile}.exe" : dnscryptFile,
+                Arguments = arguments,
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            });
         }
     }
 }
