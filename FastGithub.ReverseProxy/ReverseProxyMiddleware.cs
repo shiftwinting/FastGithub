@@ -12,18 +12,18 @@ namespace FastGithub.ReverseProxy
     sealed class ReverseProxyMiddleware
     {
         private readonly IHttpForwarder httpForwarder;
-        private readonly HttpClientHanlder httpClientHanlder;
+        private readonly HttpClientFactory httpClientFactory;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<ReverseProxyMiddleware> logger;
 
         public ReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
-            HttpClientHanlder httpClientHanlder,
+            HttpClientFactory httpClientFactory,
             FastGithubConfig fastGithubConfig,
             ILogger<ReverseProxyMiddleware> logger)
         {
             this.httpForwarder = httpForwarder;
-            this.httpClientHanlder = httpClientHanlder;
+            this.httpClientFactory = httpClientFactory;
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
@@ -54,10 +54,8 @@ namespace FastGithub.ReverseProxy
             else
             {
                 var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
+                var httpClient = this.httpClientFactory.CreateHttpClient(domainConfig);
                 var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
-
-                var tlsSniPattern = domainConfig.GetTlsSniPattern();
-                using var httpClient = new HttpClient(this.httpClientHanlder, tlsSniPattern, domainConfig.TlsIgnoreNameMismatch);
 
                 var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
                 await HandleErrorAsync(context, error);
