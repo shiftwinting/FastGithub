@@ -32,7 +32,7 @@ github加速神器
 ### Q群
 > 307306673
 
-如果你还没有此工具或者其它原因不能下载releases里发布的程序，可以到Q群文件下载。
+如果你还没有此工具或者其它原因不能下载[releases](https://github.com/xljiulang/FastGithub/releases)里发布的程序，可以到Q群文件下载。
 
 ### 安全性说明
 FastGithub生成自签名CA证书，要求安装到本机设备。FastGithub为每台不同设备生成的CA不同的证书，保存在CACert文件夹下，请不要将证书私钥泄露给他人，以免造成损失。
