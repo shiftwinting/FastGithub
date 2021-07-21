@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -12,51 +14,61 @@ namespace FastGithub
     /// </summary>
     public class FastGithubConfig
     {
-        /// <summary>
-        /// 域名与配置缓存
-        /// </summary>
-        [AllowNull]
+        private readonly ILogger<FastGithubConfig> logger;
         private ConcurrentDictionary<string, DomainConfig?> domainConfigCache;
-
 
         /// <summary>
         /// 未污染的dns
-        /// </summary>
-        [AllowNull]
+        /// </summary>  
         public IPEndPoint PureDns { get; private set; }
 
         /// <summary>
         /// 速度快的dns
         /// </summary>
-        [AllowNull]
         public IPEndPoint FastDns { get; private set; }
 
         /// <summary>
         /// 获取域名配置
-        /// </summary>
-        [AllowNull]
+        /// </summary>    
         public Dictionary<DomainMatch, DomainConfig> DomainConfigs { get; private set; }
 
         /// <summary>
         /// FastGithub配置
-        /// </summary> 
+        /// </summary>
         /// <param name="options"></param>
-        public FastGithubConfig(IOptionsMonitor<FastGithubOptions> options)
+        /// <param name="logger"></param>
+        public FastGithubConfig(
+            IOptionsMonitor<FastGithubOptions> options,
+            ILogger<FastGithubConfig> logger)
         {
-            this.Init(options.CurrentValue);
-            options.OnChange(opt => this.Init(opt));
+            this.logger = logger;
+
+            var opt = options.CurrentValue;
+            this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
+            this.PureDns = opt.PureDns.ToIPEndPoint();
+            this.FastDns = opt.FastDns.ToIPEndPoint();
+            this.DomainConfigs = opt.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
+
+            options.OnChange(opt => this.Update(opt));
         }
 
         /// <summary>
-        /// 初始化
+        /// 更新配置
         /// </summary>
         /// <param name="options"></param>
-        private void Init(FastGithubOptions options)
+        private void Update(FastGithubOptions options)
         {
-            this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
-            this.PureDns = options.PureDns.ToIPEndPoint();
-            this.FastDns = options.FastDns.ToIPEndPoint();
-            this.DomainConfigs = options.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
+            try
+            {
+                this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
+                this.PureDns = options.PureDns.ToIPEndPoint();
+                this.FastDns = options.FastDns.ToIPEndPoint();
+                this.DomainConfigs = options.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex.Message);
+            }
         }
 
         /// <summary>
@@ -77,14 +89,19 @@ namespace FastGithub
         /// <returns></returns>
         public bool TryGetDomainConfig(string domain, [MaybeNullWhen(false)] out DomainConfig value)
         {
-            value = this.domainConfigCache.GetOrAdd(domain, GetDomainConfig);
+            value = this.domainConfigCache.GetOrAdd(domain, this.GetDomainConfig);
             return value != null;
+        }
 
-            DomainConfig? GetDomainConfig(string domain)
-            {
-                var key = this.DomainConfigs.Keys.FirstOrDefault(item => item.IsMatch(domain));
-                return key == null ? null : this.DomainConfigs[key];
-            }
+        /// <summary>
+        /// 获取域名配置
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        private DomainConfig? GetDomainConfig(string domain)
+        {
+            var key = this.DomainConfigs.Keys.FirstOrDefault(item => item.IsMatch(domain));
+            return key == null ? null : this.DomainConfigs[key];
         }
     }
 }
