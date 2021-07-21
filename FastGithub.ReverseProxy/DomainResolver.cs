@@ -1,7 +1,6 @@
 ﻿using DNS.Client;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Net;
@@ -15,9 +14,8 @@ namespace FastGithub.ReverseProxy
     /// </summary> 
     sealed class DomainResolver
     {
-        private DnsClient dnsClient;
         private readonly IMemoryCache memoryCache;
-        private readonly IOptionsMonitor<FastGithubOptions> options;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DomainResolver> logger;
         private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
 
@@ -25,19 +23,16 @@ namespace FastGithub.ReverseProxy
         /// 域名解析器
         /// </summary>
         /// <param name="memoryCache"></param>
-        /// <param name="options"></param>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
         public DomainResolver(
             IMemoryCache memoryCache,
-            IOptionsMonitor<FastGithubOptions> options,
+            FastGithubConfig fastGithubConfig,
             ILogger<DomainResolver> logger)
         {
             this.memoryCache = memoryCache;
-            this.options = options;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
-
-            this.dnsClient = new DnsClient(options.CurrentValue.PureDns.ToIPEndPoint());
-            options.OnChange(opt => this.dnsClient = new DnsClient(opt.PureDns.ToIPEndPoint()));
         }
 
         /// <summary>
@@ -68,6 +63,7 @@ namespace FastGithub.ReverseProxy
         {
             try
             {
+                var dnsClient = new DnsClient(this.fastGithubConfig.PureDns);
                 var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
                 var address = addresses?.FirstOrDefault();
                 if (address == null)
@@ -87,7 +83,7 @@ namespace FastGithub.ReverseProxy
             }
             catch (Exception ex)
             {
-                var dns = this.options.CurrentValue.PureDns;
+                var dns = this.fastGithubConfig.PureDns;
                 throw new FastGithubException($"dns({dns})服务器异常：{ex.Message}", ex);
             }
         }

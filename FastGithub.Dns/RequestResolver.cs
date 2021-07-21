@@ -2,7 +2,6 @@
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Net;
@@ -16,8 +15,6 @@ namespace FastGithub.Dns
     /// </summary> 
     sealed class RequestResolver : IRequestResolver
     {
-        private IRequestResolver requestResolver;
-
         private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<RequestResolver> logger;
@@ -26,24 +23,13 @@ namespace FastGithub.Dns
         /// dns解析者
         /// </summary>
         /// <param name="fastGithubConfig"></param>
-        /// <param name="options"></param>
         /// <param name="logger"></param>
         public RequestResolver(
             FastGithubConfig fastGithubConfig,
-            IOptionsMonitor<FastGithubOptions> options,
             ILogger<RequestResolver> logger)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
-
-            this.requestResolver = new UdpRequestResolver(fastGithubConfig.FastDns);
-            options.OnChange(opt => OptionsChanged(opt));
-
-            void OptionsChanged(FastGithubOptions opt)
-            {
-                var dns = opt.FastDns.ToIPEndPoint();
-                this.requestResolver = new UdpRequestResolver(dns);
-            }
         }
 
         /// <summary>
@@ -78,7 +64,8 @@ namespace FastGithub.Dns
                 return response;
             }
 
-            return await this.requestResolver.Resolve(request, cancellationToken);
+            var fastResolver = new UdpRequestResolver(fastGithubConfig.FastDns);
+            return await fastResolver.Resolve(request, cancellationToken);
         }
     }
 }
