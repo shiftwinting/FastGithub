@@ -59,7 +59,10 @@ namespace FastGithub.Upgrade
         /// <returns></returns>
         public async Task<GithubRelease?> GetLastedReleaseAsync(CancellationToken cancellationToken)
         {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30d) };
+            using var httpClient = new HttpClient(new ReverseProxyHttpHandler())
+            {
+                Timeout = TimeSpan.FromSeconds(30d),
+            };
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
             httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(nameof(FastGithub), "1.0"));
 

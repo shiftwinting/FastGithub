@@ -33,7 +33,7 @@ namespace FastGithub.Upgrade
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var maxTryCount = 3;
+            var maxTryCount = 5;
             for (var i = 1; i <= maxTryCount; i++)
             {
                 try
