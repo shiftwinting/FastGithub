@@ -10,7 +10,7 @@ namespace FastGithub.Dns.DnscryptProxy
     /// <summary>
     /// DnscryptProxy后台服务
     /// </summary>
-    sealed class DnscryptProxyHostedService : IHostedService
+    sealed class DnscryptProxyHostedService : BackgroundService
     {
         private const string dnscryptProxyFile = "dnscrypt-proxy";
         private readonly ILogger<DnscryptProxyHostedService> logger;
@@ -29,7 +29,7 @@ namespace FastGithub.Dns.DnscryptProxy
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task StartAsync(CancellationToken cancellationToken)
+        public override Task StartAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -48,7 +48,8 @@ namespace FastGithub.Dns.DnscryptProxy
             {
                 this.logger.LogWarning($"{dnscryptProxyFile}启动失败：{ex.Message}");
             }
-            return Task.CompletedTask;
+
+            return base.StartAsync(cancellationToken);
         }
 
         /// <summary>
@@ -56,7 +57,7 @@ namespace FastGithub.Dns.DnscryptProxy
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -76,9 +77,26 @@ namespace FastGithub.Dns.DnscryptProxy
             {
                 this.logger.LogWarning($"{dnscryptProxyFile}停止失败：{ex.Message}");
             }
-            return Task.CompletedTask;
+            return base.StopAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// 后台任务
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (stoppingToken.IsCancellationRequested == false)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10d), stoppingToken);
+                var processes = Process.GetProcessesByName(dnscryptProxyFile);
+                if (processes.Length == 0)
+                {
+                    this.logger.LogError($"检测到{dnscryptProxyFile}已停止运行，{nameof(FastGithub)}将无法使用。你可以把配置文件的PureDns修改为其它可用的DNS以临时使用。");
+                }
+            }
+        }
 
         /// <summary>
         /// 启动DnscryptProxy进程
