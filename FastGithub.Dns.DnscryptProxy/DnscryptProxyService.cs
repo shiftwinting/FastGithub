@@ -11,12 +11,13 @@ namespace FastGithub.Dns.DnscryptProxy
     /// </summary>
     sealed class DnscryptProxyService
     {
+        private const string name = "dnscrypt-proxy";
         private readonly FastGithubConfig fastGithubConfig;
 
         /// <summary>
-        /// 获取文件名
+        /// 获取相关进程
         /// </summary>
-        public string Name => "dnscrypt-proxy";
+        public Process? Process { get; private set; }
 
         /// <summary>
         /// DnscryptProxy服务
@@ -34,22 +35,23 @@ namespace FastGithub.Dns.DnscryptProxy
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var tomlPath = $"{this.Name}.toml";
+            var tomlPath = $"{name}.toml";
             await TomlUtil.SetListensAsync(tomlPath, this.fastGithubConfig.PureDns, cancellationToken);
 
-            foreach (var process in Process.GetProcessesByName(this.Name))
+            foreach (var process in Process.GetProcessesByName(name))
             {
                 process.Kill();
             }
 
             if (OperatingSystem.IsWindows())
             {
-                this.StartDnscryptProxy("-service install", waitForExit: true);
-                this.StartDnscryptProxy("-service start", waitForExit: true);
+                StartDnscryptProxy("-service install")?.WaitForExit();
+                StartDnscryptProxy("-service start")?.WaitForExit();
+                this.Process = Process.GetProcessesByName(name).FirstOrDefault(item => item.SessionId == 0);
             }
             else
             {
-                this.StartDnscryptProxy(string.Empty, waitForExit: false);
+                this.Process = StartDnscryptProxy(string.Empty);
             }
         }
 
@@ -60,48 +62,30 @@ namespace FastGithub.Dns.DnscryptProxy
         {
             if (OperatingSystem.IsWindows())
             {
-                this.StartDnscryptProxy("-service stop", waitForExit: true);
-                this.StartDnscryptProxy("-service uninstall", waitForExit: true);
+                StartDnscryptProxy("-service stop")?.WaitForExit();
+                StartDnscryptProxy("-service uninstall")?.WaitForExit();
             }
 
-            foreach (var process in Process.GetProcessesByName(this.Name))
+            if (this.Process != null && this.Process.HasExited == false)
             {
-                process.Kill();
-            }
-        }
-
-        /// <summary>
-        /// 等待退出
-        /// </summary>
-        public void WaitForExit()
-        {
-            var process = Process.GetProcessesByName(this.Name).FirstOrDefault();
-            if (process != null)
-            {
-                process.WaitForExit();
+                this.Process.Kill();
             }
         }
 
         /// <summary>
         /// 启动DnscryptProxy进程
         /// </summary>
-        /// <param name="arguments"></param>
-        /// <param name="waitForExit"></param> 
-        private void StartDnscryptProxy(string arguments, bool waitForExit)
+        /// <param name="arguments"></param> 
+        private static Process? StartDnscryptProxy(string arguments)
         {
-            var process = Process.Start(new ProcessStartInfo
+            return Process.Start(new ProcessStartInfo
             {
-                FileName = OperatingSystem.IsWindows() ? $"{this.Name}.exe" : this.Name,
+                FileName = OperatingSystem.IsWindows() ? $"{name}.exe" : name,
                 Arguments = arguments,
                 UseShellExecute = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             });
-
-            if (waitForExit && process != null)
-            {
-                process.WaitForExit();
-            }
         }
 
         /// <summary>
@@ -110,7 +94,7 @@ namespace FastGithub.Dns.DnscryptProxy
         /// <returns></returns>
         public override string ToString()
         {
-            return this.Name;
+            return name;
         }
     }
 }
