@@ -38,6 +38,18 @@ namespace FastGithub.Dns.DnscryptProxy
             {
                 await this.dnscryptProxyService.StartAsync(cancellationToken);
                 this.logger.LogInformation($"{this.dnscryptProxyService}启动成功");
+
+                // 监听意外退出
+                var service = this.dnscryptProxyService.Process;
+                if (service == null)
+                {
+                    this.OnProcessExit(null, new EventArgs());
+                }
+                else
+                {
+                    service.EnableRaisingEvents = true;
+                    service.Exited += this.OnProcessExit;
+                }
             }
             catch (Exception ex)
             {
@@ -45,21 +57,18 @@ namespace FastGithub.Dns.DnscryptProxy
             }
         }
 
-        ///// <summary>
-        ///// 后台监控
-        ///// </summary>
-        ///// <param name="stoppingToken"></param>
-        ///// <returns></returns>
-        //protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        //{
-        //    await Task.Yield();
-
-        //    this.dnscryptProxyService.Process?.WaitForExit();
-        //    if (this.isStopped == false)
-        //    {
-        //        this.logger.LogCritical($"{this.dnscryptProxyService}已停止运行，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的{nameof(FastGithubOptions.PureDns)}修改为其它可用的DNS以临时使用。");
-        //    }
-        //}
+        /// <summary>
+        /// 进程退出时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnProcessExit(object? sender, EventArgs e)
+        {
+            if (this.dnscryptProxyService.ControllState != ControllState.Stopped)
+            {
+                this.logger.LogCritical($"{this.dnscryptProxyService}已停止运行，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的{nameof(FastGithubOptions.PureDns)}修改为其它可用的DNS以临时使用。");
+            }
+        }
 
         /// <summary>
         /// 停止dnscrypt-proxy

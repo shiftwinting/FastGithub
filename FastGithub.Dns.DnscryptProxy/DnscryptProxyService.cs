@@ -20,6 +20,11 @@ namespace FastGithub.Dns.DnscryptProxy
         public Process? Process { get; private set; }
 
         /// <summary>
+        /// 获取服务控制状态
+        /// </summary>
+        public ControllState ControllState { get; private set; } = ControllState.None;
+
+        /// <summary>
         /// DnscryptProxy服务
         /// </summary>
         /// <param name="fastGithubConfig"></param>
@@ -35,6 +40,8 @@ namespace FastGithub.Dns.DnscryptProxy
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            this.ControllState = ControllState.Started;
+
             var tomlPath = $"{name}.toml";
             await TomlUtil.SetListensAsync(tomlPath, this.fastGithubConfig.PureDns, cancellationToken);
 
@@ -60,6 +67,8 @@ namespace FastGithub.Dns.DnscryptProxy
         /// </summary>
         public void Stop()
         {
+            this.ControllState = ControllState.Stopped;
+
             if (OperatingSystem.IsWindows())
             {
                 StartDnscryptProxy("-service stop")?.WaitForExit();
