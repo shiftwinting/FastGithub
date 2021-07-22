@@ -45,7 +45,7 @@ namespace FastGithub
                 return -1;
             }
 
-            for (var i = 0; i < segmentsX.Length; i++)
+            for (var i = segmentsX.Length - 1; i >= 0; i--)
             {
                 var x = segmentsX[i];
                 var y = segmentsY[i];
@@ -80,16 +80,14 @@ namespace FastGithub
 
             var maskX = x.Length - valueX.Length;
             var maskY = y.Length - valueY.Length;
-            if (maskX == 0 && maskY > 0)
+
+            var value = maskX - maskY;
+            if (value != 0)
             {
-                return -1;
-            }
-            if (maskY == 0 && maskX > 0)
-            {
-                return 1;
+                return value;
             }
 
-            var value = valueX.CompareTo(valueY);
+            value = valueX.CompareTo(valueY);
             if (value == 0)
             {
                 value = x.CompareTo(y);
