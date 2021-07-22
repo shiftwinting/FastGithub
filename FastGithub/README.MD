@@ -27,3 +27,10 @@ github加速神器
 ```
 git config --global http.sslverify false
 ```
+
+### 配置文件
+#### 主配置文件
+appsettings.json为主配置文件，里面有dns配置和域名的配置示例。
+
+#### 子配置文件
+appsettings.*.json为子配置文件，默认有github和stackoverflow的配置，新增子配置文件后需要重启FastGithub才生效。
