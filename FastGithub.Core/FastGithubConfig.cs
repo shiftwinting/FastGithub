@@ -15,6 +15,7 @@ namespace FastGithub
     public class FastGithubConfig
     {
         private readonly ILogger<FastGithubConfig> logger;
+        private SortedDictionary<DomainPattern, DomainConfig> domainConfigs;
         private ConcurrentDictionary<string, DomainConfig?> domainConfigCache;
 
         /// <summary>
@@ -27,10 +28,6 @@ namespace FastGithub
         /// </summary>
         public IPEndPoint FastDns { get; private set; }
 
-        /// <summary>
-        /// 获取域名配置
-        /// </summary>    
-        public SortedDictionary<DomainMatch, DomainConfig> DomainConfigs { get; private set; }
 
         /// <summary>
         /// FastGithub配置
@@ -46,7 +43,7 @@ namespace FastGithub
 
             this.PureDns = opt.PureDns.ToIPEndPoint();
             this.FastDns = opt.FastDns.ToIPEndPoint();
-            this.DomainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
+            this.domainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
 
             options.OnChange(opt => this.Update(opt));
@@ -62,7 +59,7 @@ namespace FastGithub
             {
                 this.PureDns = options.PureDns.ToIPEndPoint();
                 this.FastDns = options.FastDns.ToIPEndPoint();
-                this.DomainConfigs = ConvertDomainConfigs(options.DomainConfigs);
+                this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
                 this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
             }
             catch (Exception ex)
@@ -76,12 +73,12 @@ namespace FastGithub
         /// </summary>
         /// <param name="domainConfigs"></param>
         /// <returns></returns>
-        private static SortedDictionary<DomainMatch, DomainConfig> ConvertDomainConfigs(Dictionary<string, DomainConfig> domainConfigs)
+        private static SortedDictionary<DomainPattern, DomainConfig> ConvertDomainConfigs(Dictionary<string, DomainConfig> domainConfigs)
         {
-            var result = new SortedDictionary<DomainMatch, DomainConfig>();
+            var result = new SortedDictionary<DomainPattern, DomainConfig>();
             foreach (var kv in domainConfigs)
             {
-                result.Add(new DomainMatch(kv.Key), kv.Value);
+                result.Add(new DomainPattern(kv.Key), kv.Value);
             }
             return result;
         }
@@ -93,7 +90,7 @@ namespace FastGithub
         /// <returns></returns>
         public bool IsMatch(string domain)
         {
-            return this.DomainConfigs.Keys.Any(item => item.IsMatch(domain));
+            return this.domainConfigs.Keys.Any(item => item.IsMatch(domain));
         }
 
         /// <summary>
@@ -104,19 +101,14 @@ namespace FastGithub
         /// <returns></returns>
         public bool TryGetDomainConfig(string domain, [MaybeNullWhen(false)] out DomainConfig value)
         {
-            value = this.domainConfigCache.GetOrAdd(domain, this.GetDomainConfig);
+            value = this.domainConfigCache.GetOrAdd(domain, GetDomainConfig);
             return value != null;
-        }
 
-        /// <summary>
-        /// 获取域名配置
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        private DomainConfig? GetDomainConfig(string domain)
-        {
-            var key = this.DomainConfigs.Keys.FirstOrDefault(item => item.IsMatch(domain));
-            return key == null ? null : this.DomainConfigs[key];
+            DomainConfig? GetDomainConfig(string domain)
+            {
+                var key = this.domainConfigs.Keys.FirstOrDefault(item => item.IsMatch(domain));
+                return key == null ? null : this.domainConfigs[key];
+            }
         }
     }
 }

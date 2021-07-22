@@ -4,19 +4,20 @@ using System.Text.RegularExpressions;
 namespace FastGithub
 {
     /// <summary>
-    /// 域名匹配
+    /// 表示域名表达式
     /// *表示除.之外任意0到多个字符
     /// </summary>
-    public class DomainMatch : IComparable<DomainMatch>
+    sealed class DomainPattern : IComparable<DomainPattern>
     {
         private readonly Regex regex;
         private readonly string domainPattern;
 
         /// <summary>
-        /// 域名匹配
+        /// 域名表达式
+        /// *表示除.之外任意0到多个字符
         /// </summary>
         /// <param name="domainPattern">域名表达式</param>
-        public DomainMatch(string domainPattern)
+        public DomainPattern(string domainPattern)
         {
             this.domainPattern = domainPattern;
             var regexPattern = Regex.Escape(domainPattern).Replace(@"\*", @"[^\.]*");
@@ -28,7 +29,7 @@ namespace FastGithub
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public int CompareTo(DomainMatch? other)
+        public int CompareTo(DomainPattern? other)
         {
             if (other is null)
             {
