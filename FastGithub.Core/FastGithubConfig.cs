@@ -30,7 +30,7 @@ namespace FastGithub
         /// <summary>
         /// 获取域名配置
         /// </summary>    
-        public Dictionary<DomainMatch, DomainConfig> DomainConfigs { get; private set; }
+        public SortedDictionary<DomainMatch, DomainConfig> DomainConfigs { get; private set; }
 
         /// <summary>
         /// FastGithub配置
@@ -42,12 +42,12 @@ namespace FastGithub
             ILogger<FastGithubConfig> logger)
         {
             this.logger = logger;
-
             var opt = options.CurrentValue;
-            this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
+
             this.PureDns = opt.PureDns.ToIPEndPoint();
             this.FastDns = opt.FastDns.ToIPEndPoint();
-            this.DomainConfigs = opt.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
+            this.DomainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
+            this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
 
             options.OnChange(opt => this.Update(opt));
         }
@@ -60,15 +60,30 @@ namespace FastGithub
         {
             try
             {
-                this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
                 this.PureDns = options.PureDns.ToIPEndPoint();
                 this.FastDns = options.FastDns.ToIPEndPoint();
-                this.DomainConfigs = options.DomainConfigs.ToDictionary(kv => new DomainMatch(kv.Key), kv => kv.Value);
+                this.DomainConfigs = ConvertDomainConfigs(options.DomainConfigs);
+                this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// 配置转换
+        /// </summary>
+        /// <param name="domainConfigs"></param>
+        /// <returns></returns>
+        private static SortedDictionary<DomainMatch, DomainConfig> ConvertDomainConfigs(Dictionary<string, DomainConfig> domainConfigs)
+        {
+            var result = new SortedDictionary<DomainMatch, DomainConfig>();
+            foreach (var kv in domainConfigs)
+            {
+                result.Add(new DomainMatch(kv.Key), kv.Value);
+            }
+            return result;
         }
 
         /// <summary>

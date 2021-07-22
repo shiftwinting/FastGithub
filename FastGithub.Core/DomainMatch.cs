@@ -1,11 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace FastGithub
 {
     /// <summary>
     /// 域名匹配
     /// </summary>
-    public class DomainMatch
+    public class DomainMatch : IComparable<DomainMatch>
     {
         private readonly Regex regex;
         private readonly string domainPattern;
@@ -20,6 +21,82 @@ namespace FastGithub
             var regexPattern = Regex.Escape(domainPattern).Replace(@"\*", ".*");
             this.regex = new Regex($"^{regexPattern}$", RegexOptions.IgnoreCase);
         }
+
+        /// <summary>
+        /// 与目标比较
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public int CompareTo(DomainMatch? other)
+        {
+            if (other is null)
+            {
+                return 1;
+            }
+
+            var segmentsX = this.domainPattern.Split('.');
+            var segmentsY = other.domainPattern.Split('.');
+            if (segmentsX.Length > segmentsY.Length)
+            {
+                return 1;
+            }
+            if (segmentsX.Length < segmentsY.Length)
+            {
+                return -1;
+            }
+
+            for (var i = 0; i < segmentsX.Length; i++)
+            {
+                var x = segmentsX[i];
+                var y = segmentsY[i];
+
+                var value = Compare(x, y);
+                if (value == 0)
+                {
+                    continue;
+                }
+                return value;
+            }
+
+            return 0;
+        }
+
+
+        /// <summary>
+        ///  比较两个分段
+        /// </summary>
+        /// <param name="x">abc</param>
+        /// <param name="y">abc*</param>
+        /// <returns></returns>
+        private static int Compare(string x, string y)
+        {
+            if (x == y)
+            {
+                return 0;
+            }
+
+            var valueX = x.Replace("*", null);
+            var valueY = y.Replace("*", null);
+
+            var maskX = x.Length - valueX.Length;
+            var maskY = y.Length - valueY.Length;
+            if (maskX == 0 && maskY > 0)
+            {
+                return -1;
+            }
+            if (maskY == 0 && maskX > 0)
+            {
+                return 1;
+            }
+
+            var value = valueX.CompareTo(valueY);
+            if (value == 0)
+            {
+                value = x.CompareTo(y);
+            }
+            return value;
+        }
+
 
         /// <summary>
         /// 是否与指定域名匹配
