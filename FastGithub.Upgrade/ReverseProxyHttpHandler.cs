@@ -16,7 +16,10 @@ namespace FastGithub.Upgrade
         /// </summary>
         public ReverseProxyHttpHandler()
         {
-            this.InnerHandler = new HttpClientHandler();
+            this.InnerHandler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = delegate { return true; }
+            };
         }
 
         /// <summary>

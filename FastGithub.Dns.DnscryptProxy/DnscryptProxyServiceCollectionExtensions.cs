@@ -15,7 +15,9 @@ namespace FastGithub
         /// <returns></returns>
         public static IServiceCollection AddDnscryptProxy(this IServiceCollection services)
         {
-            return services.AddHostedService<DnscryptProxyHostedService>();
+            return services
+                .AddSingleton<DnscryptProxyService>()
+                .AddHostedService<DnscryptProxyHostedService>();
         }
     }
 }
