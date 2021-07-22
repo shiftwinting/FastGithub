@@ -72,7 +72,7 @@ namespace FastGithub.Dns
                 var domain = items[1];
                 if (this.fastGithubConfig.IsMatch(domain))
                 {
-                    this.logger.LogWarning($"hosts文件设置了[{domain}->{address}]，{nameof(FastGithub)}对此域名反向代理失效");
+                    this.logger.LogWarning($"由于你的hosts文件设置了[{domain}->{address}]，{nameof(FastGithub)}无法加速此域名");
                 }
             }
         }
