@@ -5,6 +5,7 @@ namespace FastGithub
 {
     /// <summary>
     /// 域名匹配
+    /// *表示除.之外任意0到多个字符
     /// </summary>
     public class DomainMatch : IComparable<DomainMatch>
     {
@@ -18,7 +19,7 @@ namespace FastGithub
         public DomainMatch(string domainPattern)
         {
             this.domainPattern = domainPattern;
-            var regexPattern = Regex.Escape(domainPattern).Replace(@"\*", ".*");
+            var regexPattern = Regex.Escape(domainPattern).Replace(@"\*", @"[^\.]*");
             this.regex = new Regex($"^{regexPattern}$", RegexOptions.IgnoreCase);
         }
 
