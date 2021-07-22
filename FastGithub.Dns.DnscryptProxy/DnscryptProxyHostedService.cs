@@ -70,7 +70,7 @@ namespace FastGithub.Dns.DnscryptProxy
             }
             if (this.isStopped == false)
             {
-                this.logger.LogCritical($"{dnscryptProxyFile}已停止运行，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的PureDns修改为其它可用的DNS以临时使用。");
+                this.logger.LogCritical($"{dnscryptProxyFile}已停止运行，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的{nameof(FastGithubOptions.PureDns)}修改为其它可用的DNS以临时使用。");
             }
         }
 
