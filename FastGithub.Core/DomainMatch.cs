@@ -37,13 +37,10 @@ namespace FastGithub
 
             var segmentsX = this.domainPattern.Split('.');
             var segmentsY = other.domainPattern.Split('.');
-            if (segmentsX.Length > segmentsY.Length)
+            var value = segmentsX.Length - segmentsY.Length;
+            if (value != 0)
             {
-                return 1;
-            }
-            if (segmentsX.Length < segmentsY.Length)
-            {
-                return -1;
+                return value;
             }
 
             for (var i = segmentsX.Length - 1; i >= 0; i--)
@@ -51,7 +48,7 @@ namespace FastGithub
                 var x = segmentsX[i];
                 var y = segmentsY[i];
 
-                var value = Compare(x, y);
+                value = Compare(x, y);
                 if (value == 0)
                 {
                     continue;
