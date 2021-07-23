@@ -1,4 +1,4 @@
-﻿namespace FastGithub.ReverseProxy
+﻿namespace FastGithub.Http
 {
     /// <summary>
     /// 表示请求上下文

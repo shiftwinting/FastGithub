@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.Http
 {
     /// <summary>
     /// 请求上下文扩展

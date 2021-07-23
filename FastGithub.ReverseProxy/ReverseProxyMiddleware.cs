@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FastGithub.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -12,13 +13,13 @@ namespace FastGithub.ReverseProxy
     sealed class ReverseProxyMiddleware
     {
         private readonly IHttpForwarder httpForwarder;
-        private readonly HttpClientFactory httpClientFactory;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<ReverseProxyMiddleware> logger;
 
         public ReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
-            HttpClientFactory httpClientFactory,
+            IHttpClientFactory httpClientFactory,
             FastGithubConfig fastGithubConfig,
             ILogger<ReverseProxyMiddleware> logger)
         {

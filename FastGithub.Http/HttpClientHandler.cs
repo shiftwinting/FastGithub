@@ -9,20 +9,20 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.Http
 {
     /// <summary>
-    /// YARP的HttpClientHandler
+    /// HttpClientHandler
     /// </summary> 
-    class HttpClientHanlder : DelegatingHandler
+    class HttpClientHandler : DelegatingHandler
     {
-        private readonly DomainResolver domainResolver;
+        private readonly IDomainResolver domainResolver;
 
         /// <summary>
-        /// YARP的HttpClientHandler
+        /// HttpClientHandler
         /// </summary>
         /// <param name="domainResolver"></param> 
-        public HttpClientHanlder(DomainResolver domainResolver)
+        public HttpClientHandler(IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
             this.InnerHandler = CreateSocketsHttpHandler();

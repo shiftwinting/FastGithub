@@ -8,12 +8,12 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.Http
 {
     /// <summary>
     /// 域名解析器
     /// </summary> 
-    sealed class DomainResolver
+    sealed class DomainResolver : IDomainResolver
     {
         private readonly IMemoryCache memoryCache;
         private readonly FastGithubConfig fastGithubConfig;
