@@ -13,7 +13,6 @@ namespace FastGithub.DnscryptProxy
     {
         private readonly DnscryptProxyService dnscryptProxyService;
         private readonly ILogger<DnscryptProxyHostedService> logger;
-        private readonly TimeSpan dnsOKTimeout = TimeSpan.FromSeconds(60d);
 
         /// <summary>
         /// DnscryptProxy后台服务
@@ -50,37 +49,11 @@ namespace FastGithub.DnscryptProxy
                 {
                     process.EnableRaisingEvents = true;
                     process.Exited += this.OnProcessExit;
-                    await this.WaitForDnsOKAsync(cancellationToken);
                 }
             }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"{this.dnscryptProxyService}启动失败：{ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 等待dns服务初始化
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task WaitForDnsOKAsync(CancellationToken cancellationToken)
-        {
-            this.logger.LogInformation($"{this.dnscryptProxyService}正在初始化");
-            using var timeoutTokenSource = new CancellationTokenSource(this.dnsOKTimeout);
-
-            try
-            {
-                using var linkeTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                await this.dnscryptProxyService.WaitForDnsOKAsync(linkeTokenSource.Token);
-                this.logger.LogInformation($"{this.dnscryptProxyService}初始化完成");
-            }
-            catch (Exception)
-            {
-                if (timeoutTokenSource.IsCancellationRequested)
-                {
-                    this.logger.LogWarning($"{this.dnscryptProxyService}在{this.dnsOKTimeout.TotalSeconds}秒内未能初始化完成");
-                }
             }
         }
 

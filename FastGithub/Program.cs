@@ -26,7 +26,6 @@ namespace FastGithub
         {
             return Host
                 .CreateDefaultBuilder(args)
-                .UseConsoleLifetime()
                 .UseWindowsService()
                 .UseBinaryPathContentRoot()
                 .UseDefaultServiceProvider(c =>

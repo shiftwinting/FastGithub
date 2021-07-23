@@ -71,7 +71,7 @@ namespace FastGithub.ReverseProxy
             }
             catch (Exception)
             {
-                this.logger.LogWarning($"由于{pureDns}解析{domain}失败，本次使用{fastDns}");
+                this.logger.LogTrace($"由于{pureDns}解析{domain}失败，本次使用{fastDns}");
                 return await LookupCoreAsync(fastDns, domain, cancellationToken);
             }
         }
