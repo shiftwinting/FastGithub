@@ -93,7 +93,7 @@ namespace FastGithub.DnscryptProxy
         {
             if (this.dnscryptProxyService.ControllState != ControllState.Stopped)
             {
-                this.logger.LogCritical($"{this.dnscryptProxyService}已意外停止，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的{nameof(FastGithubOptions.PureDns)}修改为其它可用的DNS以临时使用。");
+                this.logger.LogCritical($"{this.dnscryptProxyService}已意外停止，这将影响到{nameof(FastGithub)}解析域名的速度和准确性。");
             }
         }
 
