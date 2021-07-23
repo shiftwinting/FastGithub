@@ -47,8 +47,6 @@ namespace FastGithub
                 listen.UseHttps(https =>
                     https.ServerCertificateSelector = (ctx, domain) =>
                         GetDomainCert(domain, caPublicCerPath, caPrivateKeyPath)));
-
-            logger.LogInformation("https反向代理服务启动成功");
         }
 
         /// <summary>

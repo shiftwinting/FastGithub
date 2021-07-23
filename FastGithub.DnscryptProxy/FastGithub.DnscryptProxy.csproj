@@ -5,11 +5,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="DNS" Version="6.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
+		<ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -33,22 +33,13 @@ namespace FastGithub.Upgrade
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var maxTryCount = 5;
-            for (var i = 1; i <= maxTryCount; i++)
+            try
             {
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(2d), stoppingToken);
-                    await this.upgradeService.UpgradeAsync(stoppingToken);
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    if (i == maxTryCount)
-                    {
-                        this.logger.LogWarning($"升级失败：{ex.Message}");
-                    }
-                }
+                await this.upgradeService.UpgradeAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"升级失败：{ex.Message}");
             }
         }
     }

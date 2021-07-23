@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DNS.Client;
+using DNS.Protocol;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -12,6 +14,7 @@ namespace FastGithub.DnscryptProxy
     sealed class DnscryptProxyService
     {
         private const string name = "dnscrypt-proxy";
+        private const string testDomain = "api.github.com";
         private readonly FastGithubConfig fastGithubConfig;
 
         /// <summary>
@@ -59,6 +62,51 @@ namespace FastGithub.DnscryptProxy
             else
             {
                 this.Process = StartDnscryptProxy(string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// 等待dns服务OK
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task WaitForDnsOKAsync(CancellationToken cancellationToken)
+        {
+            var process = this.Process;
+            if (process == null || process.HasExited || this.ControllState != ControllState.Started)
+            {
+                return;
+            }
+
+            using var processExitTokenSource = new CancellationTokenSource();
+            process.EnableRaisingEvents = true;
+            process.Exited += (s, e) => processExitTokenSource.Cancel();
+
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, processExitTokenSource.Token);
+            await this.WaitForDnsOKCoreAsync(linkedTokenSource.Token);
+        }
+
+        /// <summary>
+        /// 等待dns服务OK
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task WaitForDnsOKCoreAsync(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                try
+                {
+                    using var timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(1d));
+                    using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                    var dnsClient = new DnsClient(this.fastGithubConfig.PureDns);
+                    await dnsClient.Lookup(testDomain, RecordType.A, linkedTokenSource.Token);
+                    break;
+                }
+                catch (Exception)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
             }
         }
 

@@ -13,6 +13,7 @@ namespace FastGithub.DnscryptProxy
     {
         private readonly DnscryptProxyService dnscryptProxyService;
         private readonly ILogger<DnscryptProxyHostedService> logger;
+        private readonly TimeSpan dnsOKTimeout = TimeSpan.FromSeconds(60d);
 
         /// <summary>
         /// DnscryptProxy后台服务
@@ -40,20 +41,46 @@ namespace FastGithub.DnscryptProxy
                 this.logger.LogInformation($"{this.dnscryptProxyService}启动成功");
 
                 // 监听意外退出
-                var service = this.dnscryptProxyService.Process;
-                if (service == null)
+                var process = this.dnscryptProxyService.Process;
+                if (process == null)
                 {
                     this.OnProcessExit(null, new EventArgs());
                 }
                 else
                 {
-                    service.EnableRaisingEvents = true;
-                    service.Exited += this.OnProcessExit;
+                    process.EnableRaisingEvents = true;
+                    process.Exited += this.OnProcessExit;
+                    await this.WaitForDnsOKAsync(cancellationToken);
                 }
             }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"{this.dnscryptProxyService}启动失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 等待dns服务初始化
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task WaitForDnsOKAsync(CancellationToken cancellationToken)
+        {
+            this.logger.LogInformation($"{this.dnscryptProxyService}正在初始化");
+            using var timeoutTokenSource = new CancellationTokenSource(this.dnsOKTimeout);
+
+            try
+            {
+                using var linkeTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                await this.dnscryptProxyService.WaitForDnsOKAsync(linkeTokenSource.Token);
+                this.logger.LogInformation($"{this.dnscryptProxyService}初始化完成");
+            }
+            catch (Exception)
+            {
+                if (timeoutTokenSource.IsCancellationRequested)
+                {
+                    this.logger.LogWarning($"{this.dnscryptProxyService}在{this.dnsOKTimeout.TotalSeconds}秒内未能初始化完成");
+                }
             }
         }
 
@@ -66,7 +93,7 @@ namespace FastGithub.DnscryptProxy
         {
             if (this.dnscryptProxyService.ControllState != ControllState.Stopped)
             {
-                this.logger.LogCritical($"{this.dnscryptProxyService}已停止运行，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的{nameof(FastGithubOptions.PureDns)}修改为其它可用的DNS以临时使用。");
+                this.logger.LogCritical($"{this.dnscryptProxyService}已意外停止，{nameof(FastGithub)}将无法解析域名。你可以把配置文件的{nameof(FastGithubOptions.PureDns)}修改为其它可用的DNS以临时使用。");
             }
         }
 
