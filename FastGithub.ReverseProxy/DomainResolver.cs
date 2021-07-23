@@ -1,4 +1,5 @@
 ﻿using DNS.Client;
+using DNS.Protocol;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
@@ -61,31 +62,48 @@ namespace FastGithub.ReverseProxy
         /// <exception cref="FastGithubException">
         private async Task<IPAddress> LookupAsync(string domain, CancellationToken cancellationToken)
         {
+            var pureDns = this.fastGithubConfig.PureDns;
+            var fastDns = this.fastGithubConfig.FastDns;
+
             try
             {
-                var dnsClient = new DnsClient(this.fastGithubConfig.PureDns);
-                var addresses = await dnsClient.Lookup(domain, DNS.Protocol.RecordType.A, cancellationToken);
-                var address = addresses?.FirstOrDefault();
-                if (address == null)
-                {
-                    throw new Exception($"解析不到{domain}的ip");
-                }
-
-                // 受干扰的dns，常常返回127.0.0.1来阻断请求
-                // 虽然DnscryptProxy的抗干扰能力，但它仍然可能降级到不安全的普通dns上游
-                if (address.Equals(IPAddress.Loopback))
-                {
-                    throw new Exception($"dns被污染，解析{domain}为{address}");
-                }
-
-                this.logger.LogInformation($"[{domain}->{address}]");
-                return address;
+                return await LookupCoreAsync(pureDns, domain, cancellationToken);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                var dns = this.fastGithubConfig.PureDns;
-                throw new FastGithubException($"dns({dns})服务器异常：{ex.Message}", ex);
+                this.logger.LogWarning($"由于{pureDns}解析{domain}失败，本次使用{fastDns}");
+                return await LookupCoreAsync(fastDns, domain, cancellationToken);
             }
+        }
+
+        /// <summary>
+        /// 查找ip
+        /// </summary>
+        /// <param name="dns"></param>
+        /// <param name="domain"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<IPAddress> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken)
+        {
+            var dnsClient = new DnsClient(dns);
+            using var timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(1d));
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+
+            var addresses = await dnsClient.Lookup(domain, RecordType.A, linkedTokenSource.Token);
+            var address = addresses?.FirstOrDefault();
+            if (address == null)
+            {
+                throw new FastGithubException($"dns{dns}解析不到{domain}的ip");
+            }
+
+            // 受干扰的dns，常常返回127.0.0.1来阻断请求
+            if (address.Equals(IPAddress.Loopback))
+            {
+                throw new FastGithubException($"dns{dns}被污染，解析{domain}为{address}");
+            }
+
+            this.logger.LogInformation($"[{domain}->{address}]");
+            return address;
         }
     }
 }

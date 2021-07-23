@@ -80,10 +80,22 @@ namespace FastGithub.DnscryptProxy
 
             using var processExitTokenSource = new CancellationTokenSource();
             process.EnableRaisingEvents = true;
-            process.Exited += (s, e) => processExitTokenSource.Cancel();
+            process.Exited += OnProcessExited;
 
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, processExitTokenSource.Token);
-            await this.WaitForDnsOKCoreAsync(linkedTokenSource.Token);
+            try
+            {
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, processExitTokenSource.Token);
+                await this.WaitForDnsOKCoreAsync(linkedTokenSource.Token);
+            }
+            finally
+            {
+                process.Exited -= OnProcessExited;
+            }
+
+            void OnProcessExited(object? sender, EventArgs eventArgs)
+            {
+                processExitTokenSource.Cancel();
+            }
         }
 
         /// <summary>
