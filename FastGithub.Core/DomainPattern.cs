@@ -69,31 +69,10 @@ namespace FastGithub
         /// <returns></returns>
         private static int Compare(string x, string y)
         {
-            if (x == y)
-            {
-                return 0;
-            }
-
-            var valueX = x.Replace("*", null);
-            var valueY = y.Replace("*", null);
-
-            var maskX = x.Length - valueX.Length;
-            var maskY = y.Length - valueY.Length;
-
-            var value = maskX - maskY;
-            if (value != 0)
-            {
-                return value;
-            }
-
-            value = valueX.CompareTo(valueY);
-            if (value == 0)
-            {
-                value = x.CompareTo(y);
-            }
-            return value;
+            var valueX = x.Replace('*', char.MaxValue);
+            var valueY = y.Replace('*', char.MaxValue);
+            return valueX.CompareTo(valueY);
         }
-
 
         /// <summary>
         /// 是否与指定域名匹配
