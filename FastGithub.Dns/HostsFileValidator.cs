@@ -12,19 +12,19 @@ namespace FastGithub.Dns
     /// <summary>
     /// host文件配置验证器
     /// </summary>
-    sealed class HostsValidator
+    sealed class HostsFileValidator
     {
         private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<HostsValidator> logger;
+        private readonly ILogger<HostsFileValidator> logger;
 
         /// <summary>
         /// host文件配置验证器
         /// </summary>
         /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
-        public HostsValidator(
+        public HostsFileValidator(
             FastGithubConfig fastGithubConfig,
-            ILogger<HostsValidator> logger)
+            ILogger<HostsFileValidator> logger)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;

@@ -17,7 +17,7 @@ namespace FastGithub.Dns
     sealed class DnsServerHostedService : BackgroundService
     {
         private readonly RequestResolver requestResolver;
-        private readonly HostsValidator hostsValidator;
+        private readonly HostsFileValidator hostsValidator;
         private readonly ILogger<DnsServerHostedService> logger;
 
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -33,7 +33,7 @@ namespace FastGithub.Dns
         /// <param name="logger"></param>
         public DnsServerHostedService(
             RequestResolver requestResolver,
-            HostsValidator hostsValidator,
+            HostsFileValidator hostsValidator,
             IOptionsMonitor<FastGithubOptions> options,
             ILogger<DnsServerHostedService> logger)
         {
