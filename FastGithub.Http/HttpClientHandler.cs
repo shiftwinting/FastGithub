@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -39,6 +40,7 @@ namespace FastGithub.Http
                 Proxy = null,
                 UseProxy = false,
                 AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.None,
                 ConnectCallback = async (context, cancellationToken) =>
                 {
                     var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
