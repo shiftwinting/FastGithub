@@ -43,7 +43,7 @@ namespace FastGithub
             GeneratorCaCert(caPublicCerPath, caPrivateKeyPath);
             InstallCaCert(caPublicCerPath, logger);
 
-            kestrel.ListenAnyIP(443, listen =>
+            kestrel.Listen(IPAddress.Any, 443, listen =>
                 listen.UseHttps(https =>
                     https.ServerCertificateSelector = (ctx, domain) =>
                         GetDomainCert(domain, caPublicCerPath, caPrivateKeyPath)));
