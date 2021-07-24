@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -54,7 +56,13 @@ namespace FastGithub
                     web.Configure(app =>
                     {
                         app.UseRequestLogging();
-                        app.UseHttpsReverseProxy("README.html");
+                        app.UseHttpsReverseProxy();
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints => endpoints.Map("/", async context =>
+                        {
+                            context.Response.ContentType = "text/html";
+                            await context.Response.SendFileAsync("README.html");
+                        }));
                     });
                     web.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy());
                 });

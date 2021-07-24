@@ -33,15 +33,14 @@ namespace FastGithub.ReverseProxy
         /// 处理请求
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="fallbackFile"></param>
+        /// <param name="next"></param>
         /// <returns></returns>
-        public async Task InvokeAsync(HttpContext context, string fallbackFile)
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var host = context.Request.Host.Host;
             if (this.fastGithubConfig.TryGetDomainConfig(host, out var domainConfig) == false)
             {
-                context.Response.ContentType = "text/html";
-                await context.Response.SendFileAsync(fallbackFile);
+                await next(context);
             }
             else if (domainConfig.Response != null)
             {
