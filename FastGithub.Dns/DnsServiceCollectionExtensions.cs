@@ -6,7 +6,7 @@ namespace FastGithub
     /// <summary>
     /// dns服务注册扩展
     /// </summary>
-    public static class DnsServerServiceCollectionExtensions
+    public static class DnsServiceCollectionExtensions
     {
         /// <summary>
         /// 注册dns服务
@@ -17,8 +17,9 @@ namespace FastGithub
         {
             return services
                 .AddSingleton<RequestResolver>()
+                .AddSingleton<DnsServer>()
                 .AddSingleton<HostsFileValidator>()
-                .AddHostedService<DnsServerHostedService>();
+                .AddHostedService<DnsHostedService>();
         }
     }
 }
