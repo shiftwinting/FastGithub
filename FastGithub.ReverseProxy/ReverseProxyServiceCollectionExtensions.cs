@@ -20,7 +20,8 @@ namespace FastGithub
                 .AddHttpForwarder()
                 .AddHttpClient()
                 .AddSingleton<RequestLoggingMilldeware>()
-                .AddSingleton<ReverseProxyMiddleware>();
+                .AddSingleton<ReverseProxyMiddleware>()
+                .AddHostedService<ReverseProxyHostedService>();
         }
     }
 }

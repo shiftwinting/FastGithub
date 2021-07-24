@@ -5,21 +5,21 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace FastGithub.Dns
+namespace FastGithub.ReverseProxy
 {
     /// <summary>
     /// windows iphlpapi
     /// </summary>
     [SupportedOSPlatform("windows")]
-    unsafe static class UdpTable
+    unsafe static class TcpTable
     {
         private const int ERROR_INSUFFICIENT_BUFFER = 122;
 
         [DllImport("iphlpapi.dll", SetLastError = true)]
-        private static extern uint GetExtendedUdpTable(void* pUdpTable, ref int pdwSize, bool bOrder, AddressFamily ulAf, UDP_TABLE_CLASS tableClass, uint reserved = 0);
+        private static extern uint GetExtendedTcpTable(void* pTcpTable, ref int pdwSize, bool bOrder, AddressFamily ulAf, TCP_TABLE_CLASS tableClass, uint reserved = 0);
 
         /// <summary>
-        /// 获取udp端口的占用进程id
+        /// 获取tcp端口的占用进程id
         /// </summary>
         /// <param name="port"></param>
         /// <param name="processId"></param>
@@ -28,34 +28,34 @@ namespace FastGithub.Dns
         {
             processId = 0;
             var pdwSize = 0;
-            var result = GetExtendedUdpTable(null, ref pdwSize, false, AddressFamily.InterNetwork, UDP_TABLE_CLASS.UDP_TABLE_OWNER_PID);
+            var result = GetExtendedTcpTable(null, ref pdwSize, false, AddressFamily.InterNetwork, TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_LISTENER);
             if (result != ERROR_INSUFFICIENT_BUFFER)
             {
                 return false;
             }
 
             var buffer = new byte[pdwSize];
-            fixed (byte* pUdpTable = &buffer[0])
+            fixed (byte* pTcpTable = &buffer[0])
             {
-                result = GetExtendedUdpTable(pUdpTable, ref pdwSize, false, AddressFamily.InterNetwork, UDP_TABLE_CLASS.UDP_TABLE_OWNER_PID);
+                result = GetExtendedTcpTable(pTcpTable, ref pdwSize, false, AddressFamily.InterNetwork, TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_LISTENER);
                 if (result != 0)
                 {
                     return false;
                 }
 
-                var prt = new IntPtr(pUdpTable);
-                var table = Marshal.PtrToStructure<MIB_UDPTABLE_OWNER_PID>(prt);
+                var prt = new IntPtr(pTcpTable);
+                var table = Marshal.PtrToStructure<MIB_TCPTABLE_OWNER_PID>(prt);
                 prt += sizeof(int);
                 for (var i = 0; i < table.dwNumEntries; i++)
                 {
-                    var row = Marshal.PtrToStructure<MIB_UDPROW_OWNER_PID>(prt);
+                    var row = Marshal.PtrToStructure<MIB_TCPROW_OWNER_PID>(prt);
                     if (row.LocalPort == port)
                     {
                         processId = row.ProcessId;
                         return true;
                     }
 
-                    prt += Marshal.SizeOf<MIB_UDPROW_OWNER_PID>();
+                    prt += Marshal.SizeOf<MIB_TCPROW_OWNER_PID>();
                 }
             }
 
@@ -63,26 +63,39 @@ namespace FastGithub.Dns
         }
 
 
-        private enum UDP_TABLE_CLASS
+        private enum TCP_TABLE_CLASS
         {
-            UDP_TABLE_BASIC,
-            UDP_TABLE_OWNER_PID,
-            UDP_TABLE_OWNER_MODULE
+            TCP_TABLE_BASIC_LISTENER,
+            TCP_TABLE_BASIC_CONNECTIONS,
+            TCP_TABLE_BASIC_ALL,
+            TCP_TABLE_OWNER_PID_LISTENER,
+            TCP_TABLE_OWNER_PID_CONNECTIONS,
+            TCP_TABLE_OWNER_PID_ALL,
+            TCP_TABLE_OWNER_MODULE_LISTENER,
+            TCP_TABLE_OWNER_MODULE_CONNECTIONS,
+            TCP_TABLE_OWNER_MODULE_ALL
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct MIB_UDPTABLE_OWNER_PID
+        private struct MIB_TCPTABLE_OWNER_PID
         {
             public uint dwNumEntries;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct MIB_UDPROW_OWNER_PID
+        private struct MIB_TCPROW_OWNER_PID
         {
+            public uint state;
+
             public uint localAddr;
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public byte[] localPort;
+
+            public uint remoteAddr;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public byte[] remotePort;
 
             public int owningPid;
 
