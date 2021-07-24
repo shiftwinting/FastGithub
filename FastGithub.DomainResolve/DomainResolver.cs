@@ -8,7 +8,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Http
+namespace FastGithub.DomainResolve
 {
     /// <summary>
     /// 域名解析器

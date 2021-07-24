@@ -16,8 +16,6 @@ namespace FastGithub
         /// <returns></returns>
         public static IServiceCollection AddHttpClient(this IServiceCollection services)
         {
-            services.AddMemoryCache();
-            services.TryAddSingleton<IDomainResolver, DomainResolver>();
             services.TryAddSingleton<IHttpClientFactory, HttpClientFactory>();
             return services;
         }

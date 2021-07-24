@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FastGithub.DomainResolve;
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;

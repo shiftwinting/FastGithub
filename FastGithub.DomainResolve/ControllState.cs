@@ -1,4 +1,4 @@
-﻿namespace FastGithub.DnscryptProxy
+﻿namespace FastGithub.DomainResolve
 {
     /// <summary>
     /// 服务控制状态

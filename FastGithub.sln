@@ -13,9 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Upgrade", "FastG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.ReverseProxy", "FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj", "{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.DnscryptProxy", "FastGithub.DnscryptProxy\FastGithub.DnscryptProxy.csproj", "{26BB826F-4117-4746-9BD0-C6D8043E2808}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Http", "FastGithub.Http\FastGithub.Http.csproj", "{B5DCB3E4-5094-4170-B844-6F395002CA42}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.DomainResolve", "FastGithub.DomainResolve\FastGithub.DomainResolve.csproj", "{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,14 +43,14 @@ Global
 		{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28326D0F-B0FB-4B6B-A65A-C69ACB72CAD8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{26BB826F-4117-4746-9BD0-C6D8043E2808}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26BB826F-4117-4746-9BD0-C6D8043E2808}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26BB826F-4117-4746-9BD0-C6D8043E2808}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26BB826F-4117-4746-9BD0-C6D8043E2808}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B5DCB3E4-5094-4170-B844-6F395002CA42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B5DCB3E4-5094-4170-B844-6F395002CA42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5DCB3E4-5094-4170-B844-6F395002CA42}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5DCB3E4-5094-4170-B844-6F395002CA42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using FastGithub.DomainResolve;
+using Microsoft.Extensions.Options;
 
 namespace FastGithub.Http
 {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.DnscryptProxy
+namespace FastGithub.DomainResolve
 {
     /// <summary>
     /// doml配置工具
