@@ -52,6 +52,7 @@ namespace FastGithub.DnscryptProxy
 
             if (OperatingSystem.IsWindows())
             {
+                StartDnscryptProxy("-service uninstall")?.WaitForExit();
                 StartDnscryptProxy("-service install")?.WaitForExit();
                 StartDnscryptProxy("-service start")?.WaitForExit();
                 this.Process = Process.GetProcessesByName(name).FirstOrDefault(item => item.SessionId == 0);
