@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,6 +41,16 @@ namespace FastGithub.Upgrade
             catch (Exception ex)
             {
                 this.logger.LogWarning($"升级失败：{ex.Message}");
+            }
+
+            if (OperatingSystem.IsWindows() && Process.GetCurrentProcess().SessionId > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2d), stoppingToken);
+                Process.Start(new ProcessStartInfo
+                {
+                    UseShellExecute = true,
+                    FileName = "https://localhost"
+                });
             }
         }
     }

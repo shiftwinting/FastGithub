@@ -6,8 +6,8 @@ github加速神器
 * 双击运行FastGithub.exe程序
 * 程序自动设置网络适配器的主DNS为127.0.0.1
 * 程序自动安装CA证书到`将所有的证书都放入下载存储\受信任的根证书颁发机构` 
-* FastGithub.exe start // 安装并启动服务
-* FastGithub.exe stop  // 卸载并删除服务
+* FastGithub.exe start // 作为windows服务安装并启动
+* FastGithub.exe stop  // 作为windows服务卸载并删除
 
 #### linux本机
 * 执行./FastGithub运行程序
