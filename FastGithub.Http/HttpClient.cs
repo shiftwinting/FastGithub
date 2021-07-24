@@ -11,6 +11,7 @@ namespace FastGithub.Http
     public class HttpClient : HttpMessageInvoker
     {
         private readonly DomainConfig domainConfig;
+        private readonly TimeSpan defaltTimeout = TimeSpan.FromMinutes(2d);
 
         /// <summary>
         /// http客户端
@@ -50,7 +51,10 @@ namespace FastGithub.Http
                 TlsSniPattern = this.domainConfig.GetTlsSniPattern(),
                 TlsIgnoreNameMismatch = this.domainConfig.TlsIgnoreNameMismatch
             });
-            return base.SendAsync(request, cancellationToken);
+
+            using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout ?? defaltTimeout);
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+            return base.SendAsync(request, linkedTokenSource.Token);
         }
     }
 }

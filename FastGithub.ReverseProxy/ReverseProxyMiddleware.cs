@@ -56,9 +56,7 @@ namespace FastGithub.ReverseProxy
             {
                 var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
                 var httpClient = this.httpClientFactory.CreateHttpClient(domainConfig);
-                var requestConfig = new ForwarderRequestConfig { Timeout = domainConfig.Timeout };
-
-                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, requestConfig);
+                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
                 await HandleErrorAsync(context, error);
             }
         }
