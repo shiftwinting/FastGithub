@@ -30,8 +30,18 @@ namespace FastGithub.ReverseProxy
                 const int HTTPSPORT = 443;
                 if (TcpTable.TryGetOwnerProcessId(HTTPSPORT, out var pid))
                 {
-                    var process = Process.GetProcessById(pid);
-                    this.logger.LogError($"由于进程{process.ProcessName}({pid})占用了{HTTPSPORT}端口，{nameof(FastGithub)}的反向代理无法工作");
+                    try
+                    {
+                        Process.GetProcessById(pid).Kill();
+                    }
+                    catch (ArgumentException)
+                    {
+                    }
+                    catch (Exception)
+                    {
+                        var processName = Process.GetProcessById(pid).ProcessName;
+                        this.logger.LogError($"由于进程{processName}({pid})占用了{HTTPSPORT}端口，{nameof(FastGithub)}的反向代理无法工作");
+                    }
                 }
             }
             return Task.CompletedTask;
