@@ -46,7 +46,7 @@ jobs:
       - name: Build
         run: |
           cd $GITHUB_WORKSPACE
-          dotnet publish FastGithub -c Release -f net6.0 /p:PublishSingleFile=true /p:PublishTrimmed=true -r ${{ matrix.os }} /p:PublishTrimmed=true -p:AssemblyVersion=${{ steps.gitversion.outputs.MajorMinorPatch }} -p:Version=${{ steps.gitversion.outputs.SemVer }} -o ./out/${{ matrix.os }}
+          dotnet publish FastGithub -c Release -f net6.0 /p:PublishSingleFile=true -r ${{ matrix.os }} /p:PublishTrimmed=true -p:AssemblyVersion=${{ steps.gitversion.outputs.MajorMinorPatch }} -p:Version=${{ steps.gitversion.outputs.SemVer }} -o ./out/${{ matrix.os }}
           mv out/${{ matrix.os }} FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}
           zip -r FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}.zip FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}
       - uses: gittools/actions/gitreleasemanager/setup@v0.9.2
@@ -58,7 +58,7 @@ jobs:
         name: Add asset to a release with GitReleaseManager
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          owner: "newbe36524"
+          owner: "xljiulang"
           repository: "FastGithub"
           tagName: "${{ steps.gitversion.outputs.MajorMinorPatch }}"
           assets: |
