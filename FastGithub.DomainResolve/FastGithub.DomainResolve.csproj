@@ -12,15 +12,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="dnscrypt-proxy">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="dnscrypt-proxy.exe">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="dnscrypt-proxy.toml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+		<None Update="dnscrypt-proxy.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+		<None Update="dnscrypt-proxy">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>

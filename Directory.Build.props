@@ -4,6 +4,7 @@
 		<Nullable>enable</Nullable>
 		<Description>github加速神器</Description>
 		<Copyright>https://github.com/xljiulang/FastGithub</Copyright>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
