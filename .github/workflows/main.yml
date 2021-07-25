@@ -1,4 +1,4 @@
-name: Amazing Favorites build
+name: build
 
 on:
   push:
