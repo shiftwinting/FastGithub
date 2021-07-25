@@ -60,6 +60,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           owner: "newbe36524"
           repository: "FastGithub"
-          tagName: "v${{ steps.gitversion.outputs.MajorMinorPatch }}"
+          tagName: "${{ steps.gitversion.outputs.MajorMinorPatch }}"
           assets: |
             FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}.zip
