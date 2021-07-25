@@ -41,11 +41,11 @@ jobs:
           useConfigFile: true
       - name: Restore dependencies
         run: |
-          cd $GITHUB_WORKSPACE/src
+          cd $GITHUB_WORKSPACE
           dotnet restore
       - name: Build
         run: |
-          cd $GITHUB_WORKSPACE/src
+          cd $GITHUB_WORKSPACE
           dotnet publish FastGithub -c Release -f net6.0 /p:PublishSingleFile=true /p:PublishTrimmed=true -r ${{ matrix.os }} /p:PublishTrimmed=true -p:AssemblyVersion=${{ steps.gitversion.outputs.MajorMinorPatch }} -p:Version=${{ steps.gitversion.outputs.SemVer }} -o ./out/${{ matrix.os }}
           mv out/${{ matrix.os }} FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}
           zip -r FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}.zip FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}
@@ -62,4 +62,4 @@ jobs:
           repository: "FastGithub"
           tagName: "v${{ steps.gitversion.outputs.MajorMinorPatch }}"
           assets: |
-            src/FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}.zip
+            FastGithub-${{ matrix.os }}-${{ steps.gitversion.outputs.MajorMinorPatch }}.zip
