@@ -1,4 +1,4 @@
-#! /bin/bash  # employ bash shell
+#! /bin/bash
 cd ./bin/publish
 
 # linux
