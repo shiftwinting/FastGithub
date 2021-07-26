@@ -108,9 +108,9 @@ namespace FastGithub
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
         /// <returns></returns>
-        private static X509Certificate2 GetDomainCert(string domain, string caPublicCerPath, string caPrivateKeyPath)
+        private static X509Certificate2 GetDomainCert(string? domain, string caPublicCerPath, string caPrivateKeyPath)
         {
-            return domainCerts.GetOrAdd(domain, GetOrCreateCert).Value;
+            return domainCerts.GetOrAdd(domain ?? string.Empty, GetOrCreateCert).Value;
 
             Lazy<X509Certificate2> GetOrCreateCert(string host)
             {
