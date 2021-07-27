@@ -25,4 +25,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+    <None Include="../@dnscrypt-proxy/osx-x64/dnscrypt-proxy" Link="dnscrypt-proxy" >
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
