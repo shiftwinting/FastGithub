@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// dns配置

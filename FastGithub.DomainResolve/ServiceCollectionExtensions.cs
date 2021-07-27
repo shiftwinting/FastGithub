@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace FastGithub
 {
     /// <summary>
-    ///  域名解析相关服务注册扩展
+    /// 服务注册扩展
     /// </summary>
-    public static class DomainResolveServiceCollectionExtensions
+    public static class ServiceCollectionExtensions
     {
         /// <summary>
         /// 注册域名解析相关服务
@@ -19,8 +19,7 @@ namespace FastGithub
             services.AddMemoryCache();
             services.TryAddSingleton<IDomainResolver, DomainResolver>();
             services.TryAddSingleton<DnscryptProxyService>();
-            services.AddHostedService<DnscryptProxyHostedService>();
-            return services;
+            return services.AddHostedService<DnscryptProxyHostedService>();
         }
     }
 }

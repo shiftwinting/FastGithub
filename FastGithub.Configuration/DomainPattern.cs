@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// 表示域名表达式

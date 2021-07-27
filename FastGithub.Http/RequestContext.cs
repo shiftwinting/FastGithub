@@ -1,4 +1,6 @@
-﻿namespace FastGithub.Http
+﻿using FastGithub.Configuration;
+
+namespace FastGithub.Http
 {
     /// <summary>
     /// 表示请求上下文

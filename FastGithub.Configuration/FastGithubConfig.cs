@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// FastGithub配置

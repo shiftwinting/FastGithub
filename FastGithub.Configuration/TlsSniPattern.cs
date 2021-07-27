@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// Sni自定义值表达式

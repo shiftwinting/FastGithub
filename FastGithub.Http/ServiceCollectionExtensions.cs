@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace FastGithub
 {
     /// <summary>
-    /// httpClient的服务注册扩展
+    /// 服务注册扩展
     /// </summary>
-    public static class HttpClientServiceCollectionExtensions
+    public static class ServiceCollectionExtensions
     {
         /// <summary>
         /// 添加HttpClient相关服务

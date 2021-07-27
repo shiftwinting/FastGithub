@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// FastGithub的配置

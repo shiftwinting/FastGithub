@@ -1,12 +1,13 @@
 ﻿using FastGithub.Dns;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FastGithub
 {
     /// <summary>
-    /// dns服务注册扩展
+    /// 服务注册扩展
     /// </summary>
-    public static class DnsServiceCollectionExtensions
+    public static class ServiceCollectionExtensions
     {
         /// <summary>
         /// 注册dns服务
@@ -15,11 +16,10 @@ namespace FastGithub
         /// <returns></returns>
         public static IServiceCollection AddDnsServer(this IServiceCollection services)
         {
-            return services
-                .AddSingleton<RequestResolver>()
-                .AddSingleton<DnsServer>()
-                .AddSingleton<HostsFileValidator>()
-                .AddHostedService<DnsHostedService>();
+            services.TryAddSingleton<RequestResolver>();
+            services.TryAddSingleton<DnsServer>();
+            services.TryAddSingleton<HostsFileValidator>();
+            return services.AddHostedService<DnsHostedService>();
         }
     }
 }

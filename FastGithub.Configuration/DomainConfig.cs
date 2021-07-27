@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// 域名配置
@@ -47,11 +47,11 @@ namespace FastGithub
         {
             if (this.TlsSni == false)
             {
-                return FastGithub.TlsSniPattern.None;
+                return Configuration.TlsSniPattern.None;
             }
             if (string.IsNullOrEmpty(this.TlsSniPattern))
             {
-                return FastGithub.TlsSniPattern.Domain;
+                return Configuration.TlsSniPattern.Domain;
             }
             return new TlsSniPattern(this.TlsSniPattern);
         }

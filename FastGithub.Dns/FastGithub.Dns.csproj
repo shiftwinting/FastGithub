@@ -10,6 +10,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
+	  <ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
 	</ItemGroup>
 </Project>

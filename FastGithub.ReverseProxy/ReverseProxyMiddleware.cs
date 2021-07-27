@@ -1,4 +1,5 @@
-﻿using FastGithub.Http;
+﻿using FastGithub.Configuration;
+using FastGithub.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
@@ -22,7 +23,7 @@ namespace FastGithub.ReverseProxy
             IHttpClientFactory httpClientFactory,
             FastGithubConfig fastGithubConfig,
             ILogger<ReverseProxyMiddleware> logger)
-        {
+        { 
             this.httpForwarder = httpForwarder;
             this.httpClientFactory = httpClientFactory;
             this.fastGithubConfig = fastGithubConfig;

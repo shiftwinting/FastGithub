@@ -1,4 +1,3 @@
-using FastGithub.Upgrade;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,15 +26,12 @@ namespace FastGithub
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddConfiguration().Bind(this.Configuration.GetSection(nameof(FastGithub)));
             services.AddDnsServer();
             services.AddDomainResolve();
             services.AddHttpClient();
             services.AddReverseProxy();
-
-            services.AddSingleton<FastGithubConfig>();
-            services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
-
-            services.AddSingleton<UpgradeService>();
+            services.AddUpgrade();
             services.AddHostedService<HostedService>();
 
             services.AddControllersWithViews();
@@ -53,9 +49,7 @@ namespace FastGithub
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                     name: "default",
-                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

@@ -1,6 +1,7 @@
 ﻿using DNS.Client.RequestResolver;
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
+using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;

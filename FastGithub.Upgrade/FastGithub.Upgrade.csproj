@@ -5,7 +5,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FastGithub.Core\FastGithub.Core.csproj" />
     <ProjectReference Include="..\FastGithub.Http\FastGithub.Http.csproj" />
   </ItemGroup>
 

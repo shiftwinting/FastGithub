@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FastGithub
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// 表示FastGithub异常

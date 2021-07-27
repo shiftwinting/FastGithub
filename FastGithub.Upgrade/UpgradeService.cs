@@ -1,4 +1,5 @@
-﻿using FastGithub.DomainResolve;
+﻿using FastGithub.Configuration;
+using FastGithub.DomainResolve;
 using FastGithub.Http;
 using Microsoft.Extensions.Logging;
 using System;

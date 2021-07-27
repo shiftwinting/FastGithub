@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.31320.298
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub", "FastGithub\FastGithub.csproj", "{C1099390-6103-4917-A740-A3002B542FE0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Core", "FastGithub.Core\FastGithub.Core.csproj", "{4E4841D2-F743-40BB-BE28-729DB53775CC}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Dns", "FastGithub.Dns\FastGithub.Dns.csproj", "{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Upgrade", "FastGithub.Upgrade\FastGithub.Upgrade.csproj", "{8239A077-A84C-4FDF-A204-02A2DE4243F3}"
@@ -16,6 +14,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Http", "FastGithub.Http\FastGithub.Http.csproj", "{B5DCB3E4-5094-4170-B844-6F395002CA42}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.DomainResolve", "FastGithub.DomainResolve\FastGithub.DomainResolve.csproj", "{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.Configuration", "FastGithub.Configuration\FastGithub.Configuration.csproj", "{C63CEBB1-56DA-4AC3-BDC9-52424EC292A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +27,6 @@ Global
 		{C1099390-6103-4917-A740-A3002B542FE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1099390-6103-4917-A740-A3002B542FE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1099390-6103-4917-A740-A3002B542FE0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E4841D2-F743-40BB-BE28-729DB53775CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E4841D2-F743-40BB-BE28-729DB53775CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E4841D2-F743-40BB-BE28-729DB53775CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E4841D2-F743-40BB-BE28-729DB53775CC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43FF9C79-51D5-4037-AA0B-CA3006E2A7E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -51,6 +47,10 @@ Global
 		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D26ABDD-F341-4EB7-9D08-FCB80F79B4B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C63CEBB1-56DA-4AC3-BDC9-52424EC292A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C63CEBB1-56DA-4AC3-BDC9-52424EC292A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C63CEBB1-56DA-4AC3-BDC9-52424EC292A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C63CEBB1-56DA-4AC3-BDC9-52424EC292A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-﻿namespace FastGithub
+﻿namespace FastGithub.Configuration
 {
     /// <summary>
     /// 响应配置

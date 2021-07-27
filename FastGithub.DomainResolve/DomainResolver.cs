@@ -1,5 +1,6 @@
 ﻿using DNS.Client;
 using DNS.Protocol;
+using FastGithub.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
