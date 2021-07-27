@@ -1,37 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0-*" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0-*" />
-    <PackageReference Include="DNS" Version="6.1.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0-*" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0-*" />
+		<PackageReference Include="DNS" Version="6.1.0" />
+		<ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="../@dnscrypt-proxy/dnscrypt-proxy.toml" Link="dnscrypt-proxy.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="../@dnscrypt-proxy/dnscrypt-proxy.toml" Link="dnscrypt-proxy.toml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <None Include="../@dnscrypt-proxy/windows-x64/dnscrypt-proxy.exe" Link="dnscrypt-proxy.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+		<None Include="../@dnscrypt-proxy/windows-x64/dnscrypt-proxy.exe" Link="dnscrypt-proxy.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <None Include="../@dnscrypt-proxy/linux-x64/dnscrypt-proxy" Link="dnscrypt-proxy">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+		<None Include="../@dnscrypt-proxy/linux-x64/dnscrypt-proxy" Link="dnscrypt-proxy">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-    <None Include="../@dnscrypt-proxy/osx-x64/dnscrypt-proxy" Link="dnscrypt-proxy">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
-  </ItemGroup>
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+		<None Include="../@dnscrypt-proxy/osx-x64/dnscrypt-proxy" Link="dnscrypt-proxy">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+cd ./FastGithub
 set output=./bin/publish
 if exist "%output%" rd /S /Q "%output%"
 dotnet publish -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -r win-x64 -o "%output%/win-x64"

@@ -1,5 +1,5 @@
 #! /bin/bash
-cd ./bin/publish
+cd ./FastGithub/bin/publish
 
 # linux-x64
 chmod 777 ./linux-x64/dnscrypt-proxy
