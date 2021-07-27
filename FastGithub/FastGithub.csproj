@@ -25,10 +25,7 @@
   <ItemGroup>
     <None Update="appsettings.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="README.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </None> 
   </ItemGroup>
 
 </Project>

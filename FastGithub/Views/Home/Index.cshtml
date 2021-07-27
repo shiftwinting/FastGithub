@@ -1,0 +1,97 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href=" https://cdn.jsdelivr.net/npm/@@bootcss/v3.bootcss.com@@1.0.10/dist/css/bootstrap.min.css">
+    <title>FastGithub--github加速神器</title>
+
+    <style type="text/css">
+        .os {
+            text-align: center;
+            background-color: #ddd;
+            padding: 20px 0;
+            font-size: 32px;
+            color: #606060;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <h1>FastGithub</h1>
+        <p>github加速神器</p>
+
+        <h3>CA证书</h3>
+        <p>
+            你可能需要<a target="_blank" href="/home/cert">下载FastGithub自颁发的CA证书</a>，根据设备所使用的平台要求，导入到受信任的受信任的根证书颁发机构或浏览器
+        </p>
+
+        <h3>运行方式</h3>
+        <div class="row">
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                    <div class="os">windows本机</div>
+                    <div class="caption">
+                        <h4>x64系统</h4>
+                        <p>双击运行FastGithub.exe程序</p>
+                        <p><code>FastGithub.exe start</code> // 以windows服务安装并启动</p>
+                        <p><code>FastGithub.exe stop</code>  // 以windows服务卸载并删除</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                    <div class="os">linux本机</div>
+                    <div class="caption">
+                        <h4>x64系统</h4>
+                        <p>执行<code>./FastGithub</code></p>
+                        <p>手工修改resolv.conf的第一条记录为127.0.0.1</p>
+                        <p>手工安装CA证书到受信任的根证书颁发机构</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                    <div class="os">局域网服务器</div>
+                    <div class="caption">
+                        <h4>x64系统</h4>
+                        <p>在局域网服务器运行FastGithub程序</p>
+                        <p>手工将你电脑的主DNS设置为局域网服务器的ip</p>
+                        <p>手工在你电脑安装CA证书到受信任的根证书颁发机构</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>证书验证</h3>
+        <div class="row">
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                    <div class="os">git ssl验证</div>
+                    <div class="caption">
+                        <p>
+                            git pull或push时会遇到SSL certificate problem: unable to get local issuer certificate
+                        </p>
+                        <p>
+                            <span>需要关闭git的证书验证：</span>
+                            <code>git config --global http.sslverify false</code>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</body>
+</html>

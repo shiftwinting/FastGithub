@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.IO;
 
@@ -41,30 +38,10 @@ namespace FastGithub
                         c.AddJsonFile(Path.GetFileName(jsonFile), true, true);
                     }
                 })
-                .ConfigureServices((ctx, services) =>
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    services.AddDnsServer();
-                    services.AddDomainResolve();
-                    services.AddHttpClient();
-                    services.AddReverseProxy();
-                    services.AddAppUpgrade();
-                    services.AddSingleton<FastGithubConfig>();
-                    services.Configure<FastGithubOptions>(ctx.Configuration.GetSection(nameof(FastGithub)));
-                })
-                .ConfigureWebHostDefaults(web =>
-                {
-                    web.Configure(app =>
-                    {
-                        app.UseRequestLogging();
-                        app.UseHttpsReverseProxy();
-                        app.UseRouting();
-                        app.UseEndpoints(endpoints => endpoints.Map("/", async context =>
-                        {
-                            context.Response.ContentType = "text/html";
-                            await context.Response.SendFileAsync("README.html");
-                        }));
-                    });
-                    web.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy());
+                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy());
                 });
         }
     }
