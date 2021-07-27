@@ -23,11 +23,16 @@ namespace FastGithub.ReverseProxy
             this.logger = logger;
         }
 
+        /// <summary>
+        /// 服务启动时
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            const int HTTPSPORT = 443;
             if (OperatingSystem.IsWindows())
             {
-                const int HTTPSPORT = 443;
                 if (TcpTable.TryGetOwnerProcessId(HTTPSPORT, out var pid))
                 {
                     try
@@ -47,6 +52,11 @@ namespace FastGithub.ReverseProxy
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// 服务停止时
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;

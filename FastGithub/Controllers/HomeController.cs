@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FastGithub.Models;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 
 namespace FastGithub.Controllers
 {
+    /// <summary>
+    /// 首页控制器
+    /// </summary>
     public class HomeController : Controller
     {
         /// <summary>
@@ -13,20 +14,8 @@ namespace FastGithub.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
-            return View();
-        }
-
-        /// <summary>
-        /// 下载CA证书
-        /// </summary>
-        /// <returns></returns>
-        public async Task<IActionResult> Cert()
-        {
-            var certFile = $"CACert/{nameof(FastGithub)}.cer";
-            this.Response.ContentType = "application/x-x509-ca-cert";
-            this.Response.Headers.Add("Content-Disposition", $"attachment;filename={nameof(FastGithub)}.cer");
-            await this.Response.SendFileAsync(certFile);
-            return new EmptyResult();
-        }
+            var model = new Home();
+            return View(model);
+        } 
     }
 }

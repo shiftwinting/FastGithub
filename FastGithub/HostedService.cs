@@ -1,52 +1,46 @@
-﻿using FastGithub.Upgrade;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub
 {
     /// <summary>
-    /// Host服务
+    /// 后台服务
     /// </summary>
-    sealed class HostedService : BackgroundService
+    sealed class HostedService : IHostedService
     {
-        private readonly UpgradeService upgradeService;
         private readonly ILogger<HostedService> logger;
 
         /// <summary>
-        /// Host服务
+        /// 后台服务
         /// </summary>
         /// <param name="upgradeService"></param>
         /// <param name="logger"></param>
-        public HostedService(
-            UpgradeService upgradeService,
-            ILogger<HostedService> logger)
+        public HostedService(ILogger<HostedService> logger)
         {
-            this.upgradeService = upgradeService;
             this.logger = logger;
         }
 
         /// <summary>
-        /// 后台任务
+        /// 服务启动时
         /// </summary>
-        /// <param name="stoppingToken"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            try
-            {
-                await this.upgradeService.UpgradeAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"升级检测失败：{ex.Message}");
-            }
-            finally
-            {
-                this.logger.LogInformation($"{nameof(FastGithub)}启动完成，访问https://127.0.0.1或本机其它任意ip可进入Dashboard");
-            }
+            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，访问https://127.0.0.1或本机其它任意ip可进入Dashboard");
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 服务停止时
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
     }
 }

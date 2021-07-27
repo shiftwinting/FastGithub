@@ -31,11 +31,9 @@ namespace FastGithub
             services.AddDomainResolve();
             services.AddHttpClient();
             services.AddReverseProxy();
-            services.AddUpgrade();
-            services.AddHostedService<HostedService>();
 
+            services.AddHostedService<HostedService>();
             services.AddControllersWithViews();
-            services.AddRouting(c => c.LowercaseUrls = true);
         }
 
         /// <summary>
@@ -49,7 +47,7 @@ namespace FastGithub
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
             });
         }
     }

@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Threading.Tasks;
 
 namespace FastGithub.Controllers
 {
+    /// <summary>
+    /// 证书控制器
+    /// </summary>
     public class CertController : Controller
     {
         /// <summary>

@@ -2,7 +2,7 @@
 @{
     Layout = null;
 }
-@using FastGithub.Upgrade
+@model Home
 
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -31,7 +31,7 @@
         <p>github加速神器</p>
         <p>
             <span>软件版本：</span>
-            <span>v@(ProductionVersion.GetAppVersion())</span>
+            <span>v@(Model?.Version)</span>
         </p>
         <p>
             <span>项目地址：</span>
