@@ -1,3 +1,4 @@
+using FastGithub.Upgrade;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,9 +31,11 @@ namespace FastGithub
             services.AddDomainResolve();
             services.AddHttpClient();
             services.AddReverseProxy();
-            services.AddAppUpgrade();
+
             services.AddSingleton<FastGithubConfig>();
             services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
+
+            services.AddSingleton<UpgradeService>();
             services.AddHostedService<HostedService>();
 
             services.AddControllersWithViews();

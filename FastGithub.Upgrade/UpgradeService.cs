@@ -12,7 +12,7 @@ namespace FastGithub.Upgrade
     /// <summary>
     /// 升级服务
     /// </summary>
-    sealed class UpgradeService
+    public class UpgradeService
     {
         private readonly IDomainResolver domainResolver;
         private readonly ILogger<UpgradeService> logger;
@@ -58,7 +58,7 @@ namespace FastGithub.Upgrade
             }
             else
             {
-                this.logger.LogInformation($"当前版本{currentVersion}为最新版本");
+                this.logger.LogInformation($"当前版本{currentVersion}已经是最新版本");
             }
         }
 

@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using FastGithub.Upgrade;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,39 +10,43 @@ namespace FastGithub
     /// <summary>
     /// Host服务
     /// </summary>
-    sealed class HostedService : IHostedService
+    sealed class HostedService : BackgroundService
     {
+        private readonly UpgradeService upgradeService;
         private readonly ILogger<HostedService> logger;
 
         /// <summary>
         /// Host服务
         /// </summary>
+        /// <param name="upgradeService"></param>
         /// <param name="logger"></param>
-        public HostedService(ILogger<HostedService> logger)
+        public HostedService(
+            UpgradeService upgradeService,
+            ILogger<HostedService> logger)
         {
+            this.upgradeService = upgradeService;
             this.logger = logger;
         }
 
         /// <summary>
-        /// 启动服务
+        /// 后台任务
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var localhost = "https://127.0.0.1";
-            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，访问{localhost}或本机任意ip可查看使用说明");
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// 停止服务
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
+            try
+            {
+                await this.upgradeService.UpgradeAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"升级检测失败：{ex.Message}");
+            }
+            finally
+            {
+                this.logger.LogInformation($"{nameof(FastGithub)}启动完成，访问https://127.0.0.1或本机其它任意ip可进入Dashboard");
+            }
         }
     }
 }

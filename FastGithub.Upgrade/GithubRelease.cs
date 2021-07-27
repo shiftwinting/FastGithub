@@ -8,7 +8,7 @@ namespace FastGithub.Upgrade
     /// <summary>
     /// 发行记录
     /// </summary>
-    sealed class GithubRelease
+    public class GithubRelease
     {
         /// <summary>
         /// 标签名
