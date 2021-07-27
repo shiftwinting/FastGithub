@@ -17,8 +17,8 @@
         .os {
             text-align: center;
             background-color: #ddd;
-            padding: 20px 0;
-            font-size: 32px;
+            padding: 12px 0;
+            font-size: 24px;
             color: #606060;
         }
     </style>
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
 
-        <h1>FastGithub</h1>
+        <h1>FastGithub</h1> 
         <p>github加速神器</p>
         <p>
             <span>软件版本：</span>
@@ -39,11 +39,11 @@
         </p>
 
 
-
         <h3>CA证书</h3>
         <p>
-            你可能需要下载<a target="_blank" href="/cert">FastGithub自颁发的CA证书</a>，根据设备所使用的平台要求，导入到受信任的根证书颁发机构或浏览器
+            你可能需要在客户端设备下载FastGithub自颁发的<a target="_blank" href="/cert">CA证书</a>，导入到受信任的根证书颁发机构或浏览器
         </p>
+
 
         <h3>部署方式</h3>
         <div class="row">
@@ -66,7 +66,7 @@
                         <h4>x64系统</h4>
                         <p>执行<code>./FastGithub</code></p>
                         <p>手工修改resolv.conf的第一条记录为127.0.0.1</p>
-                        <p>手工安装CA证书到受信任的根证书颁发机构</p>
+                        <p>手工安装<a target="_blank" href="/cert">CA证书</a>到受信任的根证书颁发机构</p>
                     </div>
                 </div>
             </div>
@@ -78,7 +78,7 @@
                         <h4>x64系统</h4>
                         <p>在局域网服务器运行FastGithub程序</p>
                         <p>手工将你电脑的主DNS设置为局域网服务器的ip</p>
-                        <p>手工在你电脑安装CA证书到受信任的根证书颁发机构</p>
+                        <p>手工在你电脑安装<a target="_blank" href="/cert">CA证书</a>到受信任的根证书颁发机构</p>
                     </div>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                     <div class="caption">
                         <h4>未连接：有潜在的安全问题</h4>
                         <p>设置->隐私与安全->证书->查看证书</p>
-                        <p>证书管理器->证书颁发机构->导入FastGithub.cer</p>
+                        <p>证书管理器->证书颁发机构->导入<a target="_blank" href="/cert">CA证书</a></p>
                     </div>
                 </div>
             </div>
