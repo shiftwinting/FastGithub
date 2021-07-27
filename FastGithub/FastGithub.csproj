@@ -19,6 +19,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="../README.md" Link="README.md">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Update="appsettings.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
