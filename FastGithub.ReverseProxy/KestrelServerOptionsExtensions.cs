@@ -77,6 +77,11 @@ namespace FastGithub
         /// <param name="logger"></param>
         private static void InstallCaCert(string caPublicCerPath, ILogger logger)
         {
+            if (OperatingSystem.IsWindows() == false)
+            {
+                logger.LogWarning($"不支持自动安装根证书{caPublicCerPath}：请根据你的系统平台情况安装和信任根证书");
+            }
+
             try
             {
                 var caCert = new X509Certificate2(caPublicCerPath);
@@ -90,14 +95,7 @@ namespace FastGithub
             }
             catch (Exception)
             {
-                if (OperatingSystem.IsWindows())
-                {
-                    logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
-                }
-                else
-                {
-                    logger.LogWarning($"安装根证书{caPublicCerPath}失败：请根据你的系统平台要求安装和信任根证书");
-                }
+                logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
             }
         }
 

@@ -63,12 +63,12 @@ namespace FastGithub.Dns
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning($"设置为本机主DNS失败：{ex.Message}");
+                    this.logger.LogWarning($"设置为本机主DNS为{IPAddress.Loopback}失败：{ex.Message}");
                 }
             }
             else
             {
-                this.logger.LogWarning("平台不支持自动设置DNS，请手动设置网卡的主DNS为127.0.0.1");
+                this.logger.LogWarning($"不支持自动设置DNS，请根据你的系统平台情况修改主DNS为{IPAddress.Loopback}");
             }
 
             await this.hostsValidator.ValidateAsync();
