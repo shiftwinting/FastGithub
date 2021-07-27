@@ -7,7 +7,7 @@ namespace FastGithub.Upgrade
     /// <summary>
     /// 表示产品版本
     /// </summary>
-    sealed class ProductionVersion : IComparable<ProductionVersion>
+    public class ProductionVersion : IComparable<ProductionVersion>
     {
         /// <summary>
         /// 版本
@@ -94,14 +94,14 @@ namespace FastGithub.Upgrade
         /// 获取当前应用程序的产品版本
         /// </summary>
         /// <returns></returns>
-        public static ProductionVersion? GetApplicationVersion()
+        public static ProductionVersion? GetAppVersion()
         {
             var version = Assembly
                 .GetEntryAssembly()?
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion;
 
-            return version == null ? null : ProductionVersion.Parse(version);
+            return version == null ? null : Parse(version);
         }
     }
 }

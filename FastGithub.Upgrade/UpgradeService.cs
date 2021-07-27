@@ -38,7 +38,7 @@ namespace FastGithub.Upgrade
         /// <returns></returns>
         public async Task UpgradeAsync(CancellationToken cancellationToken)
         {
-            var currentVersion = ProductionVersion.GetApplicationVersion();
+            var currentVersion = ProductionVersion.GetAppVersion();
             if (currentVersion == null)
             {
                 return;

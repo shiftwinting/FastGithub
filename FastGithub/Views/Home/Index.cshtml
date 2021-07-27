@@ -2,6 +2,7 @@
 @{
     Layout = null;
 }
+@using FastGithub.Upgrade
 
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -10,7 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href=" https://cdn.jsdelivr.net/npm/@@bootcss/v3.bootcss.com@@1.0.10/dist/css/bootstrap.min.css">
-    <title>FastGithub--github加速神器</title>
+    <title>FastGithub</title>
 
     <style type="text/css">
         .os {
@@ -28,14 +29,23 @@
 
         <h1>FastGithub</h1>
         <p>github加速神器</p>
-        <a href="https://github.com/xljiulang/FastGithub">https://github.com/xljiulang/FastGithub</a>
+        <p>
+            <span>软件版本：</span>
+            <span>v@(ProductionVersion.GetAppVersion())</span>
+        </p>
+        <p>
+            <span>平台地址：</span>
+            <a target="_blank" href="https://github.com/xljiulang/FastGithub">https://github.com/xljiulang/FastGithub</a>
+        </p>
+
+
 
         <h3>CA证书</h3>
         <p>
             你可能需要<a target="_blank" href="/cert">下载FastGithub自颁发的CA证书</a>，根据设备所使用的平台要求，导入到受信任的根证书颁发机构或浏览器
         </p>
 
-        <h3>运行方式</h3>
+        <h3>部署方式</h3>
         <div class="row">
             <div class="col-sm-6 col-md-4">
                 <div class="thumbnail">

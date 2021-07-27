@@ -33,6 +33,7 @@ namespace FastGithub
             services.AddAppUpgrade();
             services.AddSingleton<FastGithubConfig>();
             services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
+            services.AddHostedService<HostedService>();
 
             services.AddControllersWithViews();
             services.AddRouting(c => c.LowercaseUrls = true);
