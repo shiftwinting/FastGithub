@@ -8,20 +8,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="dnscrypt-proxy.toml">
+    <None Include="../@dnscrypt-proxy/dnscrypt-proxy.toml" Link="dnscrypt-proxy.toml" >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <None Update="dnscrypt-proxy.exe">
+    <None Include="../@dnscrypt-proxy/windows-x64/dnscrypt-proxy.exe" Link="dnscrypt-proxy.exe" >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <None Update="dnscrypt-proxy">
+    <None Include="../@dnscrypt-proxy/linux-x64/dnscrypt-proxy" Link="dnscrypt-proxy" >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
 </Project>
