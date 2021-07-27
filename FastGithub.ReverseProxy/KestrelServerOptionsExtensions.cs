@@ -37,8 +37,8 @@ namespace FastGithub
 
             const string CAPATH = "CACert";
             Directory.CreateDirectory(CAPATH);
-            var caPublicCerPath = $"{CAPATH}/{Environment.MachineName}.cer";
-            var caPrivateKeyPath = $"{CAPATH}/{Environment.MachineName}.key";
+            var caPublicCerPath = $"{CAPATH}/{nameof(FastGithub)}.cer";
+            var caPrivateKeyPath = $"{CAPATH}/{nameof(FastGithub)}.key";
 
             GeneratorCaCert(caPublicCerPath, caPrivateKeyPath);
             InstallCaCert(caPublicCerPath, logger);

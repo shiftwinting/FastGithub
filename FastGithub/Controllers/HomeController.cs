@@ -22,7 +22,7 @@ namespace FastGithub.Controllers
         /// <returns></returns>
         public async Task<IActionResult> Cert()
         {
-            var certFile = $"CACert/{Environment.MachineName}.cer";
+            var certFile = $"CACert/{nameof(FastGithub)}.cer";
             this.Response.ContentType = "application/x-x509-ca-cert";
             this.Response.Headers.Add("Content-Disposition", $"attachment;filename={nameof(FastGithub)}.cer");
             await this.Response.SendFileAsync(certFile);
