@@ -28,10 +28,11 @@
 
         <h1>FastGithub</h1>
         <p>github加速神器</p>
+        <a href="https://github.com/xljiulang/FastGithub">https://github.com/xljiulang/FastGithub</a>
 
         <h3>CA证书</h3>
         <p>
-            你可能需要<a target="_blank" href="/home/cert">下载FastGithub自颁发的CA证书</a>，根据设备所使用的平台要求，导入到受信任的受信任的根证书颁发机构或浏览器
+            你可能需要<a target="_blank" href="/cert">下载FastGithub自颁发的CA证书</a>，根据设备所使用的平台要求，导入到受信任的根证书颁发机构或浏览器
         </p>
 
         <h3>运行方式</h3>
@@ -77,19 +78,24 @@
         <div class="row">
             <div class="col-sm-6 col-md-4">
                 <div class="thumbnail">
-                    <div class="os">git ssl验证</div>
+                    <div class="os">git</div>
                     <div class="caption">
-                        <p>
-                            git pull或push时会遇到SSL certificate problem: unable to get local issuer certificate
-                        </p>
-                        <p>
-                            <span>需要关闭git的证书验证：</span>
-                            <code>git config --global http.sslverify false</code>
-                        </p>
+                        <h4>SSL certificate problem</h4>
+                        <p>需要关闭git的证书验证：</p>
+                        <p><code>git config --global http.sslverify false</code></p>
                     </div>
                 </div>
             </div>
-
+            <div class="col-sm-6 col-md-4">
+                <div class="thumbnail">
+                    <div class="os">firefox</div>
+                    <div class="caption">
+                        <h4>未连接：有潜在的安全问题</h4>
+                        <p>设置->隐私与安全->证书->查看证书</p>
+                        <p>证书管理器->证书颁发机构->导入FastGithub.cer</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
