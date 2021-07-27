@@ -49,7 +49,8 @@ namespace FastGithub.Upgrade
         /// <returns></returns>
         public ProductionVersion GetProductionVersion()
         {
-            return ProductionVersion.Parse(this.TagName);
+            var version = this.TagName.TrimStart('v', 'V');
+            return ProductionVersion.Parse(version);
         }
 
         public override string ToString()
