@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,24 +16,24 @@ namespace FastGithub.Dns
     sealed class DnsHostedService : BackgroundService
     {
         private readonly DnsServer dnsServer;
-        private readonly HostsFileValidator hostsValidator;
+        private readonly IEnumerable<IDnsValidator> dnsValidators;
         private readonly ILogger<DnsHostedService> logger;
 
         /// <summary>
         /// dns后台服务
         /// </summary>
         /// <param name="dnsServer"></param>
-        /// <param name="hostsValidator"></param>
+        /// <param name="dnsValidators"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         public DnsHostedService(
             DnsServer dnsServer,
-            HostsFileValidator hostsValidator,
+            IEnumerable<IDnsValidator> dnsValidators,
             IOptionsMonitor<FastGithubOptions> options,
             ILogger<DnsHostedService> logger)
         {
             this.dnsServer = dnsServer;
-            this.hostsValidator = hostsValidator;
+            this.dnsValidators = dnsValidators;
             this.logger = logger;
 
             options.OnChange(opt =>
@@ -72,7 +73,11 @@ namespace FastGithub.Dns
                 this.logger.LogWarning($"不支持自动设置DNS，请根据你的系统平台情况修改主DNS为{IPAddress.Loopback}");
             }
 
-            await this.hostsValidator.ValidateAsync();
+            foreach (var item in this.dnsValidators)
+            {
+                await item.ValidateAsync();
+            }
+
             await base.StartAsync(cancellationToken);
         }
 
