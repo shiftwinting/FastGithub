@@ -5,15 +5,13 @@ github加速神器
 * 修改本机的dns服务指向FastGithub自身
 * 解析匹配的域名为FastGithub自身的ip
 * 请求不受污染的dns服务(dnscrypt-proxy)获取域名的ip
-* 使用得到的ip进行无或有SNI的https反向代理
- 
+* 使用得到的ip进行无或有SNI的https反向代理 
+
+### 程序下载
+如果不能下载[releases](https://github.com/xljiulang/FastGithub/releases)里发布的程序，可以到Q群`307306673`里面的群文件下载。
+
 ### 使用说明
 运行FastGithub，然后浏览器访问 https://127.0.0.1 或其它ip进入Dashboard
-
-### Q群
-> 307306673
-
-如果你还没有此工具或者其它原因不能下载[releases](https://github.com/xljiulang/FastGithub/releases)里发布的程序，可以到Q群文件下载。
 
 ### 安全性说明
 FastGithub生成自签名CA证书，要求安装到本机设备。FastGithub为每台不同设备生成的CA不同的证书，保存在CACert文件夹下，请不要将证书私钥泄露给他人，以免造成损失。
