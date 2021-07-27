@@ -72,7 +72,7 @@ namespace FastGithub.Dns
                 var domain = items[1];
                 if (this.fastGithubConfig.IsMatch(domain))
                 {
-                    this.logger.LogWarning($"由于你的hosts文件设置了[{domain}->{address}]，{nameof(FastGithub)}无法加速此域名");
+                    this.logger.LogError($"由于你的hosts文件设置了[{domain}->{address}]，{nameof(FastGithub)}无法加速此域名");
                 }
             }
         }
