@@ -7,27 +7,8 @@ github加速神器
 * 请求不受污染的dns服务(dnscrypt-proxy)获取域名的ip
 * 使用得到的ip进行无或有SNI的https反向代理
  
-### 加速站点
-#### github
-* github.com
-* githubstatus.com
-* *.github.com
-* *.github.io
-* *.githubapp.com
-* *.githubassets.com
-* *.githubusercontent.com
-* \*github\*.s3.amazonaws.com
-
-#### stackoverflow
-* ajax.googleapis.com -> gapis.geekzu.org/ajax
-* fonts.googleapis.com -> fonts.geekzu.org
-* themes.googleusercontent.com -> gapis.geekzu.org/g-themes
-* fonts.gstatic.com -> gapis.geekzu.org/g-fonts
-* secure.gravatar.com -> sdn.geekzu.org
-* *.gravatar.com -> fdn.geekzu.org
-* i.stack.imgur.com => 404
-* lh*.googleusercontent.com => 404
-* www.google.com => 404
+### 使用说明
+运行FastGithub，然后浏览器访问 https://127.0.0.1 或其它ip进入Dashboard
 
 ### Q群
 > 307306673
