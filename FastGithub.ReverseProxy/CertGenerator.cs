@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Pkcs;
+﻿using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
@@ -134,11 +133,20 @@ namespace FastGithub.ReverseProxy
                 var akis = new AuthorityKeyIdentifierStructure(issuerPublic);
                 certGenerator.AddExtension(X509Extensions.AuthorityKeyIdentifier, false, akis);
             }
+
             if (caPathLengthConstraint != null && caPathLengthConstraint >= 0)
             {
-                var extension = new X509Extension(true, new DerOctetString(new BasicConstraints(caPathLengthConstraint.Value)));
-                certGenerator.AddExtension(X509Extensions.BasicConstraints, extension.IsCritical, extension.GetParsedValue());
+                var basicConstraints = new BasicConstraints(caPathLengthConstraint.Value);
+                certGenerator.AddExtension(X509Extensions.BasicConstraints, true, basicConstraints);
+                certGenerator.AddExtension(X509Extensions.KeyUsage, false, new KeyUsage(KeyUsage.DigitalSignature | KeyUsage.CrlSign | KeyUsage.KeyCertSign));
             }
+            else
+            {
+                var basicConstraints = new BasicConstraints(cA: false);
+                certGenerator.AddExtension(X509Extensions.BasicConstraints, true, basicConstraints);
+                certGenerator.AddExtension(X509Extensions.KeyUsage, false, new KeyUsage(KeyUsage.DigitalSignature | KeyUsage.KeyEncipherment));
+            }
+            certGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeID.IdKPServerAuth));
 
             var names = domains.Select(domain =>
             {
@@ -148,13 +156,10 @@ namespace FastGithub.ReverseProxy
                     nameType = GeneralName.IPAddress;
                 }
                 return new GeneralName(nameType, domain);
-
             }).ToArray();
 
             var subjectAltName = new GeneralNames(names);
             certGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, subjectAltName);
-
-            certGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeID.IdKPServerAuth));
             return certGenerator.Generate(signatureFactory);
         }
 
