@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Asn1.Pkcs;
+﻿using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
@@ -40,7 +41,7 @@ namespace FastGithub.ReverseProxy
         public static void GenerateBySelf(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath)
         {
             var keys = GenerateRsaKeyPair(keySizeBits);
-            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, domains.First(), null, keys.Private);
+            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, domains.First(), null, keys.Private, 1);
 
             using var priWriter = new StreamWriter(caPrivateKeyPath);
             var priPemWriter = new PemWriter(priWriter);
@@ -84,7 +85,7 @@ namespace FastGithub.ReverseProxy
 
             var caSubjectName = GetSubjectName(caCert);
             var keys = GenerateRsaKeyPair(keySizeBits);
-            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, caSubjectName, caCert.GetPublicKey(), caPrivateKey);
+            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, caSubjectName, caCert.GetPublicKey(), caPrivateKey, null);
 
             return GeneratePfx(cert, keys.Private, password);
         }
@@ -111,9 +112,10 @@ namespace FastGithub.ReverseProxy
         /// <param name="validTo"></param>
         /// <param name="issuerName"></param>
         /// <param name="issuerPublic"></param>
-        /// <param name="issuerPrivate"></param> 
+        /// <param name="issuerPrivate"></param>
+        /// <param name="caPathLengthConstraint"></param>
         /// <returns></returns>
-        private static X509Certificate GenerateCertificate(IEnumerable<string> domains, AsymmetricKeyParameter subjectPublic, DateTime validFrom, DateTime validTo, string issuerName, AsymmetricKeyParameter? issuerPublic, AsymmetricKeyParameter issuerPrivate)
+        private static X509Certificate GenerateCertificate(IEnumerable<string> domains, AsymmetricKeyParameter subjectPublic, DateTime validFrom, DateTime validTo, string issuerName, AsymmetricKeyParameter? issuerPublic, AsymmetricKeyParameter issuerPrivate, int? caPathLengthConstraint)
         {
             var signatureFactory = issuerPrivate is ECPrivateKeyParameters
                 ? new Asn1SignatureFactory(X9ObjectIdentifiers.ECDsaWithSha256.ToString(), issuerPrivate)
@@ -132,9 +134,10 @@ namespace FastGithub.ReverseProxy
                 var akis = new AuthorityKeyIdentifierStructure(issuerPublic);
                 certGenerator.AddExtension(X509Extensions.AuthorityKeyIdentifier, false, akis);
             }
-            else
+            if (caPathLengthConstraint != null && caPathLengthConstraint >= 0)
             {
-                certGenerator.AddExtension(X509Extensions.BasicConstraints, true, new BasicConstraints(cA: true)); ;
+                var extension = new X509Extension(true, new DerOctetString(new BasicConstraints(caPathLengthConstraint.Value)));
+                certGenerator.AddExtension(X509Extensions.BasicConstraints, extension.IsCritical, extension.GetParsedValue());
             }
 
             var names = domains.Select(domain =>
@@ -150,8 +153,11 @@ namespace FastGithub.ReverseProxy
 
             var subjectAltName = new GeneralNames(names);
             certGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, subjectAltName);
+
+            certGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeID.IdKPServerAuth));
             return certGenerator.Generate(signatureFactory);
         }
+
 
         /// <summary>
         /// 生成pfx
