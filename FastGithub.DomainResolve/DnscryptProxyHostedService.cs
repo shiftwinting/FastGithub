@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -11,19 +12,20 @@ namespace FastGithub.DomainResolve
     /// </summary>
     sealed class DnscryptProxyHostedService : IHostedService
     {
-        private readonly DnscryptProxyService dnscryptProxyService;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnscryptProxyHostedService> logger;
+        private DnscryptProxy? dnscryptProxy;
 
         /// <summary>
         /// DnscryptProxy后台服务
         /// </summary>
-        /// <param name="dnscryptProxyService"></param>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
         public DnscryptProxyHostedService(
-            DnscryptProxyService dnscryptProxyService,
+            FastGithubConfig fastGithubConfig,
             ILogger<DnscryptProxyHostedService> logger)
         {
-            this.dnscryptProxyService = dnscryptProxyService;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
 
@@ -34,39 +36,19 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            try
+            var pureDns = this.fastGithubConfig.PureDns;
+            if (LocalMachine.ContainsIPAddress(pureDns.Address) == true)
             {
-                await this.dnscryptProxyService.StartAsync(cancellationToken);
-                this.logger.LogInformation($"{this.dnscryptProxyService}启动成功");
-
-                // 监听意外退出
-                var process = this.dnscryptProxyService.Process;
-                if (process == null)
+                this.dnscryptProxy = new DnscryptProxy(pureDns);
+                try
                 {
-                    this.OnProcessExit(null, new EventArgs());
+                    await this.dnscryptProxy.StartAsync(cancellationToken);
+                    this.logger.LogInformation($"{this.dnscryptProxy}启动成功");
                 }
-                else
+                catch (Exception ex)
                 {
-                    process.EnableRaisingEvents = true;
-                    process.Exited += this.OnProcessExit;
+                    this.logger.LogWarning($"{this.dnscryptProxy}启动失败：{ex.Message}");
                 }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"{this.dnscryptProxyService}启动失败：{ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 进程退出时
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnProcessExit(object? sender, EventArgs e)
-        {
-            if (this.dnscryptProxyService.ControllState != ControllState.Stopped)
-            {
-                this.logger.LogCritical($"{this.dnscryptProxyService}已意外停止，这将影响到{nameof(FastGithub)}解析域名的速度和准确性。");
             }
         }
 
@@ -77,14 +59,17 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            try
+            if (this.dnscryptProxy != null)
             {
-                this.dnscryptProxyService.Stop();
-                this.logger.LogInformation($"{this.dnscryptProxyService}已停止");
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"{this.dnscryptProxyService}停止失败：{ex.Message}");
+                try
+                {
+                    this.dnscryptProxy.Stop();
+                    this.logger.LogInformation($"{this.dnscryptProxy}已停止");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning($"{this.dnscryptProxy}停止失败：{ex.Message}");
+                }
             }
 
             return Task.CompletedTask;
