@@ -188,7 +188,11 @@ namespace FastGithub
             }
 
             var globalPropreties = IPGlobalProperties.GetIPGlobalProperties();
-            yield return globalPropreties.HostName;
+            if (string.IsNullOrEmpty(globalPropreties.HostName) == false)
+            {
+                yield return globalPropreties.HostName;
+            }
+
             foreach (var item in globalPropreties.GetUnicastAddresses())
             {
                 if (item.Address.AddressFamily == AddressFamily.InterNetwork)
