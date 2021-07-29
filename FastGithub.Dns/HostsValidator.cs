@@ -67,7 +67,7 @@ namespace FastGithub.Dns
                 }
                 if (this.fastGithubConfig.IsMatch(record.Domain))
                 {
-                    this.logger.LogError($"由于你的hosts文件设置了[{record.Domain}->{record.Address}]，{nameof(FastGithub)}无法加速此域名");
+                    this.logger.LogError($"由于你的hosts文件设置了{record}，{nameof(FastGithub)}无法加速此域名");
                 }
             }
         }
@@ -92,6 +92,11 @@ namespace FastGithub.Dns
             {
                 this.Domain = domain;
                 this.Address = address;
+            }
+
+            public override string ToString()
+            {
+                return $"[{this.Domain}->{this.Address}]";
             }
 
             public static bool TryParse(string record, [MaybeNullWhen(false)] out HostsRecord value)
