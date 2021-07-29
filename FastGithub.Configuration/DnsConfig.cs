@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 
 namespace FastGithub.Configuration
 {
@@ -33,7 +32,7 @@ namespace FastGithub.Configuration
                 throw new FastGithubException($"无效的ip：{this.IPAddress}");
             }
 
-            if (this.Port == 53 && IsLocalMachineIPAddress(address))
+            if (this.Port == 53 && IsLocalIPAddress(address))
             {
                 throw new FastGithubException($"配置的dns值不能指向{nameof(FastGithub)}自身：{this.IPAddress}:{this.Port}");
             }
@@ -51,12 +50,18 @@ namespace FastGithub.Configuration
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        private static bool IsLocalMachineIPAddress(IPAddress address)
+        private static bool IsLocalIPAddress(IPAddress address)
         {
-            return IPGlobalProperties
-                .GetIPGlobalProperties()
-                .GetUnicastAddresses()
-                .Any(item => item.Address.Equals(address));
+            if (address.Equals(System.Net.IPAddress.Loopback))
+            {
+                return true;
+            }
+            if (address.Equals(System.Net.IPAddress.IPv6Loopback))
+            {
+                return true;
+            }
+            var addresses = Dns.GetHostAddresses(Dns.GetHostName());
+            return addresses.Contains(address);
         }
     }
 }

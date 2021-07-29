@@ -1,11 +1,11 @@
 ﻿using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace FastGithub.Dns
@@ -48,12 +48,7 @@ namespace FastGithub.Dns
                 return;
             }
 
-            var localAddresses = IPGlobalProperties
-                .GetIPGlobalProperties()
-                .GetUnicastAddresses()
-                .Select(item => item.Address)
-                .ToArray();
-
+            var localAddresses = await GetLocalIPv4AddressesAsync();
             var lines = await File.ReadAllLinesAsync(hostsPath);
             foreach (var line in lines)
             {
@@ -70,6 +65,29 @@ namespace FastGithub.Dns
                     this.logger.LogError($"由于你的hosts文件设置了{record}，{nameof(FastGithub)}无法加速此域名");
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取本机所有IPv4
+        /// </summary>
+        /// <returns></returns>
+        private static async Task<HashSet<IPAddress>> GetLocalIPv4AddressesAsync()
+        {
+            var hashSet = new HashSet<IPAddress>
+            {
+                IPAddress.Loopback
+            };
+
+            var hostName = System.Net.Dns.GetHostName();
+            var addresses = await System.Net.Dns.GetHostAddressesAsync(hostName);
+            foreach (var address in addresses)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    hashSet.Add(address);
+                }
+            }
+            return hashSet;
         }
 
 

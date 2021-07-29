@@ -187,17 +187,14 @@ namespace FastGithub
                 yield break;
             }
 
-            var globalPropreties = IPGlobalProperties.GetIPGlobalProperties();
-            if (string.IsNullOrEmpty(globalPropreties.HostName) == false)
-            {
-                yield return globalPropreties.HostName;
-            }
+            var hostName = Dns.GetHostName();
+            yield return hostName;
 
-            foreach (var item in globalPropreties.GetUnicastAddresses())
+            foreach (var address in Dns.GetHostAddresses(hostName))
             {
-                if (item.Address.AddressFamily == AddressFamily.InterNetwork)
+                if (address.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    yield return item.Address.ToString();
+                    yield return address.ToString();
                 }
             }
         }
