@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup> 
+	<PropertyGroup>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="6.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0-*" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
+		<ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
 	</ItemGroup>
 </Project>
