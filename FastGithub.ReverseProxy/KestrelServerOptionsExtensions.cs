@@ -189,6 +189,7 @@ namespace FastGithub
 
             var hostName = Dns.GetHostName();
             yield return hostName;
+            yield return IPAddress.Loopback.ToString();
 
             foreach (var address in Dns.GetHostAddresses(hostName))
             {
