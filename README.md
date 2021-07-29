@@ -11,7 +11,7 @@ github加速神器
 如果不能下载[releases](https://github.com/xljiulang/FastGithub/releases)里发布的程序，可以到Q群`307306673`里面的群文件下载。
 
 ### 使用说明
-运行FastGithub，然后浏览器访问 https://127.0.0.1 或其它ip进入Dashboard
+运行FastGithub，然后浏览器访问 http://127.0.0.1 或其它ip进入Dashboard
 
 ### 安全性说明
 FastGithub生成自签名CA证书，要求安装到本机设备。FastGithub为每台不同设备生成的CA不同的证书，保存在CACert文件夹下，请不要将证书私钥泄露给他人，以免造成损失。

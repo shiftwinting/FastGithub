@@ -23,7 +23,7 @@ namespace FastGithub.ReverseProxy
             IHttpClientFactory httpClientFactory,
             FastGithubConfig fastGithubConfig,
             ILogger<ReverseProxyMiddleware> logger)
-        { 
+        {
             this.httpForwarder = httpForwarder;
             this.httpClientFactory = httpClientFactory;
             this.fastGithubConfig = fastGithubConfig;
@@ -54,7 +54,8 @@ namespace FastGithub.ReverseProxy
             }
             else
             {
-                var destinationPrefix = GetDestinationPrefix(host, domainConfig.Destination);
+                var scheme = context.Request.Scheme;
+                var destinationPrefix = GetDestinationPrefix(scheme, host, domainConfig.Destination);
                 var httpClient = this.httpClientFactory.CreateHttpClient(domainConfig);
                 var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
                 await HandleErrorAsync(context, error);
@@ -64,12 +65,13 @@ namespace FastGithub.ReverseProxy
         /// <summary>
         /// 获取目标前缀
         /// </summary>
-        /// <param name="host"></param> 
+        /// <param name="scheme"></param>
+        /// <param name="host"></param>
         /// <param name="destination"></param>
         /// <returns></returns>
-        private string GetDestinationPrefix(string host, Uri? destination)
+        private string GetDestinationPrefix(string scheme, string host, Uri? destination)
         {
-            var defaultValue = $"https://{host}/";
+            var defaultValue = $"{scheme}://{host}/";
             if (destination == null)
             {
                 return defaultValue;

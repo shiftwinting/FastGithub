@@ -21,11 +21,11 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 使用https反向代理中间件
+        /// 使用反向代理中间件
         /// </summary>
         /// <param name="app"></param> 
         /// <returns></returns>
-        public static IApplicationBuilder UseHttpsReverseProxy(this IApplicationBuilder app)
+        public static IApplicationBuilder UseReverseProxy(this IApplicationBuilder app)
         {
             var middleware = app.ApplicationServices.GetRequiredService<ReverseProxyMiddleware>();
             return app.Use(next => context => middleware.InvokeAsync(context, next));

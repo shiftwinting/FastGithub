@@ -22,9 +22,34 @@ namespace FastGithub
     public static class KestrelServerOptionsExtensions
     {
         /// <summary>
-        /// 域名证书缓存
+        /// 服务器证书缓存
         /// </summary>
-        private static readonly IMemoryCache domainCertCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        private static readonly IMemoryCache serverCertCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+
+        /// <summary>
+        /// 监听http的反向代理
+        /// </summary>
+        /// <param name="kestrel"></param>
+        public static void ListenHttpReverseProxy(this KestrelServerOptions kestrel)
+        {
+            var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
+
+            const int HTTP_PORT = 80;
+            if (OperatingSystem.IsWindows())
+            {
+                TcpTable.KillPortOwner(HTTP_PORT);
+            }
+
+            if (CanTcpListen(HTTP_PORT) == false)
+            {
+                logger.LogWarning($"无法监听tcp端口{HTTP_PORT}，{nameof(FastGithub)}无法http反向代理");
+            }
+            else
+            {
+                kestrel.Listen(IPAddress.Any, HTTP_PORT);
+            }
+        }
 
         /// <summary>
         /// 监听https的反向代理
@@ -43,10 +68,34 @@ namespace FastGithub
             GeneratorCaCert(caPublicCerPath, caPrivateKeyPath);
             InstallCaCert(caPublicCerPath, logger);
 
-            kestrel.Listen(IPAddress.Any, 443, listen =>
-                listen.UseHttps(https =>
-                    https.ServerCertificateSelector = (ctx, domain) =>
-                        GetDomainCert(domain, caPublicCerPath, caPrivateKeyPath)));
+            const int HTTPS_PORT = 443;
+            if (OperatingSystem.IsWindows())
+            {
+                TcpTable.KillPortOwner(HTTPS_PORT);
+            }
+
+            if (CanTcpListen(HTTPS_PORT) == false)
+            {
+                logger.LogWarning($"无法监听tcp端口{HTTPS_PORT}，{nameof(FastGithub)}无法https反向代理");
+            }
+            else
+            {
+                kestrel.Listen(IPAddress.Any, HTTPS_PORT, listen =>
+                    listen.UseHttps(https =>
+                        https.ServerCertificateSelector = (ctx, domain) =>
+                            GetServerCert(domain, caPublicCerPath, caPrivateKeyPath)));
+            }
+        }
+
+        /// <summary>
+        /// 是否可以监听指定端口
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        private static bool CanTcpListen(int port)
+        {
+            var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            return tcpListeners.Any(item => item.Port == port) == false;
         }
 
         /// <summary>
@@ -81,24 +130,23 @@ namespace FastGithub
             if (OperatingSystem.IsWindows() == false)
             {
                 logger.LogWarning($"不支持自动安装证书{caPublicCerPath}：请手动安装证书到根证书颁发机构");
+                return;
             }
-            else
+
+            try
             {
-                try
+                var caCert = new X509Certificate2(caPublicCerPath);
+                using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
                 {
-                    var caCert = new X509Certificate2(caPublicCerPath);
-                    using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-                    store.Open(OpenFlags.ReadWrite);
-                    if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
-                    {
-                        store.Add(caCert);
-                        store.Close();
-                    }
+                    store.Add(caCert);
+                    store.Close();
                 }
-                catch (Exception)
-                {
-                    logger.LogWarning($"安装证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
-                }
+            }
+            catch (Exception)
+            {
+                logger.LogWarning($"安装证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
             }
         }
 
@@ -109,9 +157,9 @@ namespace FastGithub
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
         /// <returns></returns>
-        private static X509Certificate2 GetDomainCert(string? domain, string caPublicCerPath, string caPrivateKeyPath)
+        private static X509Certificate2 GetServerCert(string? domain, string caPublicCerPath, string caPrivateKeyPath)
         {
-            return domainCertCache.GetOrCreate(domain ?? string.Empty, GetOrCreateCert);
+            return serverCertCache.GetOrCreate(domain ?? string.Empty, GetOrCreateCert);
 
             // 生成域名的1年证书
             X509Certificate2 GetOrCreateCert(ICacheEntry entry)
@@ -138,17 +186,14 @@ namespace FastGithub
                 yield return host;
             }
 
-            yield return Environment.MachineName;
-            yield return IPAddress.Loopback.ToString();
+            var globalPropreties = IPGlobalProperties.GetIPGlobalProperties();
 
-            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            yield return globalPropreties.HostName;
+            foreach (var item in globalPropreties.GetUnicastAddresses())
             {
-                foreach (var addressInfo in @interface.GetIPProperties().UnicastAddresses)
+                if (item.Address.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    if (addressInfo.Address.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        yield return addressInfo.Address.ToString();
-                    }
+                    yield return item.Address.ToString();
                 }
             }
         }

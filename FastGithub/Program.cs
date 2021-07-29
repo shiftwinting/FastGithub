@@ -41,7 +41,11 @@ namespace FastGithub
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.UseKestrel(kestrel => kestrel.ListenHttpsReverseProxy());
+                    webBuilder.UseKestrel(kestrel =>
+                    {
+                        kestrel.ListenHttpReverseProxy();
+                        kestrel.ListenHttpsReverseProxy();
+                    });
                 });
         }
     }

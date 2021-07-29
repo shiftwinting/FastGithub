@@ -84,15 +84,9 @@ namespace FastGithub.Dns
         /// <returns></returns>
         private static IEnumerable<IPAddress> GetLocalMachineIPAddress()
         {
-            yield return IPAddress.Loopback;
-            yield return IPAddress.IPv6Loopback;
-
-            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            foreach (var item in IPGlobalProperties.GetIPGlobalProperties().GetUnicastAddresses())
             {
-                foreach (var addressInfo in @interface.GetIPProperties().UnicastAddresses)
-                {
-                    yield return addressInfo.Address;
-                }
+                yield return item.Address;
             }
         }
     }

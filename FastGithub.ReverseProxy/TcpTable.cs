@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -17,6 +18,34 @@ namespace FastGithub.ReverseProxy
 
         [DllImport("iphlpapi.dll", SetLastError = true)]
         private static extern uint GetExtendedTcpTable(void* pTcpTable, ref int pdwSize, bool bOrder, AddressFamily ulAf, TCP_TABLE_CLASS tableClass, uint reserved = 0);
+
+
+        /// <summary>
+        /// 杀死占用进程
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        public static bool KillPortOwner(int port)
+        {
+            if (TryGetOwnerProcessId(port, out var pid) == false)
+            {
+                return true;
+            }
+
+            try
+            {
+                Process.GetProcessById(pid).Kill();
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// 获取tcp端口的占用进程id

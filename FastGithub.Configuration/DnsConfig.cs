@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 
@@ -52,17 +53,10 @@ namespace FastGithub.Configuration
         /// <returns></returns>
         private static bool IsLocalMachineIPAddress(IPAddress address)
         {
-            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                foreach (var addressInfo in @interface.GetIPProperties().UnicastAddresses)
-                {
-                    if (addressInfo.Address.Equals(address))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetUnicastAddresses()
+                .Any(item => item.Address.Equals(address));
         }
     }
 }
