@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace FastGithub.ReverseProxy
@@ -45,6 +46,12 @@ namespace FastGithub.ReverseProxy
             var request = context.Request;
             var response = context.Response;
             var message = $"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms";
+
+            var client = context.Connection.RemoteIpAddress;
+            if (IPAddress.Loopback.Equals(client) == false)
+            {
+                message = $"{client} {message}";
+            }
 
             var exception = context.GetForwarderErrorFeature()?.Exception;
             if (exception == null)
