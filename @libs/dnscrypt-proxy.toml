@@ -148,7 +148,7 @@ keepalive = 30
 
 ## Log level (0-6, default: 2 - 0 is very verbose, 6 only contains fatal errors)
 
-# log_level = 2
+log_level = 6
 
 
 ## Log file for the application, as an alternative to sending logs to
