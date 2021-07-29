@@ -184,10 +184,10 @@ namespace FastGithub
             if (string.IsNullOrEmpty(host) == false)
             {
                 yield return host;
+                yield break;
             }
 
             var globalPropreties = IPGlobalProperties.GetIPGlobalProperties();
-
             yield return globalPropreties.HostName;
             foreach (var item in globalPropreties.GetUnicastAddresses())
             {
