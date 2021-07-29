@@ -47,7 +47,7 @@
 
         <h3>部署方式</h3>
         <div class="row">
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">windows本机</div>
                     <div class="caption">
@@ -59,26 +59,38 @@
                 </div>
             </div>
 
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">linux本机</div>
                     <div class="caption">
                         <h4>x64系统</h4>
                         <p>执行<code>./FastGithub</code></p>
-                        <p>手工修改resolv.conf的第一条记录为127.0.0.1</p>
-                        <p>手工安装<a target="_blank" href="/cert">CA证书</a>到受信任的根证书颁发机构</p>
+                        <p>手工修改/etc/resolv.conf的第一条记录为127.0.0.1</p>
+                        <p>手工安装CACert/FastGithub.cer到受信任的根证书颁发机构</p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
+                <div class="thumbnail">
+                    <div class="os">macOS本机</div>
+                    <div class="caption">
+                        <h4>x64系统</h4>
+                        <p>双击运行FastGithub程序</p>
+                        <p>手工修改网络适配器DNS的第一条记录为127.0.0.1</p>
+                        <p>手工安装CACert/FastGithub.cer到受信任的根证书颁发机构</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">局域网服务器</div>
                     <div class="caption">
                         <h4>x64系统</h4>
                         <p>在局域网服务器运行FastGithub程序</p>
                         <p>手工将你电脑的主DNS设置为局域网服务器的ip</p>
-                        <p>手工在你电脑安装<a target="_blank" href="/cert">CA证书</a>到受信任的根证书颁发机构</p>
+                        <p>手工在你电脑安装<a target="_blank" href="/cert">FastGithub.cer</a>到受信任的根证书颁发机构</p>
                     </div>
                 </div>
             </div>
@@ -86,7 +98,7 @@
 
         <h3>证书验证</h3>
         <div class="row">
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">git</div>
                     <div class="caption">
@@ -96,13 +108,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">firefox</div>
                     <div class="caption">
                         <h4>未连接：有潜在的安全问题</h4>
                         <p>设置->隐私与安全->证书->查看证书</p>
-                        <p>证书管理器->证书颁发机构->导入<a target="_blank" href="/cert">CA证书</a></p>
+                        <p>证书管理器->证书颁发机构->导入<a target="_blank" href="/cert">FastGithub.cer</a></p>
                     </div>
                 </div>
             </div>
@@ -112,7 +124,7 @@
         <h3>应用冲突</h3>
         <div class="row">
 
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">hosts</div>
                     <div class="caption">
@@ -122,7 +134,7 @@
                 </div>
             </div>
 
-            <div class="col-sm-6 col-md-4">
+            <div class="col-md-5">
                 <div class="thumbnail">
                     <div class="os">代理</div>
                     <div class="caption">
