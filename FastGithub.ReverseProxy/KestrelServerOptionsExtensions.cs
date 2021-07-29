@@ -1,10 +1,11 @@
 ﻿using FastGithub.ReverseProxy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +13,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 
 namespace FastGithub
 {
@@ -22,9 +22,9 @@ namespace FastGithub
     public static class KestrelServerOptionsExtensions
     {
         /// <summary>
-        /// 域名与证书
+        /// 域名证书缓存
         /// </summary>
-        private static readonly ConcurrentDictionary<string, Lazy<X509Certificate2>> domainCerts = new();
+        private static readonly IMemoryCache domainCertCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         /// <summary>
         /// 监听https的反向代理
@@ -51,6 +51,7 @@ namespace FastGithub
 
         /// <summary>
         /// 生成根证书
+        /// 10年
         /// </summary>
         /// <param name="caPublicCerPath"></param>
         /// <param name="caPrivateKeyPath"></param>
@@ -64,8 +65,8 @@ namespace FastGithub
             File.Delete(caPublicCerPath);
             File.Delete(caPrivateKeyPath);
 
-            var validFrom = DateTime.Today.AddYears(-10);
-            var validTo = DateTime.Today.AddYears(50);
+            var validFrom = DateTime.Today.AddDays(-1);
+            var validTo = DateTime.Today.AddYears(10);
             CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
         }
 
@@ -79,7 +80,7 @@ namespace FastGithub
         {
             if (OperatingSystem.IsWindows() == false)
             {
-                logger.LogWarning($"不支持自动安装根证书{caPublicCerPath}：请根据你的系统平台情况安装和信任根证书");
+                logger.LogWarning($"不支持自动安装证书{caPublicCerPath}：请手动安装证书到根证书颁发机构");
             }
             else
             {
@@ -96,7 +97,7 @@ namespace FastGithub
                 }
                 catch (Exception)
                 {
-                    logger.LogWarning($"安装根证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+                    logger.LogWarning($"安装证书{caPublicCerPath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
                 }
             }
         }
@@ -110,17 +111,18 @@ namespace FastGithub
         /// <returns></returns>
         private static X509Certificate2 GetDomainCert(string? domain, string caPublicCerPath, string caPrivateKeyPath)
         {
-            return domainCerts.GetOrAdd(domain ?? string.Empty, GetOrCreateCert).Value;
+            return domainCertCache.GetOrCreate(domain ?? string.Empty, GetOrCreateCert);
 
-            Lazy<X509Certificate2> GetOrCreateCert(string host)
+            // 生成域名的1年证书
+            X509Certificate2 GetOrCreateCert(ICacheEntry entry)
             {
-                return new Lazy<X509Certificate2>(() =>
-                {
-                    var domains = GetDomains(host).Distinct();
-                    var validFrom = DateTime.Today.AddYears(-1);
-                    var validTo = DateTime.Today.AddYears(10);
-                    return CertGenerator.GenerateByCa(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
-                }, LazyThreadSafetyMode.ExecutionAndPublication);
+                var host = (string)entry.Key;
+                var domains = GetDomains(host).Distinct();
+                var validFrom = DateTime.Today.AddDays(-1);
+                var validTo = DateTime.Today.AddYears(1);
+
+                entry.SetAbsoluteExpiration(validTo);
+                return CertGenerator.GenerateByCa(domains, 2048, validFrom, validTo, caPublicCerPath, caPrivateKeyPath);
             }
         }
 
