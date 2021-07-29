@@ -1,4 +1,5 @@
-﻿using FastGithub.ReverseProxy;
+﻿using FastGithub.Configuration;
+using FastGithub.ReverseProxy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Caching.Memory;
@@ -11,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub
@@ -196,16 +196,10 @@ namespace FastGithub
                 yield break;
             }
 
-            var hostName = Dns.GetHostName();
-            yield return hostName;
-            yield return IPAddress.Loopback.ToString();
-
-            foreach (var address in Dns.GetHostAddresses(hostName))
+            yield return LocalMachine.Name;
+            foreach (var address in LocalMachine.GetAllIPv4Addresses())
             {
-                if (address.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    yield return address.ToString();
-                }
+                yield return address.ToString();
             }
         }
     }

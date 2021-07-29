@@ -1,7 +1,6 @@
 ﻿using DNS.Protocol;
-using System;
+using FastGithub.Configuration;
 using System.Net;
-using System.Net.Sockets;
 
 namespace FastGithub.Dns
 {
@@ -32,16 +31,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public IPAddress? GetLocalAddress()
         {
-            try
-            {
-                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                socket.Connect(this.RemoteEndPoint);
-                return socket.LocalEndPoint is IPEndPoint localEndPoint ? localEndPoint.Address : default;
-            }
-            catch (Exception)
-            {
-                return default;
-            }
+            return LocalMachine.GetLocalAddress(this.RemoteEndPoint);
         }
     }
 }

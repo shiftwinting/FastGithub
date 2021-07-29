@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
 
 namespace FastGithub.Configuration
@@ -32,7 +31,7 @@ namespace FastGithub.Configuration
                 throw new FastGithubException($"无效的ip：{this.IPAddress}");
             }
 
-            if (this.Port == 53 && IsLocalIPAddress(address))
+            if (this.Port == 53 && LocalMachine.ContainsIPAddress(address))
             {
                 throw new FastGithubException($"配置的dns值不能指向{nameof(FastGithub)}自身：{this.IPAddress}:{this.Port}");
             }
@@ -43,25 +42,6 @@ namespace FastGithub.Configuration
         public override string ToString()
         {
             return $"{this.IPAddress}:{this.Port}";
-        }
-
-        /// <summary>
-        /// 是否为本机ip
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        private static bool IsLocalIPAddress(IPAddress address)
-        {
-            if (address.Equals(System.Net.IPAddress.Loopback))
-            {
-                return true;
-            }
-            if (address.Equals(System.Net.IPAddress.IPv6Loopback))
-            {
-                return true;
-            }
-            var addresses = Dns.GetHostAddresses(Dns.GetHostName());
-            return addresses.Contains(address);
         }
     }
 }
