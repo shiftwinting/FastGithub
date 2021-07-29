@@ -29,7 +29,7 @@ namespace FastGithub
         /// <returns></returns>
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，访问 http://127.0.0.1 或本机其它任意ip可进入Dashboard");
+            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，访问 http://127.0.0.1 或 https://127.0.0.1 或本机其它任意ip可进入Dashboard");
             return Task.CompletedTask;
         }
 
