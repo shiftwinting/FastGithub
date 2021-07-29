@@ -49,6 +49,7 @@ namespace FastGithub.DomainResolve
             foreach (var process in Process.GetProcessesByName(name))
             {
                 process.Kill();
+                process.WaitForExit();
             }
 
             if (OperatingSystem.IsWindows())

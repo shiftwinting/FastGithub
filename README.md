@@ -8,7 +8,7 @@ github加速神器
 * 使用得到的ip进行无或有SNI的https反向代理 
 
 ### 程序下载
-如果不能下载[releases](https://github.com/xljiulang/FastGithub/releases)里发布的程序，可以到Q群`307306673`里面的群文件下载。
+如果不能下载[releases](https://github.com/dotnetcore/FastGithub)里发布的程序，可以到Q群`307306673`里面的群文件下载。
 
 ### 使用说明
 运行FastGithub，然后浏览器访问 http://127.0.0.1 或其它ip进入Dashboard
