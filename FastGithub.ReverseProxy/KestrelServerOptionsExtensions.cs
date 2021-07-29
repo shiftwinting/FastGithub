@@ -135,14 +135,23 @@ namespace FastGithub
 
             try
             {
-                var caCert = new X509Certificate2(caPublicCerPath);
                 using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
                 store.Open(OpenFlags.ReadWrite);
+
+                var caCert = new X509Certificate2(caPublicCerPath);
+                var subjectName = caCert.Subject[3..];
+                foreach (var item in store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false))
+                {
+                    if (item.Thumbprint != caCert.Thumbprint)
+                    {
+                        store.Remove(item);
+                    }
+                }
                 if (store.Certificates.Find(X509FindType.FindByThumbprint, caCert.Thumbprint, true).Count == 0)
                 {
                     store.Add(caCert);
-                    store.Close();
                 }
+                store.Close();
             }
             catch (Exception)
             {
