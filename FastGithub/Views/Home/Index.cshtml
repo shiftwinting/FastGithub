@@ -41,7 +41,7 @@
 
         <h3>CA证书</h3>
         <p>
-            你可能需要在客户端设备下载FastGithub自颁发的<a target="_blank" href="/cert">CA证书</a>，导入到受信任的根证书颁发机构或浏览器
+            你可能需要在客户端设备下载FastGithub自颁发的CA证书<a target="_blank" href="/cert">FastGithub.cer</a>，导入到受信任的根证书颁发机构或浏览器
         </p>
 
 
@@ -65,7 +65,7 @@
                     <div class="caption">
                         <h4>x64系统</h4>
                         <p>执行<code>./FastGithub</code></p>
-                        <p>手工修改/etc/resolv.conf的第一条记录为127.0.0.1</p>
+                        <p>手工添加127.0.0.1做为/etc/resolv.conf的第一条记录</p>
                         <p>手工安装CACert/FastGithub.cer到受信任的根证书颁发机构</p>
                     </div>
                 </div>
@@ -77,8 +77,8 @@
                     <div class="caption">
                         <h4>x64系统</h4>
                         <p>双击运行FastGithub程序</p>
-                        <p>手工修改网络适配器DNS的第一条记录为127.0.0.1</p>
-                        <p>手工安装CACert/FastGithub.cer到受信任的根证书颁发机构</p>
+                        <p>手工添加127.0.0.1做为连接网络的DNS的第一条记录</p>
+                        <p>手工安装CACert/FastGithub.cer并设置信任</p>
                     </div>
                 </div>
             </div>
@@ -113,8 +113,8 @@
                     <div class="os">firefox</div>
                     <div class="caption">
                         <h4>未连接：有潜在的安全问题</h4>
-                        <p>设置->隐私与安全->证书->查看证书</p>
-                        <p>证书管理器->证书颁发机构->导入<a target="_blank" href="/cert">FastGithub.cer</a></p>
+                        <p>设置->隐私与安全->证书->查看证书->证书颁发机构</p>
+                        <p>导入<a target="_blank" href="/cert">FastGithub.cer</a>，勾选信任由此证书颁发机构来标识网站</p>
                     </div>
                 </div>
             </div>
