@@ -1,7 +1,7 @@
 ﻿using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -48,45 +48,73 @@ namespace FastGithub.Dns
                 return;
             }
 
+            var localAddresses = IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetUnicastAddresses()
+                .Select(item => item.Address)
+                .ToArray();
+
             var lines = await File.ReadAllLinesAsync(hostsPath);
-            var records = lines.Where(item => item.TrimStart().StartsWith("#") == false);
-            var localAddresses = GetLocalMachineIPAddress().ToArray();
-
-            foreach (var record in records)
+            foreach (var line in lines)
             {
-                var items = record.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (items.Length < 2)
+                if (HostsRecord.TryParse(line, out var record) == false)
                 {
                     continue;
                 }
-
-                if (IPAddress.TryParse(items[0], out var address) == false)
+                if (localAddresses.Contains(record.Address) == true)
                 {
                     continue;
                 }
-
-                if (localAddresses.Contains(address))
+                if (this.fastGithubConfig.IsMatch(record.Domain))
                 {
-                    continue;
-                }
-
-                var domain = items[1];
-                if (this.fastGithubConfig.IsMatch(domain))
-                {
-                    this.logger.LogError($"由于你的hosts文件设置了[{domain}->{address}]，{nameof(FastGithub)}无法加速此域名");
+                    this.logger.LogError($"由于你的hosts文件设置了[{record.Domain}->{record.Address}]，{nameof(FastGithub)}无法加速此域名");
                 }
             }
         }
 
+
         /// <summary>
-        /// 获取本机所有ip
-        /// </summary> 
-        /// <returns></returns>
-        private static IEnumerable<IPAddress> GetLocalMachineIPAddress()
+        /// hosts文件记录
+        /// </summary>
+        private class HostsRecord
         {
-            foreach (var item in IPGlobalProperties.GetIPGlobalProperties().GetUnicastAddresses())
+            /// <summary>
+            /// 获取域名
+            /// </summary>
+            public string Domain { get; }
+
+            /// <summary>
+            /// 获取地址
+            /// </summary>
+            public IPAddress Address { get; }
+
+            private HostsRecord(string domain, IPAddress address)
             {
-                yield return item.Address;
+                this.Domain = domain;
+                this.Address = address;
+            }
+
+            public static bool TryParse(string record, [MaybeNullWhen(false)] out HostsRecord value)
+            {
+                value = null;
+                if (record.TrimStart().StartsWith("#"))
+                {
+                    return false;
+                }
+
+                var items = record.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (items.Length < 2)
+                {
+                    return false;
+                }
+
+                if (IPAddress.TryParse(items[0], out var address) == false)
+                {
+                    return false;
+                }
+
+                value = new HostsRecord(items[1], address);
+                return true;
             }
         }
     }
