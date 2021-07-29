@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FastGithub.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -50,7 +51,7 @@ namespace FastGithub.Dns
                 .Where(item => item.GetIPProperties().GetIPv4Properties().Index == dwBestIfIndex)
                 .FirstOrDefault();
 
-            return @interface ?? throw new NotSupportedException("找不到网络适配器用来设置dns");
+            return @interface ?? throw new FastGithubException("找不到网络适配器用来设置dns");
         }
 
 

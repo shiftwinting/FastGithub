@@ -43,7 +43,7 @@ namespace FastGithub
 
             if (CanTcpListen(HTTP_PORT) == false)
             {
-                logger.LogWarning($"无法监听tcp端口{HTTP_PORT}，{nameof(FastGithub)}无法http反向代理");
+                logger.LogError($"由于tcp端口{HTTP_PORT}已经被其它进程占用，{nameof(FastGithub)}无法进行http反向代理");
             }
             else
             {
@@ -76,7 +76,7 @@ namespace FastGithub
 
             if (CanTcpListen(HTTPS_PORT) == false)
             {
-                logger.LogWarning($"无法监听tcp端口{HTTPS_PORT}，{nameof(FastGithub)}无法https反向代理");
+                logger.LogError($"由于tcp端口{HTTPS_PORT}已经被其它进程占用，{nameof(FastGithub)}无法进行https反向代理");
             }
             else
             {
