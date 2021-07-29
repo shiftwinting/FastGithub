@@ -34,7 +34,9 @@ namespace FastGithub.Dns
 
             try
             {
-                Process.GetProcessById(pid).Kill();
+                var proess = Process.GetProcessById(pid);
+                proess.Kill();
+                proess.WaitForExit();
                 return true;
             }
             catch (ArgumentException)

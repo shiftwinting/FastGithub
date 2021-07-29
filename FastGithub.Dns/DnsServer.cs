@@ -59,23 +59,7 @@ namespace FastGithub.Dns
                 this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
             }
             this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-            var maxSpinCount = 100;
-            var spinWait = new SpinWait();
-            var localEndPoint = new IPEndPoint(address, port);
-
-            for (var i = 0; i < maxSpinCount; i++)
-            {
-                try
-                {
-                    this.socket.Bind(localEndPoint);
-                    break;
-                }
-                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AccessDenied)
-                {
-                    spinWait.SpinOnce();
-                }
-            }
+            this.socket.Bind(new IPEndPoint(address, port));
         }
 
         /// <summary>
