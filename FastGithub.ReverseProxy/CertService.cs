@@ -1,5 +1,4 @@
-﻿using FastGithub.Configuration;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -74,15 +73,15 @@ namespace FastGithub.ReverseProxy
             }
             else if (OperatingSystem.IsLinux())
             {
-                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请手工安装证书然后设置信任证书");
+                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请根据具体linux发行版安装CA证书");
             }
             else if (OperatingSystem.IsMacOS())
             {
-                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请手工安装证书然后设置信任证书");
+                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请手工安装CA证书然后设置信任CA证书");
             }
             else
             {
-                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请根据你的系统平台手工安装和信任证书");
+                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请根据你的系统平台手工安装和信任CA证书");
             }
         }
 
