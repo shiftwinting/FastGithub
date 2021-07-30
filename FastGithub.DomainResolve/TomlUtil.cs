@@ -20,7 +20,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public static Task SetListensAsync(string tomlPath, IPEndPoint endpoint, CancellationToken cancellationToken = default)
         {
-            return SetAsync(tomlPath, "listen_addresses", $"['{endpoint}']");
+            return SetAsync(tomlPath, "listen_addresses", $"['{endpoint}']", cancellationToken);
         }
 
         /// <summary>

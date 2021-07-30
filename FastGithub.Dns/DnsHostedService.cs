@@ -61,16 +61,20 @@ namespace FastGithub.Dns
                 {
                     SystemDnsUtil.DnsSetPrimitive(IPAddress.Loopback);
                     SystemDnsUtil.DnsFlushResolverCache();
-                    this.logger.LogInformation($"设置为本机主DNS成功");
+                    this.logger.LogInformation($"设置成本机主DNS成功");
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning($"设置为本机主DNS为{IPAddress.Loopback}失败：{ex.Message}");
+                    this.logger.LogWarning($"设置成本机主DNS为{IPAddress.Loopback}失败：{ex.Message}");
                 }
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                this.logger.LogWarning($"不支持自动设置本机DNS，手工添加{IPAddress.Loopback}做为/etc/resolv.conf的第一条记录");
             }
             else
             {
-                this.logger.LogWarning($"不支持自动设置DNS，请根据你的系统平台情况修改主DNS为{IPAddress.Loopback}");
+                this.logger.LogWarning($"不支持自动设置本机DNS，请手工添加{IPAddress.Loopback}做为连接网络的DNS的第一条记录");
             }
 
             foreach (var item in this.dnsValidators)
