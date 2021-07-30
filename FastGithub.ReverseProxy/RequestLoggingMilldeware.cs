@@ -60,7 +60,7 @@ namespace FastGithub.ReverseProxy
             }
             else
             {
-                this.logger.LogError($"{message}{Environment.NewLine}{exception}");
+                this.logger.LogError($"{message}{Environment.NewLine}{exception.Message}");
             }
         }
     }

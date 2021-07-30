@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Security.Authentication;
 
 namespace FastGithub
 {
@@ -61,10 +62,11 @@ namespace FastGithub
             certService.CreateCaCertIfNotExists();
             certService.InstallAndTrustCaCert();
 
-            kestrel.Listen(IPAddress.Any, HTTPS_PORT, listen =>
-                listen.UseHttps(https =>
-                    https.ServerCertificateSelector = (ctx, domain) =>
-                        certService.GetOrCreateServerCert(domain)));
+            kestrel.Listen(IPAddress.Any, HTTPS_PORT, listen => listen.UseHttps(https =>
+            {
+                https.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+                https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);
+            }));
         }
 
         /// <summary>
