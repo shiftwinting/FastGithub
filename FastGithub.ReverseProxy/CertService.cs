@@ -15,13 +15,10 @@ namespace FastGithub.ReverseProxy
     sealed class CertService
     {
         private const string CAPATH = "CACert";
+        private const int KEY_SIZE_BITS = 2048;
         private readonly IMemoryCache serverCertCache;
         private readonly ILogger<CertService> logger;
 
-        /// <summary>
-        /// 私钥长度
-        /// </summary>
-        public int KeySizeBits { get; } = 2048;
 
         /// <summary>
         /// 获取证书文件路径
@@ -48,51 +45,9 @@ namespace FastGithub.ReverseProxy
         }
 
         /// <summary>
-        /// 获取颁发给指定域名的证书
-        /// </summary>
-        /// <param name="domain"></param> 
-        /// <returns></returns>
-        public X509Certificate2 GetServerCert(string? domain)
-        {
-            var key = $"{nameof(CertService)}:{domain}";
-            return this.serverCertCache.GetOrCreate(key, GetOrCreateCert);
-
-            // 生成域名的1年证书
-            X509Certificate2 GetOrCreateCert(ICacheEntry entry)
-            {
-                var domains = GetDomains(domain).Distinct();
-                var validFrom = DateTime.Today.AddDays(-1);
-                var validTo = DateTime.Today.AddYears(1);
-
-                entry.SetAbsoluteExpiration(validTo);
-                return CertGenerator.GenerateByCa(domains, this.KeySizeBits, validFrom, validTo, this.CaCerFilePath, this.CaKeyFilePath);
-            }
-        }
-
-        /// <summary>
-        /// 获取域名
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
-        private static IEnumerable<string> GetDomains(string? domain)
-        {
-            if (string.IsNullOrEmpty(domain) == false)
-            {
-                yield return domain;
-                yield break;
-            }
-
-            yield return LocalMachine.Name;
-            foreach (var address in LocalMachine.GetAllIPv4Addresses())
-            {
-                yield return address.ToString();
-            }
-        }
-
-        /// <summary>
-        /// 生成10年的根证书
+        /// 生成CA证书
         /// </summary> 
-        public bool GenerateCaCert()
+        public bool CreateCaCertIfNotExists()
         {
             if (File.Exists(this.CaCerFilePath) && File.Exists(this.CaKeyFilePath))
             {
@@ -104,18 +59,18 @@ namespace FastGithub.ReverseProxy
 
             var validFrom = DateTime.Today.AddDays(-1);
             var validTo = DateTime.Today.AddYears(10);
-            CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, this.KeySizeBits, validFrom, validTo, this.CaCerFilePath, this.CaKeyFilePath);
+            CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, KEY_SIZE_BITS, validFrom, validTo, this.CaCerFilePath, this.CaKeyFilePath);
             return true;
         }
 
         /// <summary>
-        /// 安装根证书
+        /// 安装和信任CA证书
         /// </summary> 
-        public void InstallCaCert()
+        public void InstallAndTrustCaCert()
         {
             if (OperatingSystem.IsWindows())
             {
-                this.InstallCaCertAtWindows();
+                this.InstallAndTrustCaCertAtWindows();
             }
             else if (OperatingSystem.IsLinux())
             {
@@ -132,9 +87,9 @@ namespace FastGithub.ReverseProxy
         }
 
         /// <summary>
-        /// 安装根证书
+        /// 安装CA证书
         /// </summary> 
-        private void InstallCaCertAtWindows()
+        private void InstallAndTrustCaCertAtWindows()
         {
             try
             {
@@ -159,6 +114,49 @@ namespace FastGithub.ReverseProxy
             catch (Exception ex)
             {
                 this.logger.LogWarning($"安装证书{this.CaCerFilePath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”", ex);
+            }
+        }
+
+
+        /// <summary>
+        /// 获取颁发给指定域名的证书
+        /// </summary>
+        /// <param name="domain"></param> 
+        /// <returns></returns>
+        public X509Certificate2 GetOrCreateServerCert(string? domain)
+        {
+            var key = $"{nameof(CertService)}:{domain}";
+            return this.serverCertCache.GetOrCreate(key, GetOrCreateCert);
+
+            // 生成域名的1年证书
+            X509Certificate2 GetOrCreateCert(ICacheEntry entry)
+            {
+                var domains = GetDomains(domain).Distinct();
+                var validFrom = DateTime.Today.AddDays(-1);
+                var validTo = DateTime.Today.AddYears(1);
+
+                entry.SetAbsoluteExpiration(validTo);
+                return CertGenerator.GenerateByCa(domains, KEY_SIZE_BITS, validFrom, validTo, this.CaCerFilePath, this.CaKeyFilePath);
+            }
+        }
+
+        /// <summary>
+        /// 获取域名
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        private static IEnumerable<string> GetDomains(string? domain)
+        {
+            if (string.IsNullOrEmpty(domain) == false)
+            {
+                yield return domain;
+                yield break;
+            }
+
+            yield return LocalMachine.Name;
+            foreach (var address in LocalMachine.GetAllIPv4Addresses())
+            {
+                yield return address.ToString();
             }
         }
     }

@@ -58,13 +58,13 @@ namespace FastGithub
             }
 
             var certService = kestrel.ApplicationServices.GetRequiredService<CertService>();
-            certService.GenerateCaCert();
-            certService.InstallCaCert();
+            certService.CreateCaCertIfNotExists();
+            certService.InstallAndTrustCaCert();
 
             kestrel.Listen(IPAddress.Any, HTTPS_PORT, listen =>
                 listen.UseHttps(https =>
                     https.ServerCertificateSelector = (ctx, domain) =>
-                        certService.GetServerCert(domain)));
+                        certService.GetOrCreateServerCert(domain)));
         }
 
         /// <summary>
