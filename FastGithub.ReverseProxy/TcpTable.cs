@@ -36,7 +36,7 @@ namespace FastGithub.ReverseProxy
             {
                 var proess = Process.GetProcessById(pid);
                 proess.Kill();
-                proess.WaitForExit();
+                proess.WaitForExit(1000);
                 return true;
             }
             catch (ArgumentException)
