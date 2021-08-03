@@ -105,7 +105,7 @@ namespace FastGithub.ReverseProxy
             await context.Response.WriteAsJsonAsync(new
             {
                 error = error.ToString(),
-                message = errorFeature.Exception?.ToString()
+                message = errorFeature.Exception?.Message
             });
         }
     }
