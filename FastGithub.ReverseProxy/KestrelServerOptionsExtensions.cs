@@ -64,7 +64,10 @@ namespace FastGithub
 
             kestrel.Listen(IPAddress.Any, HTTPS_PORT, listen => listen.UseHttps(https =>
             {
-                https.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+                if (OperatingSystem.IsWindows() && Environment.OSVersion.Version < new Version(6, 2))
+                {
+                    https.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+                }
                 https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);
             }));
         }
