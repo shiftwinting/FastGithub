@@ -2,9 +2,7 @@
 using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,8 +45,7 @@ namespace FastGithub.Dns
                 UdpTable.KillPortOwner(port);
             }
 
-            var udpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
-            if (udpListeners.Any(item => item.Port == port))
+            if (LocalMachine.CanListenUdp(port) == false)
             {
                 throw new FastGithubException($"udp端口{port}已经被其它进程占用");
             }

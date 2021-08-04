@@ -57,7 +57,7 @@ namespace FastGithub.Dns
             var domain = question.Name;
             if (this.fastGithubConfig.IsMatch(domain.ToString()) == true)
             {
-                var localAddress = remoteEndPointRequest.GetLocalAddress() ?? IPAddress.Loopback;
+                var localAddress = remoteEndPointRequest.GetLocalIPAddress() ?? IPAddress.Loopback;
                 var record = new IPAddressResourceRecord(domain, localAddress, this.ttl);
                 response.AnswerRecords.Add(record);
 

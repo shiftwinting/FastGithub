@@ -29,9 +29,9 @@ namespace FastGithub.Dns
         /// 获取对应的本机地址
         /// </summary> 
         /// <returns></returns>
-        public IPAddress? GetLocalAddress()
+        public IPAddress? GetLocalIPAddress()
         {
-            return LocalMachine.GetLocalAddress(this.RemoteEndPoint);
+            return LocalMachine.GetLocalIPAddress(this.RemoteEndPoint);
         }
     }
 }

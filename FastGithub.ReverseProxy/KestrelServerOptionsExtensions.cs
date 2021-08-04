@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Security.Authentication;
 
 namespace FastGithub
@@ -29,7 +27,7 @@ namespace FastGithub
                 TcpTable.KillPortOwner(HTTP_PORT);
             }
 
-            if (CanTcpListen(HTTP_PORT) == false)
+            if (LocalMachine.CanListenTcp(HTTP_PORT) == false)
             {
                 var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
@@ -53,7 +51,7 @@ namespace FastGithub
                 TcpTable.KillPortOwner(HTTPS_PORT);
             }
 
-            if (CanTcpListen(HTTPS_PORT) == false)
+            if (LocalMachine.CanListenTcp(HTTPS_PORT) == false)
             {
                 throw new FastGithubException($"由于tcp端口{HTTPS_PORT}已经被其它进程占用，{nameof(FastGithub)}无法进行必须的https反向代理");
             }
@@ -70,17 +68,6 @@ namespace FastGithub
                 }
                 https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);
             }));
-        }
-
-        /// <summary>
-        /// 是否可以监听指定端口
-        /// </summary>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        private static bool CanTcpListen(int port)
-        {
-            var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
-            return tcpListeners.Any(item => item.Port == port) == false;
         }
     }
 }
