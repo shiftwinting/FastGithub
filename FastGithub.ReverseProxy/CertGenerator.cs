@@ -193,7 +193,7 @@ namespace FastGithub.ReverseProxy
         private static string GetSubjectName(X509Certificate cert)
         {
             var subject = cert.SubjectDN.ToString();
-            if (subject.StartsWith("cn=", StringComparison.OrdinalIgnoreCase))
+            if (subject.StartsWith("CN=", StringComparison.OrdinalIgnoreCase))
             {
                 subject = subject[3..];
             }

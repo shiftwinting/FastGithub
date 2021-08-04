@@ -97,8 +97,8 @@ namespace FastGithub.DomainResolve
                 throw new FastGithubException($"dns{dns}解析不到{domain}的ip");
             }
 
-            // 受干扰的dns，常常返回127.0.0.1来阻断请求
-            if (address.Equals(IPAddress.Loopback))
+            // 不允许域名解析指向FastGithub自身造成消息死循环
+            if (LocalMachine.ContainsIPAddress(address) == true)
             {
                 throw new FastGithubException($"dns{dns}被污染，解析{domain}为{address}");
             }
