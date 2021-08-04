@@ -40,6 +40,7 @@ namespace FastGithub.Http
             {
                 Proxy = null,
                 UseProxy = false,
+                UseCookies = false,
                 AllowAutoRedirect = false,
                 AutomaticDecompression = DecompressionMethods.None,
                 ConnectCallback = async (context, cancellationToken) =>
@@ -146,19 +147,26 @@ namespace FastGithub.Http
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var uri = request.RequestUri;
-            if (uri != null && uri.HostNameType == UriHostNameType.Dns)
+            if (uri != null)
             {
-                var address = await this.domainResolver.ResolveAsync(uri.Host, cancellationToken);
-                var builder = new UriBuilder(uri)
+                var uriBuilder = new UriBuilder(uri)
                 {
-                    Scheme = Uri.UriSchemeHttp,
-                    Host = address.ToString(),
+                    Scheme = Uri.UriSchemeHttp
                 };
-                request.RequestUri = builder.Uri;
-                request.Headers.Host = uri.Host;
 
+                var domain = uri.Host;
                 var context = request.GetRequestContext();
-                context.TlsSniPattern = context.TlsSniPattern.WithDomain(uri.Host).WithIPAddress(address).WithRandom();
+                context.TlsSniPattern = context.TlsSniPattern.WithDomain(domain).WithRandom();
+
+                if (uri.HostNameType == UriHostNameType.Dns)
+                {
+                    var address = await this.domainResolver.ResolveAsync(domain, cancellationToken);
+                    uriBuilder.Host = address.ToString();
+                    request.Headers.Host = domain;
+                    context.TlsSniPattern = context.TlsSniPattern.WithIPAddress(address);
+                }
+
+                request.RequestUri = uriBuilder.Uri;
             }
             return await base.SendAsync(request, cancellationToken);
         }
