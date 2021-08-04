@@ -100,7 +100,7 @@ namespace FastGithub.Dns
                     return false;
                 }
 
-                var items = record.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var items = record.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 if (items.Length < 2)
                 {
                     return false;
