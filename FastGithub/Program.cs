@@ -45,6 +45,7 @@ namespace FastGithub
                     webBuilder.UseShutdownTimeout(TimeSpan.FromSeconds(2d));
                     webBuilder.UseKestrel(kestrel =>
                     {
+                        kestrel.Limits.MaxRequestBodySize = null;
                         kestrel.ListenHttpReverseProxy();
                         kestrel.ListenHttpsReverseProxy();
                     });
