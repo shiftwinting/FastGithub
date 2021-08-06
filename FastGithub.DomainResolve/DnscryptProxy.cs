@@ -42,6 +42,7 @@ namespace FastGithub.DomainResolve
         {
             var tomlPath = $"{name}.toml";
             await TomlUtil.SetListensAsync(tomlPath, this.EndPoint, cancellationToken);
+            await TomlUtil.SetEdnsClientSubnetAsync(tomlPath, cancellationToken);
 
             foreach (var process in Process.GetProcessesByName(name))
             {
@@ -61,7 +62,6 @@ namespace FastGithub.DomainResolve
                 this.process = StartDnscryptProxy(string.Empty);
             }
         }
-
 
         /// <summary>
         /// 停止dnscrypt-proxy

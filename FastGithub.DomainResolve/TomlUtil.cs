@@ -1,7 +1,10 @@
-﻿using System;
+﻿using FastGithub.Configuration;
+using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,9 +21,43 @@ namespace FastGithub.DomainResolve
         /// <param name="tomlPath"></param>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        public static Task SetListensAsync(string tomlPath, IPEndPoint endpoint, CancellationToken cancellationToken = default)
+        public static Task<bool> SetListensAsync(string tomlPath, IPEndPoint endpoint, CancellationToken cancellationToken = default)
         {
             return SetAsync(tomlPath, "listen_addresses", $"['{endpoint}']", cancellationToken);
+        }
+
+        /// <summary>
+        /// 设置ecs
+        /// </summary>
+        /// <param name="tomlPath"></param> 
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task<bool> SetEdnsClientSubnetAsync(string tomlPath, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var address = await GetPublicIPAddressAsync(cancellationToken);
+                return await SetAsync(tomlPath, "edns_client_subnet", @$"[""{address}/32""]", cancellationToken);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取公网ip
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private static async Task<IPAddress> GetPublicIPAddressAsync(CancellationToken cancellationToken)
+        {
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3d) };
+            var response = await httpClient.GetStringAsync("https://pv.sohu.com/cityjson?ie=utf-8", cancellationToken);
+            var match = Regex.Match(response, @"\d+\.\d+\.\d+\.\d+");
+            return match.Success && IPAddress.TryParse(match.Value, out var address)
+                ? address
+                : throw new FastGithubException("无法获取外网ip");
         }
 
         /// <summary>
@@ -29,50 +66,28 @@ namespace FastGithub.DomainResolve
         /// <param name="tomlPath"></param>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public static async Task SetAsync(string tomlPath, string key, object? value, CancellationToken cancellationToken = default)
+        public static async Task<bool> SetAsync(string tomlPath, string key, object? value, CancellationToken cancellationToken = default)
         {
-            var lines = await File.ReadAllLinesAsync(tomlPath, cancellationToken);
-            var toml = Set(lines, key, value);
-            await File.WriteAllTextAsync(tomlPath, toml, cancellationToken);
-        }
-
-        /// <summary>
-        /// 设置值
-        /// </summary>
-        /// <param name="lines"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private static string Set(string[] lines, string key, object? value)
-        {
-            var updated = false;
+            var setted = false;
             var builder = new StringBuilder();
+            var lines = await File.ReadAllLinesAsync(tomlPath, cancellationToken);
 
             foreach (var line in lines)
             {
-                var span = line.AsSpan();
-                if (span.IsEmpty || span[0] == '#')
+                if (Regex.IsMatch(line, @$"(?<=#*\s*){key}(?=\s*=)") == false)
                 {
                     builder.AppendLine(line);
-                    continue;
                 }
-
-                var index = span.IndexOf('=');
-                if (index <= 0 || span.Slice(0, index).Trim().SequenceEqual(key) == false)
+                else if (setted == false)
                 {
-                    builder.AppendLine(line);
-                    continue;
+                    setted = true;
+                    builder.Append(key).Append(" = ").AppendLine(value?.ToString());
                 }
-
-                builder.Append(key).Append(" = ").AppendLine(value?.ToString());
-                updated = true;
             }
 
-            if (updated == false)
-            {
-                builder.Append(key).Append(" = ").AppendLine(value?.ToString());
-            }
-            return builder.ToString();
+            var toml = builder.ToString();
+            await File.WriteAllTextAsync(tomlPath, toml, cancellationToken);
+            return setted;
         }
     }
 }
