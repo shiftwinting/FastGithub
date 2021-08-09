@@ -1,4 +1,5 @@
 ﻿using FastGithub.Configuration;
+using System.Net;
 
 namespace FastGithub.Http
 {
@@ -16,6 +17,11 @@ namespace FastGithub.Http
         /// 请求的主机
         /// </summary>
         public string? Host { get; set; }
+
+        /// <summary>
+        /// 请求的ip
+        /// </summary>
+        public string? IPAddress { get; set; }
 
         /// <summary>
         /// 获取或设置Sni值的表达式 

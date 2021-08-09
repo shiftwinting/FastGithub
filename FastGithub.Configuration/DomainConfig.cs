@@ -24,6 +24,11 @@ namespace FastGithub.Configuration
         public bool TlsIgnoreNameMismatch { get; init; }
 
         /// <summary>
+        /// 使用的ip地址
+        /// </summary>
+        public string? IPAddress { get; init; }
+
+        /// <summary>
         /// 请求超时时长
         /// </summary>
         public TimeSpan? Timeout { get; init; }

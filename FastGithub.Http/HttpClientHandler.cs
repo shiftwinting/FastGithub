@@ -160,7 +160,10 @@ namespace FastGithub.Http
 
                 if (uri.HostNameType == UriHostNameType.Dns)
                 {
-                    var address = await this.domainResolver.ResolveAsync(domain, cancellationToken);
+                    if (IPAddress.TryParse(context.IPAddress, out var address) == false)
+                    {
+                        address = await this.domainResolver.ResolveAsync(domain, cancellationToken);
+                    }
                     uriBuilder.Host = address.ToString();
                     request.Headers.Host = domain;
                     context.TlsSniPattern = context.TlsSniPattern.WithIPAddress(address);

@@ -48,6 +48,7 @@ namespace FastGithub.Http
             request.SetRequestContext(new RequestContext
             {
                 Host = request.RequestUri?.Host,
+                IPAddress = this.domainConfig.IPAddress,
                 IsHttps = request.RequestUri?.Scheme == Uri.UriSchemeHttps,
                 TlsSniPattern = this.domainConfig.GetTlsSniPattern(),
                 TlsIgnoreNameMismatch = this.domainConfig.TlsIgnoreNameMismatch
