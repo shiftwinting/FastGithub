@@ -97,7 +97,7 @@ namespace FastGithub.ReverseProxy
             }
 
             var errorFeature = context.GetForwarderErrorFeature();
-            if (errorFeature == null)
+            if (errorFeature == null || context.Response.HasStarted)
             {
                 return;
             }
