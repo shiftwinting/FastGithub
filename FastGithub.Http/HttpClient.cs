@@ -1,9 +1,6 @@
 ﻿using FastGithub.Configuration;
 using FastGithub.DomainResolve;
-using System;
 using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace FastGithub.Http
 {
@@ -12,51 +9,24 @@ namespace FastGithub.Http
     /// </summary>
     public class HttpClient : HttpMessageInvoker
     {
-        private readonly DomainConfig domainConfig;
-        private readonly TimeSpan defaltTimeout = TimeSpan.FromMinutes(2d);
-
         /// <summary>
         /// http客户端
         /// </summary>
         /// <param name="domainConfig"></param>
         /// <param name="domainResolver"></param>
         public HttpClient(DomainConfig domainConfig, IDomainResolver domainResolver)
-            : this(domainConfig, new HttpClientHandler(domainResolver), disposeHandler: true)
+            : this(new HttpClientHandler(domainConfig, domainResolver), disposeHandler: true)
         {
         }
 
         /// <summary>
         /// http客户端
-        /// </summary>
-        /// <param name="domainConfig"></param>
+        /// </summary> 
         /// <param name="handler"></param>
         /// <param name="disposeHandler"></param>
-        internal HttpClient(DomainConfig domainConfig, HttpClientHandler handler, bool disposeHandler)
+        internal HttpClient(HttpClientHandler handler, bool disposeHandler)
             : base(handler, disposeHandler)
         {
-            this.domainConfig = domainConfig;
-        }
-
-        /// <summary>
-        /// 发送数据
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            request.SetRequestContext(new RequestContext
-            {
-                Host = request.RequestUri?.Host,
-                IPAddress = this.domainConfig.IPAddress,
-                IsHttps = request.RequestUri?.Scheme == Uri.UriSchemeHttps,
-                TlsSniPattern = this.domainConfig.GetTlsSniPattern(),
-                TlsIgnoreNameMismatch = this.domainConfig.TlsIgnoreNameMismatch
-            });
-
-            using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout ?? defaltTimeout);
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-            return base.SendAsync(request, linkedTokenSource.Token);
         }
     }
 }

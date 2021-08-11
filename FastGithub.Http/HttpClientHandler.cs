@@ -1,4 +1,5 @@
-﻿using FastGithub.DomainResolve;
+﻿using FastGithub.Configuration;
+using FastGithub.DomainResolve;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,23 +19,74 @@ namespace FastGithub.Http
     /// </summary> 
     class HttpClientHandler : DelegatingHandler
     {
+        private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
+        private readonly TimeSpan defaltTimeout = TimeSpan.FromMinutes(2d);
 
         /// <summary>
         /// HttpClientHandler
         /// </summary>
-        /// <param name="domainResolver"></param> 
-        public HttpClientHandler(IDomainResolver domainResolver)
+        /// <param name="domainConfig"></param>
+        /// <param name="domainResolver"></param>
+        public HttpClientHandler(DomainConfig domainConfig, IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
-            this.InnerHandler = CreateSocketsHttpHandler();
+            this.domainConfig = domainConfig;
+            this.InnerHandler = this.CreateSocketsHttpHandler();
         }
+
+        /// <summary>
+        /// 替换域名为ip
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var uri = request.RequestUri;
+            if (uri == null)
+            {
+                throw new FastGithubException("必须指定请求的URI");
+            }
+
+            // 请求上下文信息
+            var context = new RequestContext
+            {
+                Domain = uri.Host,
+                IsHttps = uri.Scheme == Uri.UriSchemeHttps,
+                TlsSniPattern = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom()
+            };
+            request.SetRequestContext(context);
+
+            // 解析ip，替换https为http
+            var uriBuilder = new UriBuilder(uri)
+            {
+                Scheme = Uri.UriSchemeHttp
+            };
+
+            if (uri.HostNameType == UriHostNameType.Dns)
+            {
+                if (IPAddress.TryParse(this.domainConfig.IPAddress, out var address) == false)
+                {
+                    address = await this.domainResolver.ResolveAsync(context.Domain, cancellationToken);
+                }
+                uriBuilder.Host = address.ToString();
+                request.Headers.Host = context.Domain;
+                context.TlsSniPattern = context.TlsSniPattern.WithIPAddress(address);
+            }
+            request.RequestUri = uriBuilder.Uri;
+
+            using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout ?? defaltTimeout);
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+            return await base.SendAsync(request, cancellationToken);
+        }
+
 
         /// <summary>
         /// 创建转发代理的httpHandler
         /// </summary>
         /// <returns></returns>
-        private static SocketsHttpHandler CreateSocketsHttpHandler()
+        private SocketsHttpHandler CreateSocketsHttpHandler()
         {
             return new SocketsHttpHandler
             {
@@ -68,14 +120,14 @@ namespace FastGithub.Http
                     {
                         if (errors == SslPolicyErrors.RemoteCertificateNameMismatch)
                         {
-                            if (requestContext.TlsIgnoreNameMismatch == true)
+                            if (this.domainConfig.TlsIgnoreNameMismatch == true)
                             {
                                 return true;
                             }
 
-                            var host = requestContext.Host;
+                            var domain = requestContext.Domain;
                             var dnsNames = ReadDnsNames(cert);
-                            return dnsNames.Any(dns => IsMatch(dns, host));
+                            return dnsNames.Any(dns => IsMatch(dns, domain));
                         }
 
                         return errors == SslPolicyErrors.None;
@@ -119,59 +171,23 @@ namespace FastGithub.Http
         /// 比较域名
         /// </summary>
         /// <param name="dnsName"></param>
-        /// <param name="host"></param>
+        /// <param name="domain"></param>
         /// <returns></returns>
-        private static bool IsMatch(string dnsName, string? host)
+        private static bool IsMatch(string dnsName, string? domain)
         {
-            if (host == null)
+            if (domain == null)
             {
                 return false;
             }
-            if (dnsName == host)
+            if (dnsName == domain)
             {
                 return true;
             }
             if (dnsName[0] == '*')
             {
-                return host.EndsWith(dnsName[1..]);
+                return domain.EndsWith(dnsName[1..]);
             }
             return false;
-        }
-
-        /// <summary>
-        /// 替换域名为ip
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            var uri = request.RequestUri;
-            if (uri != null)
-            {
-                var uriBuilder = new UriBuilder(uri)
-                {
-                    Scheme = Uri.UriSchemeHttp
-                };
-
-                var domain = uri.Host;
-                var context = request.GetRequestContext();
-                context.TlsSniPattern = context.TlsSniPattern.WithDomain(domain).WithRandom();
-
-                if (uri.HostNameType == UriHostNameType.Dns)
-                {
-                    if (IPAddress.TryParse(context.IPAddress, out var address) == false)
-                    {
-                        address = await this.domainResolver.ResolveAsync(domain, cancellationToken);
-                    }
-                    uriBuilder.Host = address.ToString();
-                    request.Headers.Host = domain;
-                    context.TlsSniPattern = context.TlsSniPattern.WithIPAddress(address);
-                }
-
-                request.RequestUri = uriBuilder.Uri;
-            }
-            return await base.SendAsync(request, cancellationToken);
         }
     }
 }

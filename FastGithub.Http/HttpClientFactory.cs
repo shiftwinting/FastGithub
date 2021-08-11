@@ -1,6 +1,7 @@
 ﻿using FastGithub.Configuration;
 using FastGithub.DomainResolve;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 
 namespace FastGithub.Http
 {
@@ -9,7 +10,8 @@ namespace FastGithub.Http
     /// </summary>
     sealed class HttpClientFactory : IHttpClientFactory
     {
-        private HttpClientHandler httpClientHanlder;
+        private readonly IDomainResolver domainResolver;
+        private ConcurrentDictionary<DomainConfig, HttpClientHandler> domainHandlers = new();
 
         /// <summary>
         /// HttpClient工厂
@@ -20,8 +22,8 @@ namespace FastGithub.Http
             IDomainResolver domainResolver,
             IOptionsMonitor<FastGithubOptions> options)
         {
-            this.httpClientHanlder = new HttpClientHandler(domainResolver);
-            options.OnChange(opt => this.httpClientHanlder = new HttpClientHandler(domainResolver));
+            this.domainResolver = domainResolver;
+            options.OnChange(opt => this.domainHandlers = new());
         }
 
         /// <summary>
@@ -31,7 +33,8 @@ namespace FastGithub.Http
         /// <returns></returns>
         public HttpClient CreateHttpClient(DomainConfig domainConfig)
         {
-            return new HttpClient(domainConfig, this.httpClientHanlder, disposeHandler: false);
+            var httpClientHandler = this.domainHandlers.GetOrAdd(domainConfig, config => new HttpClientHandler(config, this.domainResolver));
+            return new HttpClient(httpClientHandler, disposeHandler: false);
         }
     }
 }

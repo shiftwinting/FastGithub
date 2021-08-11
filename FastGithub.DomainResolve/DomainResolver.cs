@@ -87,7 +87,7 @@ namespace FastGithub.DomainResolve
         private async Task<IPAddress> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken)
         {
             var dnsClient = new DnsClient(dns);
-            using var timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(1d));
+            using var timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2d));
             using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
 
             var addresses = await dnsClient.Lookup(domain, RecordType.A, linkedTokenSource.Token);

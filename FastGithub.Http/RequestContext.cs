@@ -1,5 +1,4 @@
 ﻿using FastGithub.Configuration;
-using System.Net;
 
 namespace FastGithub.Http
 {
@@ -14,23 +13,13 @@ namespace FastGithub.Http
         public bool IsHttps { get; set; }
 
         /// <summary>
-        /// 请求的主机
+        /// 请求的域名
         /// </summary>
-        public string? Host { get; set; }
-
-        /// <summary>
-        /// 请求的ip
-        /// </summary>
-        public string? IPAddress { get; set; }
+        public string? Domain { get; set; }
 
         /// <summary>
         /// 获取或设置Sni值的表达式 
         /// </summary>
         public TlsSniPattern TlsSniPattern { get; set; }
-
-        /// <summary>
-        /// 是否忽略服务器证书域名不匹配
-        /// </summary>
-        public bool TlsIgnoreNameMismatch { get; set; }
     }
 }
