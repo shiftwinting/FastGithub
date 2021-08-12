@@ -1,3 +1,1 @@
-﻿@{
-    Layout = "_Layout";
-}
+﻿

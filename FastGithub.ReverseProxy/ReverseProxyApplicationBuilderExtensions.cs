@@ -16,8 +16,8 @@ namespace FastGithub
         /// <returns></returns>
         public static IApplicationBuilder UseRequestLogging(this IApplicationBuilder app)
         {
-            var middlware = app.ApplicationServices.GetRequiredService<RequestLoggingMilldeware>();
-            return app.Use(next => context => middlware.InvokeAsync(context, next));
+            var middleware = app.ApplicationServices.GetRequiredService<RequestLoggingMiddleware>();
+            return app.Use(next => context => middleware.InvokeAsync(context, next));
         }
 
         /// <summary>
