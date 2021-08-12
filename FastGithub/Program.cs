@@ -34,9 +34,12 @@ namespace FastGithub
                 })
                 .ConfigureAppConfiguration(c =>
                 {
-                    foreach (var jsonFile in Directory.GetFiles(".", "appsettings.*.json"))
+                    if (Directory.Exists("appsettings") == true)
                     {
-                        c.AddJsonFile(Path.GetFileName(jsonFile), true, true);
+                        foreach (var jsonFile in Directory.GetFiles("appsettings", "appsettings.*.json"))
+                        {
+                            c.AddJsonFile(jsonFile, true, true);
+                        }
                     }
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

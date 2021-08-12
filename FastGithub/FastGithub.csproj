@@ -27,11 +27,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="appsettings*.json">
+		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="*.example">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		<None Update="appsettings/appsettings.*.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
@@ -39,6 +39,6 @@
 		<None Include="../@libs/osx-x64/libSystem.Security.Cryptography.Native.Apple.dylib" Link="libSystem.Security.Cryptography.Native.Apple.dylib">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-	</ItemGroup> 
+	</ItemGroup>
 
 </Project>
