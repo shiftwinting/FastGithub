@@ -21,7 +21,6 @@ namespace FastGithub.Http
     {
         private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
-        private readonly TimeSpan defaltTimeout = TimeSpan.FromMinutes(2d);
 
         /// <summary>
         /// HttpClientHandler
@@ -76,11 +75,18 @@ namespace FastGithub.Http
             }
             request.RequestUri = uriBuilder.Uri;
 
-            using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout ?? defaltTimeout);
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-            return await base.SendAsync(request, cancellationToken);
-        }
 
+            if (this.domainConfig.Timeout != null)
+            {
+                using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout.Value);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                return await base.SendAsync(request, linkedTokenSource.Token);
+            }
+            else
+            {
+                return await base.SendAsync(request, cancellationToken);
+            }
+        }
 
         /// <summary>
         /// 创建转发代理的httpHandler
