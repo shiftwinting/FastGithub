@@ -6,6 +6,7 @@
 		<Copyright>https://github.com/dotnetcore/FastGithub</Copyright>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
