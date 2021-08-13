@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace FastGithub.ReverseProxy
 {
     /// <summary>
-    /// github的ssl处理者
+    /// github的ssh处理者
     /// </summary>
     sealed class GithubSshHandler : ConnectionHandler
     {
@@ -20,7 +20,7 @@ namespace FastGithub.ReverseProxy
         private readonly IDomainResolver domainResolver;
 
         /// <summary>
-        /// github的ssl处理者
+        /// github的ssh处理者
         /// </summary>
         /// <param name="domainResolver"></param>
         public GithubSshHandler(IDomainResolver domainResolver)
@@ -36,11 +36,11 @@ namespace FastGithub.ReverseProxy
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
             var address = await this.domainResolver.ResolveAsync(GITHUB_COM, CancellationToken.None);
-            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(new IPEndPoint(address, SSH_PORT));
 
-            using var upStream = new NetworkStream(socket, ownsSocket: true);
-            var downStream = new SshStream(connection.Transport);
+            var upStream = new NetworkStream(socket, ownsSocket: false);
+            var downStream = new DuplexStream(connection.Transport);
 
             var task1 = upStream.CopyToAsync(downStream);
             var task2 = downStream.CopyToAsync(upStream);
@@ -48,18 +48,18 @@ namespace FastGithub.ReverseProxy
         }
 
         /// <summary>
-        /// 表示Ssh的流
+        /// 双工数据流
         /// </summary>
-        private class SshStream : Stream
+        private class DuplexStream : Stream
         {
             private readonly Stream readStream;
             private readonly Stream wirteStream;
 
             /// <summary>
-            /// Ssh的流
+            /// 双工数据流
             /// </summary>
             /// <param name="transport"></param>
-            public SshStream(IDuplexPipe transport)
+            public DuplexStream(IDuplexPipe transport)
             {
                 this.readStream = transport.Input.AsStream();
                 this.wirteStream = transport.Output.AsStream();
