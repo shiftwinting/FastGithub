@@ -1,6 +1,9 @@
 ﻿using FastGithub.Configuration;
 using FastGithub.DomainResolve;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FastGithub.Http
 {
@@ -9,6 +12,11 @@ namespace FastGithub.Http
     /// </summary>
     public class HttpClient : HttpMessageInvoker
     {
+        /// <summary>
+        /// 插入的UserAgent标记
+        /// </summary>
+        private readonly static ProductInfoHeaderValue userAgent = new(new ProductHeaderValue(nameof(FastGithub), "1.0"));
+
         /// <summary>
         /// http客户端
         /// </summary>
@@ -27,6 +35,22 @@ namespace FastGithub.Http
         internal HttpClient(HttpClientHandler handler, bool disposeHandler)
             : base(handler, disposeHandler)
         {
+        }
+
+        /// <summary>
+        /// 发送请求
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.Headers.UserAgent.Contains(userAgent))
+            {
+                throw new FastGithubException($"由于{request.RequestUri}实际指向了{nameof(FastGithub)}自身，{nameof(FastGithub)}已中断本次转发");
+            }
+            request.Headers.UserAgent.Add(userAgent);
+            return base.SendAsync(request, cancellationToken);
         }
     }
 }
