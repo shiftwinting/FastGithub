@@ -91,7 +91,7 @@ namespace FastGithub
             }
             else
             {
-                kestrel.Listen(IPAddress.Any, SSH_PORT, listen => listen.UseConnectionHandler<GitubSshHandler>());
+                kestrel.Listen(IPAddress.Any, SSH_PORT, listen => listen.UseConnectionHandler<GithubSshHandler>());
             }
         }
     }

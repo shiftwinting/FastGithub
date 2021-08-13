@@ -13,7 +13,7 @@ namespace FastGithub.ReverseProxy
     /// <summary>
     /// github的ssl处理者
     /// </summary>
-    sealed class GitubSshHandler : ConnectionHandler
+    sealed class GithubSshHandler : ConnectionHandler
     {
         private const int SSH_PORT = 22;
         private const string GITHUB_COM = "github.com";
@@ -23,7 +23,7 @@ namespace FastGithub.ReverseProxy
         /// github的ssl处理者
         /// </summary>
         /// <param name="domainResolver"></param>
-        public GitubSshHandler(IDomainResolver domainResolver)
+        public GithubSshHandler(IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
         }
