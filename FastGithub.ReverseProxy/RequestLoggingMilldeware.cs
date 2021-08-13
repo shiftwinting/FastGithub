@@ -10,15 +10,15 @@ namespace FastGithub.ReverseProxy
     /// <summary>
     /// 请求日志中间件
     /// </summary>
-    sealed class RequestLoggingMilldeware
+    sealed class RequestLoggingMiddleware
     {
-        private readonly ILogger<RequestLoggingMilldeware> logger;
+        private readonly ILogger<RequestLoggingMiddleware> logger;
 
         /// <summary>
         /// 请求日志中间件
         /// </summary>
         /// <param name="logger"></param>
-        public RequestLoggingMilldeware(ILogger<RequestLoggingMilldeware> logger)
+        public RequestLoggingMiddleware(ILogger<RequestLoggingMiddleware> logger)
         {
             this.logger = logger;
         }
@@ -31,8 +31,7 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
+            var stopwatch = Stopwatch.StartNew();
 
             try
             {

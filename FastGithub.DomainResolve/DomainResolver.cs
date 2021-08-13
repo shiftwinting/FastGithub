@@ -97,12 +97,6 @@ namespace FastGithub.DomainResolve
                 throw new FastGithubException($"dns{dns}解析不到{domain}的ip");
             }
 
-            // 不允许域名解析指向FastGithub自身造成消息死循环
-            if (LocalMachine.ContainsIPAddress(address) == true)
-            {
-                throw new FastGithubException($"dns{dns}被污染，解析{domain}为{address}");
-            }
-
             this.logger.LogInformation($"[{domain}->{address}]");
             return address;
         }
