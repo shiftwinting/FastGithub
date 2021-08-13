@@ -13,8 +13,8 @@ namespace FastGithub.ReverseProxy
     /// </summary>
     sealed class GithubSshHandler : ConnectionHandler
     {
-        private const int SSH_PORT = 22;
-        private const string GITHUB_COM = "github.com";
+        private const int SSH_OVER_HTTPS_PORT = 443;
+        private const string SSH_GITHUB_COM = "ssh.github.com";
         private readonly IDomainResolver domainResolver;
 
         /// <summary>
@@ -33,9 +33,9 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
-            var address = await this.domainResolver.ResolveAsync(GITHUB_COM, CancellationToken.None);
+            var address = await this.domainResolver.ResolveAsync(SSH_GITHUB_COM, CancellationToken.None);
             using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            await socket.ConnectAsync(new IPEndPoint(address, SSH_PORT));
+            await socket.ConnectAsync(new IPEndPoint(address, SSH_OVER_HTTPS_PORT));
             var targetStream = new NetworkStream(socket, ownsSocket: false);
 
             var task1 = targetStream.CopyToAsync(connection.Transport.Output);
