@@ -1,5 +1,6 @@
 ﻿using FastGithub.Configuration;
 using FastGithub.ReverseProxy;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +69,30 @@ namespace FastGithub
                 }
                 https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);
             }));
+        }
+
+        /// <summary>
+        /// 监听github的ssh的代理
+        /// </summary>
+        /// <param name="kestrel"></param>
+        public static void ListenGithubSshProxy(this KestrelServerOptions kestrel)
+        {
+            const int SSH_PORT = 22;
+            if (OperatingSystem.IsWindows())
+            {
+                TcpTable.KillPortOwner(SSH_PORT);
+            }
+
+            if (LocalMachine.CanListenTcp(SSH_PORT) == false)
+            {
+                var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(ReverseProxy)}");
+                logger.LogWarning($"由于tcp端口{SSH_PORT}已经被其它进程占用，github的ssh代理功能将受限");
+            }
+            else
+            {
+                kestrel.Listen(IPAddress.Any, SSH_PORT, listen => listen.UseConnectionHandler<GitubSshHandler>());
+            }
         }
     }
 }
