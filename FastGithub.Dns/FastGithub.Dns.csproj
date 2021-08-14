@@ -7,7 +7,6 @@
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="6.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-		<PackageReference Include="System.Management" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
