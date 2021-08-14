@@ -23,11 +23,6 @@ namespace FastGithub
         public static void ListenHttpReverseProxy(this KestrelServerOptions kestrel)
         {
             const int HTTP_PORT = 80;
-            if (OperatingSystem.IsWindows())
-            {
-                TcpTable.KillPortOwner(HTTP_PORT);
-            }
-
             if (LocalMachine.CanListenTcp(HTTP_PORT) == false)
             {
                 var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
@@ -78,11 +73,6 @@ namespace FastGithub
         public static void ListenGithubSshProxy(this KestrelServerOptions kestrel)
         {
             const int SSH_PORT = 22;
-            if (OperatingSystem.IsWindows())
-            {
-                TcpTable.KillPortOwner(SSH_PORT);
-            }
-
             if (LocalMachine.CanListenTcp(SSH_PORT) == false)
             {
                 var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
