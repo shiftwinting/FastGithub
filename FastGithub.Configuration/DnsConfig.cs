@@ -6,18 +6,18 @@ namespace FastGithub.Configuration
     /// <summary>
     /// dns配置
     /// </summary>
-    public class DnsConfig
+    public record DnsConfig
     {
         /// <summary>
         /// IP地址
         /// </summary>
         [AllowNull]
-        public string IPAddress { get; set; }
+        public string IPAddress { get; init; }
 
         /// <summary>
         /// 端口
         /// </summary>
-        public int Port { get; set; } = 53;
+        public int Port { get; init; } = 53;
 
         /// <summary>
         /// 转换为IPEndPoint
@@ -37,11 +37,6 @@ namespace FastGithub.Configuration
             }
 
             return new IPEndPoint(address, this.Port);
-        }
-
-        public override string ToString()
-        {
-            return $"{this.IPAddress}:{this.Port}";
         }
     }
 }
