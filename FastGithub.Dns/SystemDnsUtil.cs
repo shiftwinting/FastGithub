@@ -1,8 +1,8 @@
 ﻿using FastGithub.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -94,26 +94,23 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="interface"></param>
         /// <param name="nameServers"></param>
-        private static void SetNameServers(NetworkInterface @interface, IEnumerable<IPAddress> nameServers)
+        /// <returns></returns>
+        private static bool SetNameServers(NetworkInterface @interface, IEnumerable<IPAddress> nameServers)
         {
-            Netsh($@"interface ipv4 delete dns ""{@interface.Name}"" all");
-            foreach (var address in nameServers)
+            var index = @interface.GetIPProperties().GetIPv4Properties().Index;
+            using var wmi = new ManagementClass("Win32_NetworkAdapterConfiguration");
+            foreach (ManagementObject adapter in wmi.GetInstances())
             {
-                Netsh($@"interface ipv4 add dns ""{@interface.Name}"" {address} validate=no");
+                if ((int)(uint)adapter["InterfaceIndex"] == index)
+                {
+                    var inParams = adapter.GetMethodParameters("SetDNSServerSearchOrder");
+                    inParams["DNSServerSearchOrder"] = nameServers.Select(item => item.ToString()).ToArray();
+                    adapter.InvokeMethod("SetDNSServerSearchOrder", inParams, null);
+                    return true;
+                }
             }
 
-            static void Netsh(string arguments)
-            {
-                var netsh = new ProcessStartInfo
-                {
-                    FileName = "netsh.exe",
-                    Arguments = arguments,
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                };
-                Process.Start(netsh)?.WaitForExit();
-            }
+            return false;
         }
     }
 }
