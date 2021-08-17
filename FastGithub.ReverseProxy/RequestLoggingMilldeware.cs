@@ -53,7 +53,7 @@ namespace FastGithub.ReverseProxy
             }
 
             var exception = context.GetForwarderErrorFeature()?.Exception;
-            if (exception == null)
+            if (exception == null || exception is OperationCanceledException)
             {
                 this.logger.LogInformation(message);
             }
