@@ -77,17 +77,19 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress> LookupAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
         {
-            var pureDnsTask = this.LookupCoreAsync(this.fastGithubConfig.PureDns, endPoint, cancellationToken);
-            var fastDnsTask = this.LookupCoreAsync(this.fastGithubConfig.FastDns, endPoint, cancellationToken);
-
-            var addresses = await Task.WhenAll(pureDnsTask, fastDnsTask);
-            var fastAddress = await this.GetFastIPAddressAsync(addresses.SelectMany(item => item), endPoint.Port, cancellationToken);
-
-            if (fastAddress != null)
+            var dnsEndPoints = new[] { this.fastGithubConfig.PureDns, this.fastGithubConfig.FastDns };
+            foreach (var dns in dnsEndPoints)
             {
-                this.logger.LogInformation($"[{endPoint.Host}->{fastAddress}]");
-                return fastAddress;
+                var addresses = await this.LookupCoreAsync(dns, endPoint, cancellationToken);
+                var fastAddress = await this.GetFastIPAddressAsync(addresses, endPoint.Port, cancellationToken);
+
+                if (fastAddress != null)
+                {
+                    this.logger.LogInformation($"[{endPoint.Host}->{fastAddress}]");
+                    return fastAddress;
+                }
             }
+
             throw new FastGithubException($"解析不到{endPoint.Host}可用的ip");
         }
 
@@ -123,6 +125,11 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress?> GetFastIPAddressAsync(IEnumerable<IPAddress> addresses, int port, CancellationToken cancellationToken)
         {
+            if (addresses.Any() == false)
+            {
+                return default;
+            }
+
             var tasks = addresses.Select(address => this.IsAvailableAsync(address, port, cancellationToken));
             var fastTask = await Task.WhenAny(tasks);
             return await fastTask;
