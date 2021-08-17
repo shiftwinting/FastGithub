@@ -18,19 +18,14 @@ namespace FastGithub.Dns
     {
         private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
         private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<RequestResolver> logger;
 
         /// <summary>
         /// dns解析者
         /// </summary>
         /// <param name="fastGithubConfig"></param>
-        /// <param name="logger"></param>
-        public RequestResolver(
-            FastGithubConfig fastGithubConfig,
-            ILogger<RequestResolver> logger)
+        public RequestResolver(FastGithubConfig fastGithubConfig)
         {
             this.fastGithubConfig = fastGithubConfig;
-            this.logger = logger;
         }
 
         /// <summary>
@@ -60,8 +55,6 @@ namespace FastGithub.Dns
                 var localAddress = remoteEndPointRequest.GetLocalIPAddress() ?? IPAddress.Loopback;
                 var record = new IPAddressResourceRecord(domain, localAddress, this.ttl);
                 response.AnswerRecords.Add(record);
-
-                this.logger.LogInformation($"[{domain}->{localAddress}]");
                 return response;
             }
 

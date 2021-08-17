@@ -67,7 +67,8 @@ namespace FastGithub.Http
             {
                 if (IPAddress.TryParse(this.domainConfig.IPAddress, out var address) == false)
                 {
-                    address = await this.domainResolver.ResolveAsync(context.Domain, cancellationToken);
+                    var endPoint = new DnsEndPoint(uri.Host, uri.Port);
+                    address = await this.domainResolver.ResolveAsync(endPoint, cancellationToken);
                 }
                 uriBuilder.Host = address.ToString();
                 request.Headers.Host = context.Domain;

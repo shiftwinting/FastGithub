@@ -4,8 +4,11 @@ using FastGithub.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +22,11 @@ namespace FastGithub.DomainResolve
         private readonly IMemoryCache memoryCache;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DomainResolver> logger;
-        private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
+
+        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(2d);
+        private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
+        private readonly TimeSpan resolveCacheTimeSpan = TimeSpan.FromMinutes(2d);
+        private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
 
         /// <summary>
         /// 域名解析器
@@ -38,42 +45,49 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 解析指定的域名
+        /// 解析域名
         /// </summary>
-        /// <param name="domain"></param>
+        /// <param name="endPoint"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        /// <exception cref="FastGithubException"></exception>
-        public Task<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken)
+        public async Task<IPAddress> ResolveAsync(DnsEndPoint endPoint, CancellationToken cancellationToken = default)
         {
-            // 缓存以避免做不必要的并发查询
-            var key = $"{nameof(DomainResolver)}:{domain}";
-            return this.memoryCache.GetOrCreateAsync(key, e =>
+            var semaphore = this.semaphoreSlims.GetOrAdd(endPoint, _ => new SemaphoreSlim(1, 1));
+            try
             {
-                e.SetAbsoluteExpiration(this.cacheTimeSpan);
-                return this.LookupAsync(domain, cancellationToken);
-            });
+                await semaphore.WaitAsync(cancellationToken);
+                if (this.memoryCache.TryGetValue<IPAddress>(endPoint, out var address) == false)
+                {
+                    address = await this.LookupAsync(endPoint, cancellationToken);
+                    this.memoryCache.Set(endPoint, address, this.resolveCacheTimeSpan);
+                }
+                return address;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         /// <summary>
         /// 查找ip
         /// </summary>
-        /// <param name="domain"></param>
+        /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        /// <exception cref="FastGithubException">
-        private async Task<IPAddress> LookupAsync(string domain, CancellationToken cancellationToken)
+        private async Task<IPAddress> LookupAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
         {
             var pureDns = this.fastGithubConfig.PureDns;
             var fastDns = this.fastGithubConfig.FastDns;
 
             try
             {
-                return await LookupCoreAsync(pureDns, domain, cancellationToken);
+                return await LookupCoreAsync(pureDns, endPoint, cancellationToken);
             }
             catch (Exception)
             {
-                this.logger.LogWarning($"由于{pureDns}解析{domain}失败，本次使用{fastDns}");
-                return await LookupCoreAsync(fastDns, domain, cancellationToken);
+                this.logger.LogWarning($"由于{pureDns}解析{endPoint.Host}失败，本次使用{fastDns}");
+                return await LookupCoreAsync(fastDns, endPoint, cancellationToken);
             }
         }
 
@@ -81,24 +95,66 @@ namespace FastGithub.DomainResolve
         /// 查找ip
         /// </summary>
         /// <param name="dns"></param>
-        /// <param name="domain"></param>
+        /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken)
+        private async Task<IPAddress> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken)
         {
             var dnsClient = new DnsClient(dns);
-            using var timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2d));
+            using var timeoutTokenSource = new CancellationTokenSource(this.lookupTimeout);
             using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
 
-            var addresses = await dnsClient.Lookup(domain, RecordType.A, linkedTokenSource.Token);
-            var address = addresses?.FirstOrDefault();
-            if (address == null)
-            {
-                throw new FastGithubException($"dns{dns}解析不到{domain}的ip");
-            }
+            var addresses = await dnsClient.Lookup(endPoint.Host, RecordType.A, linkedTokenSource.Token);
+            var fastAddress = await this.GetFastIPAddressAsync(addresses, endPoint.Port, cancellationToken);
 
-            this.logger.LogInformation($"[{domain}->{address}]");
-            return address;
+            if (fastAddress != null)
+            {
+                this.logger.LogInformation($"[{endPoint.Host}->{fastAddress}]");
+                return fastAddress;
+            }
+            throw new FastGithubException($"dns{dns}解析不到{endPoint.Host}可用的ip");
+        }
+
+        /// <summary>
+        /// 获取最快的ip
+        /// </summary>
+        /// <param name="addresses"></param>
+        /// <param name="port"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<IPAddress?> GetFastIPAddressAsync(IEnumerable<IPAddress> addresses, int port, CancellationToken cancellationToken)
+        {
+            var tasks = addresses.Select(address => this.IsAvailableAsync(address, port, cancellationToken));
+            var fastTask = await Task.WhenAny(tasks);
+            return await fastTask;
+        }
+
+        /// <summary>
+        /// 验证远程节点是否可连接
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="port"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<IPAddress?> IsAvailableAsync(IPAddress address, int port, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                await socket.ConnectAsync(address, port, linkedTokenSource.Token);
+                return address;
+            }
+            catch (OperationCanceledException)
+            {
+                return default;
+            }
+            catch (Exception)
+            {
+                await Task.Delay(this.connectTimeout, cancellationToken);
+                return default;
+            }
         }
     }
 }
