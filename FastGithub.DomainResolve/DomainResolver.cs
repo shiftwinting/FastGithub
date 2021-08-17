@@ -19,7 +19,7 @@ namespace FastGithub.DomainResolve
         private readonly IMemoryCache memoryCache;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DomainResolver> logger;
-        private readonly TimeSpan cacheTimeSpan = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan cacheTimeSpan = TimeSpan.FromSeconds(10d);
 
         /// <summary>
         /// 域名解析器
