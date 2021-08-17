@@ -23,7 +23,7 @@ namespace FastGithub.DomainResolve
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DomainResolver> logger;
 
-        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(2d);
+        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(1d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
         private readonly TimeSpan resolveCacheTimeSpan = TimeSpan.FromMinutes(2d);
         private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
@@ -77,18 +77,18 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress> LookupAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
         {
-            var pureDns = this.fastGithubConfig.PureDns;
-            var fastDns = this.fastGithubConfig.FastDns;
+            var pureDnsTask = this.LookupCoreAsync(this.fastGithubConfig.PureDns, endPoint, cancellationToken);
+            var fastDnsTask = this.LookupCoreAsync(this.fastGithubConfig.FastDns, endPoint, cancellationToken);
 
-            try
+            var addresses = await Task.WhenAll(pureDnsTask, fastDnsTask);
+            var fastAddress = await this.GetFastIPAddressAsync(addresses.SelectMany(item => item), endPoint.Port, cancellationToken);
+
+            if (fastAddress != null)
             {
-                return await LookupCoreAsync(pureDns, endPoint, cancellationToken);
+                this.logger.LogInformation($"[{endPoint.Host}->{fastAddress}]");
+                return fastAddress;
             }
-            catch (Exception)
-            {
-                this.logger.LogWarning($"由于{pureDns}解析{endPoint.Host}失败，本次使用{fastDns}");
-                return await LookupCoreAsync(fastDns, endPoint, cancellationToken);
-            }
+            throw new FastGithubException($"解析不到{endPoint.Host}可用的ip");
         }
 
         /// <summary>
@@ -98,21 +98,20 @@ namespace FastGithub.DomainResolve
         /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken)
+        private async Task<IEnumerable<IPAddress>> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken)
         {
-            var dnsClient = new DnsClient(dns);
-            using var timeoutTokenSource = new CancellationTokenSource(this.lookupTimeout);
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-
-            var addresses = await dnsClient.Lookup(endPoint.Host, RecordType.A, linkedTokenSource.Token);
-            var fastAddress = await this.GetFastIPAddressAsync(addresses, endPoint.Port, cancellationToken);
-
-            if (fastAddress != null)
+            try
             {
-                this.logger.LogInformation($"[{endPoint.Host}->{fastAddress}]");
-                return fastAddress;
+                var dnsClient = new DnsClient(dns);
+                using var timeoutTokenSource = new CancellationTokenSource(this.lookupTimeout);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                return await dnsClient.Lookup(endPoint.Host, RecordType.A, linkedTokenSource.Token);
             }
-            throw new FastGithubException($"dns{dns}解析不到{endPoint.Host}可用的ip");
+            catch
+            {
+                this.logger.LogWarning($"dns({dns})无法解析{endPoint.Host}");
+                return Enumerable.Empty<IPAddress>();
+            }
         }
 
         /// <summary>
