@@ -130,6 +130,11 @@ namespace FastGithub.DomainResolve
                 return default;
             }
 
+            if (port <= 0)
+            {
+                return addresses.FirstOrDefault();
+            }
+
             var tasks = addresses.Select(address => this.IsAvailableAsync(address, port, cancellationToken));
             var fastTask = await Task.WhenAny(tasks);
             return await fastTask;
