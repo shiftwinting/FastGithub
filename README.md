@@ -5,7 +5,7 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 * 修改本机的dns服务指向FastGithub自身
 * 解析匹配的域名为FastGithub自身的ip
 * 请求不受污染的dns服务(dnscrypt-proxy)获取域名的ip
-* 使用得到的ip进行无或有SNI的https反向代理 
+* 选择最优的ip进行ssh或https反向代理 
 
 ### 程序下载
 如果不能下载[releases](https://github.com/dotnetcore/FastGithub)里发布的程序，可以到Q群`307306673`里面的群文件下载。
