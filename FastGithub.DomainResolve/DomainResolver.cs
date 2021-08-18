@@ -23,7 +23,7 @@ namespace FastGithub.DomainResolve
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DomainResolver> logger;
 
-        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(1d);
+        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(2d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
         private readonly TimeSpan resolveCacheTimeSpan = TimeSpan.FromMinutes(2d);
         private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
