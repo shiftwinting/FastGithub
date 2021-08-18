@@ -1,5 +1,4 @@
-﻿using FastGithub.Configuration;
-using FastGithub.DomainResolve;
+﻿using FastGithub.DomainResolve;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -125,7 +124,7 @@ namespace FastGithub.Http
 
                     bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
                     {
-                        if (errors == SslPolicyErrors.RemoteCertificateNameMismatch)
+                        if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
                         {
                             if (this.domainConfig.TlsIgnoreNameMismatch == true)
                             {
