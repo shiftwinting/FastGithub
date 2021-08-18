@@ -90,7 +90,7 @@ namespace FastGithub.DomainResolve
                 }
             }
 
-            throw new FastGithubException($"解析不到{endPoint.Host}可用的ip");
+            throw new FastGithubException($"当前解析不到{endPoint.Host}可用的ip，请刷新重试");
         }
 
         /// <summary>
