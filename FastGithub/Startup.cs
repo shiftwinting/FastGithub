@@ -1,3 +1,4 @@
+using FastGithub.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,12 +27,15 @@ namespace FastGithub
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddConfiguration().Bind(this.Configuration.GetSection(nameof(FastGithub)));
+            services.Configure<FastGithubListenOptions>(this.Configuration);
+            services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
+
+            services.AddConfiguration();
             services.AddDnsServer();
             services.AddDomainResolve();
             services.AddHttpClient();
             services.AddReverseProxy();
-             
+
             services.AddControllersWithViews();
         }
 

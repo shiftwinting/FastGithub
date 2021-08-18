@@ -17,6 +17,7 @@ namespace FastGithub.Dns
     {
         private readonly DnsServer dnsServer;
         private readonly IEnumerable<IDnsValidator> dnsValidators;
+        private readonly IOptions<FastGithubListenOptions> listenOptions;
         private readonly ILogger<DnsHostedService> logger;
 
         /// <summary>
@@ -25,15 +26,18 @@ namespace FastGithub.Dns
         /// <param name="dnsServer"></param>
         /// <param name="dnsValidators"></param>
         /// <param name="options"></param>
+        /// <param name="listenOptions"></param>
         /// <param name="logger"></param>
         public DnsHostedService(
             DnsServer dnsServer,
             IEnumerable<IDnsValidator> dnsValidators,
             IOptionsMonitor<FastGithubOptions> options,
+            IOptions<FastGithubListenOptions> listenOptions,
             ILogger<DnsHostedService> logger)
         {
             this.dnsServer = dnsServer;
             this.dnsValidators = dnsValidators;
+            this.listenOptions = listenOptions;
             this.logger = logger;
 
             options.OnChange(opt =>
@@ -52,10 +56,16 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            this.dnsServer.Bind(IPAddress.Any, 53);
+            var port = this.listenOptions.Value.DnsPort;
+            this.dnsServer.Bind(IPAddress.Any, port);
             this.logger.LogInformation("DNS服务启动成功");
 
-            if (OperatingSystem.IsWindows())
+            const int DNS_PORT = 53;
+            if (port != DNS_PORT)
+            {
+                this.logger.LogWarning($"由于使用了非标准DNS端口{port}，你需要将{nameof(FastGithub)}设置为标准DNS的上游");
+            }
+            else if (OperatingSystem.IsWindows())
             {
                 try
                 {

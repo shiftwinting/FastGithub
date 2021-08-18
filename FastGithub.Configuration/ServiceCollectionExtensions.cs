@@ -15,10 +15,10 @@ namespace FastGithub
         /// </summary>
         /// <param name="services"></param> 
         /// <returns></returns>
-        public static OptionsBuilder<FastGithubOptions> AddConfiguration(this IServiceCollection services)
+        public static IServiceCollection AddConfiguration(this IServiceCollection services)
         {
             services.TryAddSingleton<FastGithubConfig>();
-            return services.AddOptions<FastGithubOptions>();
+            return services;
         }
     }
 }
