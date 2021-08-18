@@ -1,18 +1,18 @@
 ﻿namespace FastGithub.Configuration
 {
     /// <summary>
-    /// 监听选项
+    /// 监听配置
     /// </summary>
-    public class FastGithubListenOptions
+    public record ListenConfig
     {
         /// <summary>
         /// 监听的ssh端口
         /// </summary>
-        public int SshPort { get; set; } = 22;
+        public int SshPort { get; init; } = 22;
 
         /// <summary>
         /// 监听的dns端口
         /// </summary>
-        public int DnsPort { get; set; } = 53;
+        public int DnsPort { get; init; } = 53;
     }
 }

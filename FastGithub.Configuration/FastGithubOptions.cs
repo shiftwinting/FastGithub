@@ -8,6 +8,11 @@ namespace FastGithub.Configuration
     public class FastGithubOptions
     {
         /// <summary>
+        /// 监听配置
+        /// </summary>
+        public ListenConfig Listen { get; set; } = new ListenConfig();
+
+        /// <summary>
         /// 未污染的dns
         /// </summary>
         public DnsConfig PureDns { get; set; } = new DnsConfig { IPAddress = "127.0.0.1", Port = 5533 };

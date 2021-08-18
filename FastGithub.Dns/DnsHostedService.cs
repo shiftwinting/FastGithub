@@ -17,7 +17,7 @@ namespace FastGithub.Dns
     {
         private readonly DnsServer dnsServer;
         private readonly IEnumerable<IDnsValidator> dnsValidators;
-        private readonly IOptions<FastGithubListenOptions> listenOptions;
+        private readonly IOptionsMonitor<FastGithubOptions> options;
         private readonly ILogger<DnsHostedService> logger;
 
         /// <summary>
@@ -25,19 +25,17 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="dnsServer"></param>
         /// <param name="dnsValidators"></param>
-        /// <param name="options"></param>
-        /// <param name="listenOptions"></param>
+        /// <param name="options"></param> 
         /// <param name="logger"></param>
         public DnsHostedService(
             DnsServer dnsServer,
             IEnumerable<IDnsValidator> dnsValidators,
             IOptionsMonitor<FastGithubOptions> options,
-            IOptions<FastGithubListenOptions> listenOptions,
             ILogger<DnsHostedService> logger)
         {
             this.dnsServer = dnsServer;
             this.dnsValidators = dnsValidators;
-            this.listenOptions = listenOptions;
+            this.options = options;
             this.logger = logger;
 
             options.OnChange(opt =>
@@ -56,7 +54,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            var port = this.listenOptions.Value.DnsPort;
+            var port = this.options.CurrentValue.Listen.DnsPort;
             this.dnsServer.Bind(IPAddress.Any, port);
             this.logger.LogInformation("DNS服务启动成功");
 

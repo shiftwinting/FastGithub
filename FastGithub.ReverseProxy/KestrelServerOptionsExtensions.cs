@@ -72,8 +72,8 @@ namespace FastGithub
         /// <param name="kestrel"></param>
         public static void ListenGithubSshProxy(this KestrelServerOptions kestrel)
         {
-            var listenOptions = kestrel.ApplicationServices.GetRequiredService<IOptions<FastGithubListenOptions>>();
-            var sshPort = listenOptions.Value.SshPort;
+            var listenOptions = kestrel.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>();
+            var sshPort = listenOptions.Value.Listen.SshPort;
             var logger = kestrel.GetLogger();
 
             if (LocalMachine.CanListenTcp(sshPort) == false)

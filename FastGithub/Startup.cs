@@ -27,7 +27,6 @@ namespace FastGithub
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<FastGithubListenOptions>(this.Configuration);
             services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
 
             services.AddConfiguration();
