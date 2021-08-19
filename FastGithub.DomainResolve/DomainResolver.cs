@@ -27,6 +27,7 @@ namespace FastGithub.DomainResolve
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
         private readonly TimeSpan pureResolveCacheTimeSpan = TimeSpan.FromMinutes(5d);
         private readonly TimeSpan fastResolveCacheTimeSpan = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan loopbackResolveCacheTimeSpan = TimeSpan.FromSeconds(5d);
         private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
 
         /// <summary>
@@ -95,7 +96,7 @@ namespace FastGithub.DomainResolve
             // 往往是被污染的dns
             if (address.Equals(IPAddress.Loopback) == false)
             {
-                expiration = TimeSpan.FromSeconds(2d);
+                expiration = this.loopbackResolveCacheTimeSpan;
             }
 
             this.logger.LogInformation($"[{endPoint.Host}->{address}]");
