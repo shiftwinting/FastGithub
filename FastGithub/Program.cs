@@ -34,10 +34,12 @@ namespace FastGithub
                 })
                 .ConfigureAppConfiguration(c =>
                 {
-                    if (Directory.Exists("appsettings") == true)
+                    const string APPSETTINGS = "appsettings";
+                    if (Directory.Exists(APPSETTINGS) == true)
                     {
-                        foreach (var jsonFile in Directory.GetFiles("appsettings", "appsettings.*.json"))
+                        foreach (var file in Directory.GetFiles(APPSETTINGS, "appsettings.*.json"))
                         {
+                            var jsonFile = Path.Combine(APPSETTINGS, Path.GetFileName(file));
                             c.AddJsonFile(jsonFile, true, true);
                         }
                     }
