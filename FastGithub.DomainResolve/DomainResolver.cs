@@ -92,6 +92,12 @@ namespace FastGithub.DomainResolve
                 throw new FastGithubException($"当前解析不到{endPoint.Host}可用的ip，请刷新重试");
             }
 
+            // 往往是被污染的dns
+            if (address.Equals(IPAddress.Loopback) == false)
+            {
+                expiration = TimeSpan.FromSeconds(2d);
+            }
+
             this.logger.LogInformation($"[{endPoint.Host}->{address}]");
             this.memoryCache.Set(endPoint, address, expiration);
             return address;
