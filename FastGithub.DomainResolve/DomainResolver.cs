@@ -94,7 +94,7 @@ namespace FastGithub.DomainResolve
             }
 
             // 往往是被污染的dns
-            if (address.Equals(IPAddress.Loopback) == false)
+            if (address.Equals(IPAddress.Loopback) == true)
             {
                 expiration = this.loopbackResolveCacheTimeSpan;
             }
