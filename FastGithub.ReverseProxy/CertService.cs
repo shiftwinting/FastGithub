@@ -85,7 +85,7 @@ namespace FastGithub.ReverseProxy
                 this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请根据你的系统平台手工安装和信任CA证书");
             }
 
-            GitUtil.SetSslverify(false);
+            GitUtil.ConfigSslverify(false);
         }
 
         /// <summary>

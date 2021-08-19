@@ -12,7 +12,8 @@ namespace FastGithub.ReverseProxy
         /// 设置ssl验证
         /// </summary>
         /// <param name="value">是否验证</param>
-        public static void SetSslverify(bool value)
+        /// <returns></returns>
+        public static bool ConfigSslverify(bool value)
         {
             try
             {
@@ -24,9 +25,11 @@ namespace FastGithub.ReverseProxy
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden
                 });
+                return true;
             }
             catch (Exception)
             {
+                return false;
             }
         }
     }
