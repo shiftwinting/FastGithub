@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -12,7 +13,8 @@ namespace FastGithub.DomainResolve
     /// </summary>
     sealed class DnscryptProxy
     {
-        private const string name = "dnscrypt-proxy";
+        private const string PATH = "dnscryptproxy";
+        private const string Name = "dnscrypt-proxy";
 
         /// <summary>
         /// 相关进程
@@ -40,11 +42,11 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var tomlPath = $"{name}.toml";
+            var tomlPath = Path.Combine(PATH, $"{Name}.toml");
             await TomlUtil.SetListensAsync(tomlPath, this.EndPoint, cancellationToken);
             await TomlUtil.SetEdnsClientSubnetAsync(tomlPath, cancellationToken);
 
-            foreach (var process in Process.GetProcessesByName(name))
+            foreach (var process in Process.GetProcessesByName(Name))
             {
                 process.Kill();
                 process.WaitForExit();
@@ -55,7 +57,7 @@ namespace FastGithub.DomainResolve
                 StartDnscryptProxy("-service uninstall")?.WaitForExit();
                 StartDnscryptProxy("-service install")?.WaitForExit();
                 StartDnscryptProxy("-service start")?.WaitForExit();
-                this.process = Process.GetProcessesByName(name).FirstOrDefault(item => item.SessionId == 0);
+                this.process = Process.GetProcessesByName(Name).FirstOrDefault(item => item.SessionId == 0);
             }
             else
             {
@@ -86,11 +88,13 @@ namespace FastGithub.DomainResolve
         /// <param name="arguments"></param> 
         private static Process? StartDnscryptProxy(string arguments)
         {
+            var fileName = OperatingSystem.IsWindows() ? $"{Name}.exe" : Name;
             return Process.Start(new ProcessStartInfo
             {
-                FileName = OperatingSystem.IsWindows() ? $"{name}.exe" : name,
+                FileName = Path.Combine(PATH, fileName),
                 Arguments = arguments,
-                UseShellExecute = true,
+                WorkingDirectory = PATH,
+                UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             });
@@ -102,7 +106,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public override string ToString()
         {
-            return name;
+            return Name;
         }
     }
 }
