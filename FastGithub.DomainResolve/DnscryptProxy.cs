@@ -14,7 +14,7 @@ namespace FastGithub.DomainResolve
     sealed class DnscryptProxy
     {
         private const string PATH = "dnscryptproxy";
-        private const string Name = "dnscrypt-proxy";
+        private const string NAME = "dnscrypt-proxy";
 
         /// <summary>
         /// 相关进程
@@ -42,11 +42,11 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var tomlPath = Path.Combine(PATH, $"{Name}.toml");
+            var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
             await TomlUtil.SetListensAsync(tomlPath, this.EndPoint, cancellationToken);
             await TomlUtil.SetEdnsClientSubnetAsync(tomlPath, cancellationToken);
 
-            foreach (var process in Process.GetProcessesByName(Name))
+            foreach (var process in Process.GetProcessesByName(NAME))
             {
                 process.Kill();
                 process.WaitForExit();
@@ -57,7 +57,7 @@ namespace FastGithub.DomainResolve
                 StartDnscryptProxy("-service uninstall")?.WaitForExit();
                 StartDnscryptProxy("-service install")?.WaitForExit();
                 StartDnscryptProxy("-service start")?.WaitForExit();
-                this.process = Process.GetProcessesByName(Name).FirstOrDefault(item => item.SessionId == 0);
+                this.process = Process.GetProcessesByName(NAME).FirstOrDefault(item => item.SessionId == 0);
             }
             else
             {
@@ -88,7 +88,7 @@ namespace FastGithub.DomainResolve
         /// <param name="arguments"></param> 
         private static Process? StartDnscryptProxy(string arguments)
         {
-            var fileName = OperatingSystem.IsWindows() ? $"{Name}.exe" : Name;
+            var fileName = OperatingSystem.IsWindows() ? $"{NAME}.exe" : NAME;
             return Process.Start(new ProcessStartInfo
             {
                 FileName = Path.Combine(PATH, fileName),
@@ -106,7 +106,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public override string ToString()
         {
-            return Name;
+            return NAME;
         }
     }
 }
