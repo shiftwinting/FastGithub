@@ -7,6 +7,8 @@ chmod 777 ./FastGithub_linux-x64/dnscryptproxy/dnscrypt-proxy
 zip -r FastGithub_linux-x64.zip FastGithub_linux-x64
 
 # osx-x64
+chmod 777 ./FastGithub_osx-x64/FastGithub
+chmod 777 ./FastGithub_osx-x64/dnscryptproxy/dnscrypt-proxy
 zip -r FastGithub_osx-x64.zip FastGithub_osx-x64
 
 # win10-x64
