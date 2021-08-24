@@ -4,7 +4,7 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 ### 加速原理
 * 修改本机的dns服务指向FastGithub自身
 * 解析匹配的域名为FastGithub自身的ip
-* 请求不受污染的dns服务(dnscrypt-proxy)获取域名的ip
+* 请求安全dns服务(dnscrypt-proxy)获取域名的ip
 * 选择最优的ip进行ssh或https反向代理 
 
 ### 程序下载
