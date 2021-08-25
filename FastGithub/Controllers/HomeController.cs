@@ -14,7 +14,7 @@ namespace FastGithub.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
-            var model = new Home();
+            var model = new Home { Host = Request.Host.ToString() };
             return View(model);
         } 
     }

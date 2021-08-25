@@ -126,9 +126,9 @@
 
             <div class="col-md-5">
                 <div class="thumbnail">
-                    <div class="os">hosts</div>
+                    <div class="os">hosts文件</div>
                     <div class="caption">
-                        <h4>hosts解析ip</h4>
+                        <h4>hosts规则冲突</h4>
                         <p>需要从hosts文件移除github相关域名的配置</p>
                     </div>
                 </div>
@@ -136,10 +136,20 @@
 
             <div class="col-md-5">
                 <div class="thumbnail">
-                    <div class="os">代理</div>
+                    <div class="os">代理(proxy)</div>
                     <div class="caption">
-                        <h4>浏览器或系统代理</h4>
-                        <p>需要将浏览器和系统配置为不代理github相关域名</p>
+                        <h4>浏览器或系统代理冲突</h4>
+                        <p>关闭代理，或将浏览器和系统配置为不代理github相关域名</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="thumbnail">
+                    <div class="os">浏览器安全DNS</div>
+                    <div class="caption">
+                        <h4>浏览器安全DNS冲突</h4>
+                        <p>关闭浏览器的安全DNS功能或将安全DNS设置为https://@(Model?.Host)</p>
                     </div>
                 </div>
             </div>
