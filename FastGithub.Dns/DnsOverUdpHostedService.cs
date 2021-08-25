@@ -13,28 +13,28 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns后台服务
     /// </summary>
-    sealed class DnsHostedService : BackgroundService
+    sealed class DnsOverUdpHostedService : BackgroundService
     {
-        private readonly DnsServer dnsServer;
-        private readonly IEnumerable<IDnsValidator> dnsValidators;
+        private readonly DnsOverUdpServer dnsOverUdpServer;
+        private readonly IEnumerable<IConflictValidator> conflictValidators;
         private readonly IOptionsMonitor<FastGithubOptions> options;
-        private readonly ILogger<DnsHostedService> logger;
+        private readonly ILogger<DnsOverUdpHostedService> logger;
 
         /// <summary>
         /// dns后台服务
         /// </summary>
-        /// <param name="dnsServer"></param>
-        /// <param name="dnsValidators"></param>
+        /// <param name="dnsOverUdpServer"></param>
+        /// <param name="conflictValidators"></param>
         /// <param name="options"></param> 
         /// <param name="logger"></param>
-        public DnsHostedService(
-            DnsServer dnsServer,
-            IEnumerable<IDnsValidator> dnsValidators,
+        public DnsOverUdpHostedService(
+            DnsOverUdpServer dnsOverUdpServer,
+            IEnumerable<IConflictValidator> conflictValidators,
             IOptionsMonitor<FastGithubOptions> options,
-            ILogger<DnsHostedService> logger)
+            ILogger<DnsOverUdpHostedService> logger)
         {
-            this.dnsServer = dnsServer;
-            this.dnsValidators = dnsValidators;
+            this.dnsOverUdpServer = dnsOverUdpServer;
+            this.conflictValidators = conflictValidators;
             this.options = options;
             this.logger = logger;
 
@@ -54,14 +54,14 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            var port = this.options.CurrentValue.Listen.DnsPort;
-            this.dnsServer.Bind(IPAddress.Any, port);
+            var dnsPort = this.options.CurrentValue.Listen.DnsPort;
+            this.dnsOverUdpServer.Bind(IPAddress.Any, dnsPort);
             this.logger.LogInformation("DNS服务启动成功");
 
             const int DNS_PORT = 53;
-            if (port != DNS_PORT)
+            if (dnsPort != DNS_PORT)
             {
-                this.logger.LogWarning($"由于使用了非标准DNS端口{port}，你需要将{nameof(FastGithub)}设置为标准DNS的上游");
+                this.logger.LogWarning($"由于使用了非标准DNS端口{dnsPort}，你需要将{nameof(FastGithub)}设置为标准DNS的上游");
             }
             else if (OperatingSystem.IsWindows())
             {
@@ -85,7 +85,7 @@ namespace FastGithub.Dns
                 this.logger.LogWarning($"不支持自动设置本机DNS，请手工添加{IPAddress.Loopback}做为连接网络的DNS的第一条记录");
             }
 
-            foreach (var item in this.dnsValidators)
+            foreach (var item in this.conflictValidators)
             {
                 await item.ValidateAsync();
             }
@@ -100,7 +100,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return this.dnsServer.ListenAsync(stoppingToken);
+            return this.dnsOverUdpServer.ListenAsync(stoppingToken);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            this.dnsServer.Dispose();
+            this.dnsOverUdpServer.Dispose();
             this.logger.LogInformation("DNS服务已停止");
 
             if (OperatingSystem.IsWindows())

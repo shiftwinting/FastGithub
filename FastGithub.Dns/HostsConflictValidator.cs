@@ -10,28 +10,28 @@ using System.Threading.Tasks;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// host文件配置验证器
+    /// host文件冲突验证器
     /// </summary>
-    sealed class HostsValidator : IDnsValidator
+    sealed class HostsConflictValidator : IConflictValidator
     {
         private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<HostsValidator> logger;
+        private readonly ILogger<HostsConflictValidator> logger;
 
         /// <summary>
-        /// host文件配置验证器
+        /// host文件冲突验证器
         /// </summary>
         /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
-        public HostsValidator(
+        public HostsConflictValidator(
             FastGithubConfig fastGithubConfig,
-            ILogger<HostsValidator> logger)
+            ILogger<HostsConflictValidator> logger)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
 
         /// <summary>
-        /// 验证host文件的域名解析配置 
+        /// 验证冲突 
         /// </summary>
         /// <returns></returns>
         public async Task ValidateAsync()

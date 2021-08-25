@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 namespace FastGithub.ReverseProxy
 {
     /// <summary>
-    /// github的ssh处理者
+    /// github的ssh代理处理者
     /// </summary>
-    sealed class GithubSshHandler : ConnectionHandler
+    sealed class GithubSshProxyHandler : ConnectionHandler
     {
         private readonly IDomainResolver domainResolver;
         private readonly DnsEndPoint githubSshEndPoint = new("ssh.github.com", 443);
 
         /// <summary>
-        /// github的ssh处理者
+        /// github的ssh代理处理者
         /// </summary>
         /// <param name="domainResolver"></param>
-        public GithubSshHandler(IDomainResolver domainResolver)
+        public GithubSshProxyHandler(IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
         }

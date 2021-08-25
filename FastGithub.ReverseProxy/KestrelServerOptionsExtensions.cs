@@ -82,7 +82,7 @@ namespace FastGithub
             }
             else
             {
-                kestrel.Listen(IPAddress.Any, sshPort, listen => listen.UseConnectionHandler<GithubSshHandler>());
+                kestrel.Listen(IPAddress.Any, sshPort, listen => listen.UseConnectionHandler<GithubSshProxyHandler>());
                 logger.LogInformation("已监听github的ssh代理");
             }
         }

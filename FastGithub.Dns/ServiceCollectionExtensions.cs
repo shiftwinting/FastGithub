@@ -17,11 +17,11 @@ namespace FastGithub
         public static IServiceCollection AddDnsServer(this IServiceCollection services)
         {
             services.TryAddSingleton<RequestResolver>();
-            services.TryAddSingleton<DnsServer>();
+            services.TryAddSingleton<DnsOverUdpServer>();
             services.TryAddSingleton<DnsOverHttpsMiddleware>();
-            services.AddSingleton<IDnsValidator, HostsValidator>();
-            services.AddSingleton<IDnsValidator, ProxyValidtor>();
-            return services.AddHostedService<DnsHostedService>();
+            services.AddSingleton<IConflictValidator, HostsConflictValidator>();
+            services.AddSingleton<IConflictValidator, ProxyConflictValidtor>();
+            return services.AddHostedService<DnsOverUdpHostedService>();
         }
     }
 }

@@ -12,10 +12,10 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns服务器
     /// </summary>
-    sealed class DnsServer : IDisposable
+    sealed class DnsOverUdpServer : IDisposable
     {
         private readonly RequestResolver requestResolver;
-        private readonly ILogger<DnsServer> logger;
+        private readonly ILogger<DnsOverUdpServer> logger;
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private readonly byte[] buffer = new byte[ushort.MaxValue];
 
@@ -24,9 +24,9 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="requestResolver"></param>
         /// <param name="logger"></param>
-        public DnsServer(
+        public DnsOverUdpServer(
             RequestResolver requestResolver,
-            ILogger<DnsServer> logger)
+            ILogger<DnsOverUdpServer> logger)
         {
             this.requestResolver = requestResolver;
             this.logger = logger;

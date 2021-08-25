@@ -8,23 +8,23 @@ using System.Threading.Tasks;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// 代理验证
+    /// 代理冲突验证
     /// </summary>
-    sealed class ProxyValidtor : IDnsValidator
+    sealed class ProxyConflictValidtor : IConflictValidator
     {
         private readonly IOptions<FastGithubOptions> options;
-        private readonly ILogger<ProxyValidtor> logger;
+        private readonly ILogger<ProxyConflictValidtor> logger;
 
-        public ProxyValidtor(
+        public ProxyConflictValidtor(
             IOptions<FastGithubOptions> options,
-            ILogger<ProxyValidtor> logger)
+            ILogger<ProxyConflictValidtor> logger)
         {
             this.options = options;
             this.logger = logger;
         }
 
         /// <summary>
-        /// 验证是否使用了代理
+        /// 验证冲突
         /// </summary>
         /// <returns></returns>
         public Task ValidateAsync()
