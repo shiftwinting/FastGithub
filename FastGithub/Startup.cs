@@ -45,6 +45,7 @@ namespace FastGithub
         public void Configure(IApplicationBuilder app)
         {
             app.UseRequestLogging();
+            app.UseDnsOverHttps();
             app.UseReverseProxy();
             app.UseRouting();
             app.UseEndpoints(endpoints =>

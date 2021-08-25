@@ -18,6 +18,7 @@ namespace FastGithub
         {
             services.TryAddSingleton<RequestResolver>();
             services.TryAddSingleton<DnsServer>();
+            services.TryAddSingleton<DnsOverHttpsMiddleware>();
             services.AddSingleton<IDnsValidator, HostsValidator>();
             services.AddSingleton<IDnsValidator, ProxyValidtor>();
             return services.AddHostedService<DnsHostedService>();
