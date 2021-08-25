@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Tommy;
 
 namespace FastGithub.DomainResolve
 {
@@ -21,9 +22,13 @@ namespace FastGithub.DomainResolve
         /// <param name="tomlPath"></param>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        public static Task<bool> SetListensAsync(string tomlPath, IPEndPoint endpoint, CancellationToken cancellationToken = default)
+        public static Task SetListensAsync(string tomlPath, IPEndPoint endpoint, CancellationToken cancellationToken = default)
         {
-            return SetAsync(tomlPath, "listen_addresses", $"['{endpoint}']", cancellationToken);
+            var value = new TomlArray
+            {
+                endpoint.ToString()
+            };
+            return SetAsync(tomlPath, "listen_addresses", value, cancellationToken);
         }
 
         /// <summary>
@@ -37,7 +42,12 @@ namespace FastGithub.DomainResolve
             try
             {
                 var address = await GetPublicIPAddressAsync(cancellationToken);
-                return await SetAsync(tomlPath, "edns_client_subnet", @$"[""{address}/32""]", cancellationToken);
+                var value = new TomlArray
+                {
+                    $"{address}/32"
+                };
+                await SetAsync(tomlPath, "edns_client_subnet", value, cancellationToken);
+                return true;
             }
             catch (Exception)
             {
@@ -66,28 +76,19 @@ namespace FastGithub.DomainResolve
         /// <param name="tomlPath"></param>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public static async Task<bool> SetAsync(string tomlPath, string key, object? value, CancellationToken cancellationToken = default)
+        public static async Task SetAsync(string tomlPath, string key, TomlNode value, CancellationToken cancellationToken = default)
         {
-            var setted = false;
+            var toml = await File.ReadAllTextAsync(tomlPath, cancellationToken);
+            var reader = new StringReader(toml);
+            var tomlTable = TOML.Parse(reader);
+            tomlTable[key] = value;
+
             var builder = new StringBuilder();
-            var lines = await File.ReadAllLinesAsync(tomlPath, cancellationToken);
+            var writer = new StringWriter(builder);
+            tomlTable.WriteTo(writer);
+            toml = builder.ToString();
 
-            foreach (var line in lines)
-            {
-                if (Regex.IsMatch(line, @$"(?<=#*\s*){key}(?=\s*=)") == false)
-                {
-                    builder.AppendLine(line);
-                }
-                else if (setted == false)
-                {
-                    setted = true;
-                    builder.Append(key).Append(" = ").AppendLine(value?.ToString());
-                }
-            }
-
-            var toml = builder.ToString();
             await File.WriteAllTextAsync(tomlPath, toml, cancellationToken);
-            return setted;
         }
     }
 }

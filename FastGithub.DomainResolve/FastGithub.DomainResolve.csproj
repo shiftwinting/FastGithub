@@ -4,6 +4,7 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
 		<PackageReference Include="DNS" Version="6.1.0" />
+		<PackageReference Include="Tommy" Version="3.0.1" />
 		<ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
 	</ItemGroup>
 
@@ -11,9 +12,9 @@
 		<None Include="../@libs/dnscrypt-proxy.toml" Link="dnscryptproxy/dnscrypt-proxy.toml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-    <None Include="../@libs/LICENSE" Link="dnscryptproxy/LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+		<None Include="../@libs/LICENSE" Link="dnscryptproxy/LICENSE">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
