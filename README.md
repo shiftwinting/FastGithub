@@ -5,16 +5,16 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 * 修改本机的dns服务指向FastGithub自身
 * 解析匹配的域名为FastGithub自身的ip
 * 请求安全dns服务(dnscrypt-proxy)获取域名的ip
-* 选择最优的ip进行ssh或https反向代理 
+* 选择最优的ip进行ssh代理或https反向代理 
 
 ### 协议列表
-| 协议  | 资源标识            | 端口要求   | 用途                             |
-| ----- | ------------------- | ---------- | -------------------------------- |
-| DNS   | udp://0.0.0.0:53    | 要求可用   | 解析github相关域名指向FastGithub |
-| DoH   | https://0.0.0.0:443 | 要求可用   | 解析github相关域名指向FastGithub |
-| HTTPS | https://0.0.0.0:443 | 要求可用   | 反向代理https请求                |
-| HTTP  | http://0.0.0.0:80   | 不要求可用 | 反向代理http请求                 |
-| SSH   | ssh://0.0.0.0:22    | 不要求可用 | 代理ssh请求到github              |
+| 协议  | 资源标识            | 端口要求   | 用途                         |
+| ----- | ------------------- | ---------- | ---------------------------- |
+| DNS   | `udp://0.0.0.0:53`    | 要求可用   | 解析配置的域名指向FastGithub |
+| DoH   | `https://0.0.0.0:443` | 要求可用   | 解析配置的域名指向FastGithub |
+| HTTPS | `https://0.0.0.0:443` | 要求可用   | 反向代理https请求            |
+| HTTP  | `http://0.0.0.0:80`   | 不要求可用 | 反向代理http请求             |
+| SSH   | `ssh://0.0.0.0:22`    | 不要求可用 | 代理ssh请求到github          |
 
 ### 程序下载
 如果不能下载[releases](https://github.com/dotnetcore/FastGithub)里发布的程序，可以到Q群`307306673`里面的群文件下载。
