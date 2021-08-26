@@ -19,15 +19,9 @@ namespace FastGithub.Configuration
         private ConcurrentDictionary<string, DomainConfig?> domainConfigCache;
 
         /// <summary>
-        /// 未污染的dns
-        /// </summary>  
-        public IPEndPoint PureDns { get; private set; }
-
-        /// <summary>
-        /// 速度快的dns
+        /// 回退的dns
         /// </summary>
-        public IPEndPoint FastDns { get; private set; }
-
+        public IPEndPoint[] FallbackDns { get; set; }
 
         /// <summary>
         /// FastGithub配置
@@ -41,8 +35,7 @@ namespace FastGithub.Configuration
             this.logger = logger;
             var opt = options.CurrentValue;
 
-            this.PureDns = opt.PureDns.ToIPEndPoint();
-            this.FastDns = opt.FastDns.ToIPEndPoint();
+            this.FallbackDns = opt.FallbackDns.Select(item => item.ToIPEndPoint()).ToArray();
             this.domainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
 
@@ -57,8 +50,7 @@ namespace FastGithub.Configuration
         {
             try
             {
-                this.PureDns = options.PureDns.ToIPEndPoint();
-                this.FastDns = options.FastDns.ToIPEndPoint();
+                this.FallbackDns = options.FallbackDns.Select(item => item.ToIPEndPoint()).ToArray();
                 this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
                 this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
             }

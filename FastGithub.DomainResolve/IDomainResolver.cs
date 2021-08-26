@@ -12,9 +12,9 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 解析域名
         /// </summary>
-        /// <param name="endPoint"></param>
+        /// <param name="target"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<IPAddress> ResolveAsync(DnsEndPoint endPoint, CancellationToken cancellationToken = default);
+        Task<IPAddress> ResolveAsync(DnsEndPoint target, CancellationToken cancellationToken = default);
     }
 }

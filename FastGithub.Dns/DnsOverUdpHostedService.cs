@@ -100,7 +100,7 @@ namespace FastGithub.Dns
         /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return this.dnsOverUdpServer.ListenAsync(stoppingToken);
+            return this.dnsOverUdpServer.HandleAsync(stoppingToken);
         }
 
         /// <summary>

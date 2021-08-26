@@ -80,6 +80,45 @@ namespace FastGithub.Configuration
         }
 
         /// <summary>
+        /// 获取可用的随机端口
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="min">最小值</param>
+        /// <returns></returns>
+        public static int GetAvailablePort(AddressFamily addressFamily, int min = 1024)
+        {
+            var hashSet = new HashSet<int>();
+            var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            var udpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
+
+            foreach (var item in tcpListeners)
+            {
+                if (item.AddressFamily == addressFamily)
+                {
+                    hashSet.Add(item.Port);
+                }
+            }
+
+            foreach (var item in udpListeners)
+            {
+                if (item.AddressFamily == addressFamily)
+                {
+                    hashSet.Add(item.Port);
+                }
+            }
+
+            for (var port = min; port < ushort.MaxValue; port++)
+            {
+                if (hashSet.Contains(port) == false)
+                {
+                    return port;
+                }
+            }
+
+            throw new FastGithubException("当前无可用的端口");
+        }
+
+        /// <summary>
         /// 是否可以监听指定tcp端口
         /// </summary>
         /// <param name="port"></param>

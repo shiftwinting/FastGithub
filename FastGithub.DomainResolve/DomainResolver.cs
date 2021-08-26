@@ -21,13 +21,14 @@ namespace FastGithub.DomainResolve
     {
         private readonly IMemoryCache memoryCache;
         private readonly FastGithubConfig fastGithubConfig;
+        private readonly DnscryptProxy dnscryptProxy;
         private readonly ILogger<DomainResolver> logger;
 
         private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(2d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
-        private readonly TimeSpan pureResolveCacheTimeSpan = TimeSpan.FromMinutes(5d);
-        private readonly TimeSpan fastResolveCacheTimeSpan = TimeSpan.FromMinutes(1d);
-        private readonly TimeSpan loopbackResolveCacheTimeSpan = TimeSpan.FromSeconds(5d);
+        private readonly TimeSpan dnscryptExpiration = TimeSpan.FromMinutes(5d);
+        private readonly TimeSpan fallbackExpiration = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan loopbackExpiration = TimeSpan.FromSeconds(5d);
         private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
 
         /// <summary>
@@ -35,14 +36,17 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="memoryCache"></param>
         /// <param name="fastGithubConfig"></param>
+        /// <param name="dnscryptProxy"></param>
         /// <param name="logger"></param>
         public DomainResolver(
             IMemoryCache memoryCache,
             FastGithubConfig fastGithubConfig,
+            DnscryptProxy dnscryptProxy,
             ILogger<DomainResolver> logger)
         {
             this.memoryCache = memoryCache;
             this.fastGithubConfig = fastGithubConfig;
+            this.dnscryptProxy = dnscryptProxy;
             this.logger = logger;
         }
 
@@ -69,64 +73,85 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 查找ip
         /// </summary>
-        /// <param name="endPoint"></param>
+        /// <param name="target"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress> LookupAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
+        private async Task<IPAddress> LookupAsync(DnsEndPoint target, CancellationToken cancellationToken)
         {
-            if (this.memoryCache.TryGetValue<IPAddress>(endPoint, out var address))
+            if (this.memoryCache.TryGetValue<IPAddress>(target, out var address))
             {
                 return address;
             }
 
-            var expiration = this.pureResolveCacheTimeSpan;
-            address = await this.LookupCoreAsync(this.fastGithubConfig.PureDns, endPoint, cancellationToken);
+            var expiration = this.dnscryptExpiration;
+            address = await this.LookupCoreAsync(this.dnscryptProxy.EndPoint, target, cancellationToken);
 
             if (address == null)
             {
-                expiration = this.fastResolveCacheTimeSpan;
-                address = await this.LookupCoreAsync(this.fastGithubConfig.FastDns, endPoint, cancellationToken);
+                expiration = this.fallbackExpiration;
+                address = await this.FallbackLookupAsync(target, cancellationToken);
             }
 
             if (address == null)
             {
-                throw new FastGithubException($"当前解析不到{endPoint.Host}可用的ip，请刷新重试");
+                throw new FastGithubException($"当前解析不到{target.Host}可用的ip，请刷新重试");
             }
 
             // 往往是被污染的dns
             if (address.Equals(IPAddress.Loopback) == true)
             {
-                expiration = this.loopbackResolveCacheTimeSpan;
+                expiration = this.loopbackExpiration;
             }
 
-            this.logger.LogInformation($"[{endPoint.Host}->{address}]");
-            this.memoryCache.Set(endPoint, address, expiration);
+            this.logger.LogInformation($"[{target.Host}->{address}]");
+            this.memoryCache.Set(target, address, expiration);
             return address;
         }
+
+        /// <summary>
+        /// 回退查找ip
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<IPAddress?> FallbackLookupAsync(DnsEndPoint target, CancellationToken cancellationToken)
+        {
+            foreach (var dns in this.fastGithubConfig.FallbackDns)
+            {
+                var address = await this.LookupCoreAsync(dns, target, cancellationToken);
+                if (address != null)
+                {
+                    return address;
+                }
+            }
+            return default;
+        }
+
 
         /// <summary>
         /// 查找ip
         /// </summary>
         /// <param name="dns"></param>
-        /// <param name="endPoint"></param>
+        /// <param name="target"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress?> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken)
+        private async Task<IPAddress?> LookupCoreAsync(IPEndPoint dns, DnsEndPoint target, CancellationToken cancellationToken)
         {
             try
             {
                 var dnsClient = new DnsClient(dns);
                 using var timeoutTokenSource = new CancellationTokenSource(this.lookupTimeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                var addresses = await dnsClient.Lookup(endPoint.Host, RecordType.A, linkedTokenSource.Token);
-                return await this.FindFastValueAsync(addresses, endPoint.Port, cancellationToken);
+                var addresses = await dnsClient.Lookup(target.Host, RecordType.A, linkedTokenSource.Token);
+                return await this.FindFastValueAsync(addresses, target.Port, cancellationToken);
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"dns({dns})无法解析{endPoint.Host}：{ex.Message}");
+                this.logger.LogWarning($"dns({dns})无法解析{target.Host}：{ex.Message}");
                 return default;
             }
         }
+
 
         /// <summary>
         /// 获取最快的ip
@@ -151,6 +176,7 @@ namespace FastGithub.DomainResolve
             var fastTask = await Task.WhenAny(tasks);
             return await fastTask;
         }
+
 
         /// <summary>
         /// 验证远程节点是否可连接

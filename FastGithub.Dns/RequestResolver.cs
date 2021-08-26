@@ -2,7 +2,6 @@
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
 using FastGithub.Configuration;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Net;
@@ -58,8 +57,20 @@ namespace FastGithub.Dns
                 return response;
             }
 
-            var fastResolver = new UdpRequestResolver(fastGithubConfig.FastDns);
-            return await fastResolver.Resolve(request, cancellationToken);
+            // 使用回退dns解析域名
+            foreach (var dns in this.fastGithubConfig.FallbackDns)
+            {
+                try
+                {
+                    var resolver = new UdpRequestResolver(dns);
+                    return await resolver.Resolve(request, cancellationToken);
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            throw new FastGithubException($"无法解析域名{domain}");
         }
     }
 }

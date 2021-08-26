@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FastGithub.Configuration
 {
@@ -13,14 +14,9 @@ namespace FastGithub.Configuration
         public ListenConfig Listen { get; set; } = new ListenConfig();
 
         /// <summary>
-        /// 未污染的dns
+        /// 回退的dns
         /// </summary>
-        public DnsConfig PureDns { get; set; } = new DnsConfig { IPAddress = "127.0.0.1", Port = 5533 };
-
-        /// <summary>
-        /// 速度快的dns
-        /// </summary>
-        public DnsConfig FastDns { get; set; } = new DnsConfig { IPAddress = "114.114.114.114", Port = 53 };
+        public DnsConfig[] FallbackDns { get; set; } = Array.Empty<DnsConfig>();
 
         /// <summary>
         /// 代理的域名配置

@@ -60,11 +60,11 @@ namespace FastGithub.Dns
         }
 
         /// <summary>
-        /// 监听dns请求
+        /// 监听和处理dns请求
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task ListenAsync(CancellationToken cancellationToken)
+        public async Task HandleAsync(CancellationToken cancellationToken)
         {
             var remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             while (cancellationToken.IsCancellationRequested == false)
@@ -100,7 +100,7 @@ namespace FastGithub.Dns
             }
             catch (Exception ex)
             {
-                this.logger.LogTrace($"处理DNS异常：{ex.Message}");
+                this.logger.LogWarning($"处理DNS异常：{ex.Message}");
             }
         }
 

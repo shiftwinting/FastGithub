@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FastGithub.Configuration;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -29,10 +30,10 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// DnscryptProxy服务
         /// </summary>
-        /// <param name="endPoint">监听的节点</param>
-        public DnscryptProxy(IPEndPoint endPoint)
+        public DnscryptProxy()
         {
-            this.EndPoint = endPoint;
+            var port = LocalMachine.GetAvailablePort(IPAddress.Loopback.AddressFamily, min: 5353);
+            this.EndPoint = new IPEndPoint(IPAddress.Loopback, port);
         }
 
         /// <summary>
