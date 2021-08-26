@@ -35,12 +35,24 @@ namespace FastGithub.Http
         }
 
         /// <summary>
-        /// 替换域名为ip
+        /// 发送请求
         /// </summary>
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await this.ProcessRequestAsync(request, cancellationToken);
+            return await this.SendRequestAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// 处理请求
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task ProcessRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var uri = request.RequestUri;
             if (uri == null)
@@ -75,8 +87,16 @@ namespace FastGithub.Http
                 context.TlsSniPattern = context.TlsSniPattern.WithIPAddress(address);
             }
             request.RequestUri = uriBuilder.Uri;
+        }
 
-
+        /// <summary>
+        /// 发送请求
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
             if (this.domainConfig.Timeout != null)
             {
                 using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout.Value);
