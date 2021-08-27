@@ -38,13 +38,7 @@ namespace FastGithub.Dns
             this.options = options;
             this.logger = logger;
 
-            options.OnChange(opt =>
-            {
-                if (OperatingSystem.IsWindows())
-                {
-                    SystemDnsUtil.DnsFlushResolverCache();
-                }
-            });
+            options.OnChange(opt => SystemDnsUtil.FlushResolverCache());
         }
 
         /// <summary>
@@ -58,31 +52,22 @@ namespace FastGithub.Dns
             this.dnsOverUdpServer.Bind(IPAddress.Any, dnsPort);
             this.logger.LogInformation("DNS服务启动成功");
 
-            const int DNS_PORT = 53;
-            if (dnsPort != DNS_PORT)
-            {
-                this.logger.LogWarning($"由于使用了非标准DNS端口{dnsPort}，你需要将{nameof(FastGithub)}设置为标准DNS的上游");
-            }
-            else if (OperatingSystem.IsWindows())
+            const int STANDARD_DNS_PORT = 53;
+            if (dnsPort == STANDARD_DNS_PORT)
             {
                 try
                 {
-                    SystemDnsUtil.DnsSetPrimitive(IPAddress.Loopback);
-                    SystemDnsUtil.DnsFlushResolverCache();
-                    this.logger.LogInformation($"设置成本机主DNS成功");
+                    SystemDnsUtil.SetPrimitiveDns(IPAddress.Loopback);
+                    SystemDnsUtil.FlushResolverCache();
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogWarning($"设置成本机主DNS为{IPAddress.Loopback}失败：{ex.Message}");
+                    this.logger.LogWarning(ex.Message);
                 }
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                this.logger.LogWarning($"不支持自动设置本机DNS，手工添加{IPAddress.Loopback}做为/etc/resolv.conf的第一条记录");
             }
             else
             {
-                this.logger.LogWarning($"不支持自动设置本机DNS，请手工添加{IPAddress.Loopback}做为连接网络的DNS的第一条记录");
+                this.logger.LogWarning($"由于使用了非标准DNS端口{dnsPort}，你需要将{nameof(FastGithub)}设置为标准DNS的上游");
             }
 
             foreach (var item in this.conflictValidators)
@@ -113,17 +98,17 @@ namespace FastGithub.Dns
             this.dnsOverUdpServer.Dispose();
             this.logger.LogInformation("DNS服务已停止");
 
-            if (OperatingSystem.IsWindows())
+            try
             {
-                try
-                {
-                    SystemDnsUtil.DnsFlushResolverCache();
-                    SystemDnsUtil.DnsRemovePrimitive(IPAddress.Loopback);
-                }
-                catch (Exception ex)
-                {
-                    this.logger.LogWarning($"恢复DNS记录失败：{ex.Message}");
-                }
+                SystemDnsUtil.RemovePrimitiveDns(IPAddress.Loopback);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning(ex.Message);
+            }
+            finally
+            {
+                SystemDnsUtil.FlushResolverCache();
             }
 
             return base.StopAsync(cancellationToken);
