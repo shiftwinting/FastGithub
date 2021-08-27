@@ -21,6 +21,7 @@ namespace FastGithub.Http
     {
         private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
+        private readonly TimeSpan blackIPAddressExpiration = TimeSpan.FromMinutes(10d);
 
         /// <summary>
         /// HttpClientHandler
@@ -42,8 +43,16 @@ namespace FastGithub.Http
         /// <returns></returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            await this.ProcessRequestAsync(request, cancellationToken);
-            return await this.SendRequestAsync(request, cancellationToken);
+            try
+            {
+                await this.ProcessRequestAsync(request, cancellationToken);
+                return await this.SendRequestAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException ex)
+            {
+                this.InterceptRequestException(request, ex);
+                throw;
+            }
         }
 
         /// <summary>
@@ -106,6 +115,32 @@ namespace FastGithub.Http
             else
             {
                 return await base.SendAsync(request, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// 拦截请求异常
+        /// 查找TimedOut的ip地址添加到黑名单
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="exception"></param>
+        private void InterceptRequestException(HttpRequestMessage request, HttpRequestException exception)
+        {
+            if (request.RequestUri == null ||
+                exception.InnerException is not SocketException socketException ||
+                socketException.SocketErrorCode != SocketError.TimedOut)
+            {
+                return;
+            }
+
+            if (IPAddress.TryParse(request.RequestUri.Host, out var address))
+            {
+                this.domainResolver.SetBlack(address, this.blackIPAddressExpiration);
+            }
+
+            if (request.Headers.Host != null)
+            {
+                this.domainResolver.FlushDomain(new DnsEndPoint(request.Headers.Host, request.RequestUri.Port));
             }
         }
 

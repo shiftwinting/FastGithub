@@ -3,6 +3,7 @@ using DNS.Protocol;
 using FastGithub.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,7 +20,9 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
-        private readonly IMemoryCache memoryCache;
+        private readonly IMemoryCache blackIPAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        private readonly IMemoryCache domainResolveCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+
         private readonly FastGithubConfig fastGithubConfig;
         private readonly DnscryptProxy dnscryptProxy;
         private readonly ILogger<DomainResolver> logger;
@@ -33,21 +36,38 @@ namespace FastGithub.DomainResolve
 
         /// <summary>
         /// 域名解析器
-        /// </summary>
-        /// <param name="memoryCache"></param>
+        /// </summary> 
         /// <param name="fastGithubConfig"></param>
         /// <param name="dnscryptProxy"></param>
         /// <param name="logger"></param>
         public DomainResolver(
-            IMemoryCache memoryCache,
             FastGithubConfig fastGithubConfig,
             DnscryptProxy dnscryptProxy,
             ILogger<DomainResolver> logger)
         {
-            this.memoryCache = memoryCache;
             this.fastGithubConfig = fastGithubConfig;
             this.dnscryptProxy = dnscryptProxy;
             this.logger = logger;
+        }
+
+        /// <summary>
+        /// 设置ip黑名单
+        /// </summary>
+        /// <param name="address">ip</param>
+        /// <param name="expiration">过期时间</param>
+        public void SetBlack(IPAddress address, TimeSpan expiration)
+        {
+            this.blackIPAddressCache.Set(address, address, expiration);
+            this.logger.LogWarning($"已自动将{address}关到黑屋{expiration}");
+        }
+
+        /// <summary>
+        /// 刷新域名解析结果
+        /// </summary>
+        /// <param name="domain">域名</param>
+        public void FlushDomain(DnsEndPoint domain)
+        {
+            this.domainResolveCache.Remove(domain);
         }
 
         /// <summary>
@@ -78,7 +98,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress> LookupAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
-            if (this.memoryCache.TryGetValue<IPAddress>(domain, out var address))
+            if (this.domainResolveCache.TryGetValue<IPAddress>(domain, out var address))
             {
                 return address;
             }
@@ -107,7 +127,7 @@ namespace FastGithub.DomainResolve
             }
 
             this.logger.LogInformation($"[{domain.Host}->{address}]");
-            this.memoryCache.Set(domain, address, expiration);
+            this.domainResolveCache.Set(domain, address, expiration);
             return address;
         }
 
@@ -170,11 +190,6 @@ namespace FastGithub.DomainResolve
                 return default;
             }
 
-            if (port <= 0)
-            {
-                return addresses.FirstOrDefault();
-            }
-
             var tasks = addresses.Select(address => this.IsAvailableAsync(address, port, cancellationToken));
             var fastTask = await Task.WhenAny(tasks);
             return await fastTask;
@@ -190,6 +205,16 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress?> IsAvailableAsync(IPAddress address, int port, CancellationToken cancellationToken)
         {
+            if (port <= 0)
+            {
+                return address;
+            }
+
+            if (this.blackIPAddressCache.TryGetValue(address, out _))
+            {
+                return default;
+            }
+
             try
             {
                 using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
