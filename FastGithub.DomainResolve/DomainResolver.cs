@@ -58,7 +58,6 @@ namespace FastGithub.DomainResolve
         public void SetBlack(IPAddress address, TimeSpan expiration)
         {
             this.blackIPAddressCache.Set(address, address, expiration);
-            this.logger.LogWarning($"已将{address}关到小黑屋{expiration.TotalMinutes}分钟");
         }
 
         /// <summary>
@@ -212,7 +211,6 @@ namespace FastGithub.DomainResolve
 
             if (this.blackIPAddressCache.TryGetValue(address, out _))
             {
-                this.logger.LogWarning($"已跳过黑名单IP：{address}");
                 return default;
             }
 
@@ -226,12 +224,12 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogWarning($"已忽略连接超时的IP：{address}");
+                this.SetBlack(address, TimeSpan.FromSeconds(10d));
                 return default;
             }
             catch (Exception)
             {
-                this.logger.LogWarning($"已忽略不可连接的IP：{address}");
+                this.SetBlack(address, TimeSpan.FromSeconds(10d));
                 await Task.Delay(this.connectTimeout, cancellationToken);
                 return default;
             }
