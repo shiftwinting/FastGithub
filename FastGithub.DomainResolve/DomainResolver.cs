@@ -28,7 +28,7 @@ namespace FastGithub.DomainResolve
         private readonly ILogger<DomainResolver> logger;
 
         private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(5d);
-        private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
+        private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
         private readonly TimeSpan dnscryptExpiration = TimeSpan.FromMinutes(5d);
         private readonly TimeSpan fallbackExpiration = TimeSpan.FromMinutes(1d);
         private readonly TimeSpan loopbackExpiration = TimeSpan.FromSeconds(5d);
@@ -226,12 +226,12 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogWarning($"已跳过连接过慢IP：{address}");
+                this.logger.LogWarning($"已忽略连接超时的IP：{address}");
                 return default;
             }
             catch (Exception)
             {
-                this.logger.LogWarning($"已跳过不可连接的IP：{address}");
+                this.logger.LogWarning($"已忽略不可连接的IP：{address}");
                 await Task.Delay(this.connectTimeout, cancellationToken);
                 return default;
             }
