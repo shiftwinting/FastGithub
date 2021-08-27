@@ -16,11 +16,6 @@ namespace FastGithub.Dns
     static class SystemDnsUtil
     {
         /// <summary>
-        /// www.baidu.com的ip
-        /// </summary>
-        private static readonly IPAddress www_baidu_com = IPAddress.Parse("183.232.231.172");
-
-        /// <summary>
         /// 刷新DNS缓存
         /// </summary>
         [SupportedOSPlatform("windows")]
@@ -39,21 +34,22 @@ namespace FastGithub.Dns
         }
 
         /// <summary>
-        /// 设置主dns
-        /// </summary>
-        /// <param name="primitive"></param>
+        /// 设置为主dns
+        /// </summary> 
         /// <exception cref="FastGithubException"></exception> 
-        public static void SetPrimitiveDns(IPAddress primitive)
+        public static void SetAsPrimitiveDns()
         {
             var @interface = GetOutboundNetworkInterface();
             if (@interface == null)
             {
-                throw new FastGithubException($"找不到匹配的网络适配器来设置主DNS值：{primitive}");
+                throw new FastGithubException($"找不到匹配的网络适配器来设置主DNS");
             }
 
             var dnsAddresses = @interface.GetIPProperties().DnsAddresses;
-            if (primitive.Equals(dnsAddresses.FirstOrDefault()) == false)
+            var firstRecord = dnsAddresses.FirstOrDefault();
+            if (firstRecord == null || LocalMachine.ContainsIPAddress(firstRecord) == false)
             {
+                var primitive = IPAddress.Loopback;
                 var nameServers = dnsAddresses.Prepend(primitive);
                 if (OperatingSystem.IsWindows())
                 {
@@ -71,25 +67,33 @@ namespace FastGithub.Dns
         }
 
         /// <summary>
-        /// 移除主dns
-        /// </summary>
-        /// <param name="primitive"></param>
+        /// 从主dns移除
+        /// </summary> 
         /// <exception cref="FastGithubException"></exception> 
-        public static void RemovePrimitiveDns(IPAddress primitive)
+        public static void RemoveFromPrimitiveDns()
         {
             var @interface = GetOutboundNetworkInterface();
             if (@interface == null)
             {
-                throw new FastGithubException($"找不到匹配的网络适配器来移除主DNS值：{primitive}");
+                throw new FastGithubException($"找不到匹配的网络适配器来移除主DNS");
             }
 
             var dnsAddresses = @interface.GetIPProperties().DnsAddresses;
-            if (primitive.Equals(dnsAddresses.FirstOrDefault()))
+            var firstRecord = dnsAddresses.FirstOrDefault();
+            if (firstRecord != null && LocalMachine.ContainsIPAddress(firstRecord))
             {
                 var nameServers = dnsAddresses.Skip(1);
                 if (OperatingSystem.IsWindows())
                 {
                     SetNameServers(@interface, nameServers);
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    throw new FastGithubException($"不支持自动移除本机主DNS，请手工移除/etc/resolv.conf的第一条记录");
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    throw new FastGithubException($"不支持自动移除本机主DNS，请手工移除连接网络的DNS的第一条记录");
                 }
             }
         }
@@ -101,7 +105,7 @@ namespace FastGithub.Dns
         /// <returns></returns> 
         private static NetworkInterface? GetOutboundNetworkInterface()
         {
-            var remoteEndPoint = new IPEndPoint(www_baidu_com, 443);
+            var remoteEndPoint = new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53);
             var address = LocalMachine.GetLocalIPAddress(remoteEndPoint);
             if (address == null)
             {

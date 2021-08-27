@@ -57,7 +57,7 @@ namespace FastGithub.Dns
             {
                 try
                 {
-                    SystemDnsUtil.SetPrimitiveDns(IPAddress.Loopback);
+                    SystemDnsUtil.SetAsPrimitiveDns();
                     SystemDnsUtil.FlushResolverCache();
                 }
                 catch (Exception ex)
@@ -100,7 +100,7 @@ namespace FastGithub.Dns
 
             try
             {
-                SystemDnsUtil.RemovePrimitiveDns(IPAddress.Loopback);
+                SystemDnsUtil.RemoveFromPrimitiveDns();
             }
             catch (Exception ex)
             {
