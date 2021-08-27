@@ -27,7 +27,7 @@ namespace FastGithub.DomainResolve
         private readonly DnscryptProxy dnscryptProxy;
         private readonly ILogger<DomainResolver> logger;
 
-        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(2d);
+        private readonly TimeSpan lookupTimeout = TimeSpan.FromSeconds(5d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
         private readonly TimeSpan dnscryptExpiration = TimeSpan.FromMinutes(5d);
         private readonly TimeSpan fallbackExpiration = TimeSpan.FromMinutes(1d);
@@ -58,7 +58,7 @@ namespace FastGithub.DomainResolve
         public void SetBlack(IPAddress address, TimeSpan expiration)
         {
             this.blackIPAddressCache.Set(address, address, expiration);
-            this.logger.LogWarning($"已自动将{address}关到黑屋{expiration}");
+            this.logger.LogWarning($"已将{address}关到小黑屋{expiration.TotalMinutes}分钟");
         }
 
         /// <summary>
@@ -212,6 +212,7 @@ namespace FastGithub.DomainResolve
 
             if (this.blackIPAddressCache.TryGetValue(address, out _))
             {
+                this.logger.LogWarning($"已跳过黑名单IP：{address}");
                 return default;
             }
 
@@ -225,10 +226,12 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
+                this.logger.LogWarning($"已跳过连接过慢IP：{address}");
                 return default;
             }
             catch (Exception)
             {
+                this.logger.LogWarning($"已跳过不可连接的IP：{address}");
                 await Task.Delay(this.connectTimeout, cancellationToken);
                 return default;
             }
