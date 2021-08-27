@@ -62,15 +62,19 @@ namespace FastGithub.Dns
             {
                 try
                 {
-                    var resolver = new UdpRequestResolver(dns);
-                    return await resolver.Resolve(request, cancellationToken);
+                    var fallbackResolver = new UdpRequestResolver(dns);
+                    var fallbackResponse = await fallbackResolver.Resolve(request, cancellationToken);
+                    if (fallbackResponse != null && fallbackResponse.AnswerRecords.Count > 0)
+                    {
+                        return fallbackResponse;
+                    }
                 }
                 catch (Exception)
                 {
                 }
             }
 
-            throw new FastGithubException($"无法解析域名{domain}");
+            return response;
         }
     }
 }
