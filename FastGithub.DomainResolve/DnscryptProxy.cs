@@ -25,16 +25,7 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 获取监听的节点
         /// </summary>
-        public IPEndPoint EndPoint { get; }
-
-        /// <summary>
-        /// DnscryptProxy服务
-        /// </summary>
-        public DnscryptProxy()
-        {
-            var port = LocalMachine.GetAvailablePort(IPAddress.Loopback.AddressFamily, min: 5353);
-            this.EndPoint = new IPEndPoint(IPAddress.Loopback, port);
-        }
+        public IPEndPoint? LocalEndPoint { get; private set; }
 
         /// <summary>
         /// 启动dnscrypt-proxy
@@ -44,7 +35,10 @@ namespace FastGithub.DomainResolve
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
-            await TomlUtil.SetListensAsync(tomlPath, this.EndPoint, cancellationToken);
+            var port = LocalMachine.GetAvailablePort(IPAddress.Loopback.AddressFamily, min: 5353);
+            var localEndPoint = new IPEndPoint(IPAddress.Loopback, port);
+
+            await TomlUtil.SetListensAsync(tomlPath, localEndPoint, cancellationToken);
             await TomlUtil.SetEdnsClientSubnetAsync(tomlPath, cancellationToken);
 
             foreach (var process in Process.GetProcessesByName(NAME))
@@ -64,6 +58,23 @@ namespace FastGithub.DomainResolve
             {
                 this.process = StartDnscryptProxy(string.Empty);
             }
+
+            if (this.process != null)
+            {
+                this.LocalEndPoint = localEndPoint;
+                this.process.EnableRaisingEvents = true;
+                this.process.Exited += Process_Exited;
+            }
+        }
+
+        /// <summary>
+        /// 进程退出时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Process_Exited(object? sender, EventArgs e)
+        {
+            this.LocalEndPoint = null;
         }
 
         /// <summary>
@@ -81,6 +92,7 @@ namespace FastGithub.DomainResolve
             {
                 this.process.Kill();
             }
+            this.LocalEndPoint = null;
         }
 
         /// <summary>
