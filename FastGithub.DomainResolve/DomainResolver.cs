@@ -20,8 +20,8 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
-        private readonly IMemoryCache blackIPAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         private readonly IMemoryCache domainResolveCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        private readonly IMemoryCache disableIPAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private readonly FastGithubConfig fastGithubConfig;
         private readonly DnscryptProxy dnscryptProxy;
@@ -51,13 +51,13 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 设置ip黑名单
+        /// 设置ip不可用
         /// </summary>
         /// <param name="address">ip</param>
         /// <param name="expiration">过期时间</param>
-        public void SetBlack(IPAddress address, TimeSpan expiration)
+        public void SetDisabled(IPAddress address, TimeSpan expiration)
         {
-            this.blackIPAddressCache.Set(address, address, expiration);
+            this.disableIPAddressCache.Set(address, address, expiration);
         }
 
         /// <summary>
@@ -165,6 +165,7 @@ namespace FastGithub.DomainResolve
                 using var timeoutTokenSource = new CancellationTokenSource(this.lookupTimeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
                 var addresses = await dnsClient.Lookup(domain.Host, RecordType.A, linkedTokenSource.Token);
+                addresses = addresses.Where(address => this.disableIPAddressCache.TryGetValue(address, out _) == false).ToList();
                 return await this.FindFastValueAsync(addresses, domain.Port, cancellationToken);
             }
             catch (Exception ex)
@@ -189,6 +190,11 @@ namespace FastGithub.DomainResolve
                 return default;
             }
 
+            if (port <= 0)
+            {
+                return addresses.FirstOrDefault();
+            }
+
             var tasks = addresses.Select(address => this.IsAvailableAsync(address, port, cancellationToken));
             var fastTask = await Task.WhenAny(tasks);
             return await fastTask;
@@ -204,16 +210,6 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress?> IsAvailableAsync(IPAddress address, int port, CancellationToken cancellationToken)
         {
-            if (port <= 0)
-            {
-                return address;
-            }
-
-            if (this.blackIPAddressCache.TryGetValue(address, out _))
-            {
-                return default;
-            }
-
             try
             {
                 using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -224,12 +220,12 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.SetBlack(address, TimeSpan.FromSeconds(10d));
+                this.SetDisabled(address, TimeSpan.FromMilliseconds(1d));
                 return default;
             }
             catch (Exception)
             {
-                this.SetBlack(address, TimeSpan.FromSeconds(10d));
+                this.SetDisabled(address, TimeSpan.FromMilliseconds(1d));
                 await Task.Delay(this.connectTimeout, cancellationToken);
                 return default;
             }

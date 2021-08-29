@@ -11,11 +11,11 @@ namespace FastGithub.DomainResolve
     public interface IDomainResolver
     {
         /// <summary>
-        /// 设置ip黑名单
+        /// 设置ip不可用
         /// </summary>
         /// <param name="address">ip</param>
         /// <param name="expiration">过期时间</param>
-        void SetBlack(IPAddress address, TimeSpan expiration);
+        void SetDisabled(IPAddress address, TimeSpan expiration);
 
         /// <summary>
         /// 刷新域名解析结果

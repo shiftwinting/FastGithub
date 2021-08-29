@@ -135,7 +135,7 @@ namespace FastGithub.Http
 
             if (IPAddress.TryParse(request.RequestUri.Host, out var address))
             {
-                this.domainResolver.SetBlack(address, this.blackIPAddressExpiration);
+                this.domainResolver.SetDisabled(address, this.blackIPAddressExpiration);
             }
 
             if (request.Headers.Host != null)
