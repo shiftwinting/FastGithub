@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,9 +12,8 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 设置ip不可用
         /// </summary>
-        /// <param name="address">ip</param>
-        /// <param name="expiration">过期时间</param>
-        void SetDisabled(IPAddress address, TimeSpan expiration);
+        /// <param name="address">ip</param> 
+        void SetDisabled(IPAddress address);
 
         /// <summary>
         /// 刷新域名解析结果

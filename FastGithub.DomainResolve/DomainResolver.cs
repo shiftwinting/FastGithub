@@ -55,10 +55,9 @@ namespace FastGithub.DomainResolve
         /// 设置ip不可用
         /// </summary>
         /// <param name="address">ip</param>
-        /// <param name="expiration">过期时间</param>
-        public void SetDisabled(IPAddress address, TimeSpan expiration)
+        public void SetDisabled(IPAddress address)
         {
-            this.disableIPAddressCache.Set(address, address, expiration);
+            this.disableIPAddressCache.Set(address, address, this.disableIPExpiration);
         }
 
         /// <summary>
@@ -179,7 +178,7 @@ namespace FastGithub.DomainResolve
                 }
                 else
                 {
-                    this.logger.LogInformation($"dns({dns}): [{domain.Host}->{address}]");
+                    this.logger.LogInformation($"dns({dns}): {domain.Host}->{address}");
                 }
                 return address;
             }
@@ -234,12 +233,12 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.SetDisabled(address, this.disableIPExpiration);
+                this.SetDisabled(address);
                 return default;
             }
             catch (Exception)
             {
-                this.SetDisabled(address, this.disableIPExpiration);
+                this.SetDisabled(address);
                 await Task.Delay(this.connectTimeout, cancellationToken);
                 return default;
             }

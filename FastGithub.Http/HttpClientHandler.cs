@@ -22,7 +22,6 @@ namespace FastGithub.Http
     {
         private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
-        private readonly TimeSpan timedOutIPAddressExpiration = TimeSpan.FromMinutes(10d);
 
         /// <summary>
         /// HttpClientHandler
@@ -136,7 +135,7 @@ namespace FastGithub.Http
 
             if (IPAddress.TryParse(request.RequestUri.Host, out var address))
             {
-                this.domainResolver.SetDisabled(address, this.timedOutIPAddressExpiration);
+                this.domainResolver.SetDisabled(address);
             }
 
             if (request.Headers.Host != null)
