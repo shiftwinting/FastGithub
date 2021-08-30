@@ -28,6 +28,8 @@ namespace FastGithub.DomainResolve
         private readonly ILogger<DomainResolver> logger;
 
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
+        private readonly TimeSpan disableIPExpiration = TimeSpan.FromMinutes(2d);
+
         private readonly TimeSpan dnscryptExpiration = TimeSpan.FromMinutes(10d);
         private readonly TimeSpan fallbackExpiration = TimeSpan.FromMinutes(2d);
         private readonly TimeSpan loopbackExpiration = TimeSpan.FromSeconds(5d);
@@ -133,7 +135,6 @@ namespace FastGithub.DomainResolve
                 expiration = this.loopbackExpiration;
             }
 
-            this.logger.LogInformation($"[{domain.Host}->{address}]");
             this.domainResolveCache.Set(domain, address, expiration);
             return address;
         }
@@ -171,7 +172,16 @@ namespace FastGithub.DomainResolve
                 var dnsClient = new DnsClient(dns);
                 var addresses = await dnsClient.Lookup(domain.Host, RecordType.A, cancellationToken);
                 addresses = addresses.Where(address => this.disableIPAddressCache.TryGetValue(address, out _) == false).ToList();
-                return await this.FindFastValueAsync(addresses, domain.Port, cancellationToken);
+                var address = await this.FindFastValueAsync(addresses, domain.Port, cancellationToken);
+                if (address == null)
+                {
+                    this.logger.LogWarning($"dns({dns})解析不到{domain.Host}可用的ip解析");
+                }
+                else
+                {
+                    this.logger.LogInformation($"dns({dns}): [{domain.Host}->{address}]");
+                }
+                return address;
             }
             catch (Exception ex)
             {
@@ -224,12 +234,12 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.SetDisabled(address, TimeSpan.FromMilliseconds(2d));
+                this.SetDisabled(address, this.disableIPExpiration);
                 return default;
             }
             catch (Exception)
             {
-                this.SetDisabled(address, TimeSpan.FromMilliseconds(1d));
+                this.SetDisabled(address, this.disableIPExpiration);
                 await Task.Delay(this.connectTimeout, cancellationToken);
                 return default;
             }
