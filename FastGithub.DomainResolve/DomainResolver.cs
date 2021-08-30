@@ -105,7 +105,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress?> ResolveCoreAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
-            if (this.domainResolveCache.TryGetValue<IPAddress>(domain, out var address))
+            if (this.domainResolveCache.TryGetValue<IPAddress>(domain, out var address) && address != null)
             {
                 return address;
             }
@@ -124,7 +124,7 @@ namespace FastGithub.DomainResolve
 
             if (address == null)
             {
-                return default;
+                return null;
             }
 
             // 往往是被污染的dns
