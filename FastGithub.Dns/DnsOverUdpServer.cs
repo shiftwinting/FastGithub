@@ -55,8 +55,20 @@ namespace FastGithub.Dns
                 const int SIO_UDP_CONNRESET = unchecked((int)0x9800000C);
                 this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
             }
-            this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            this.socket.Bind(new IPEndPoint(address, port));
+
+            try
+            {
+                this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                this.socket.Bind(new IPEndPoint(address, port));
+            }
+            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AccessDenied)
+            {
+                if (OperatingSystem.IsLinux())
+                {
+                    throw new FastGithubException($"请以root身份运行", ex);
+                }
+                throw;
+            }
         }
 
         /// <summary>
