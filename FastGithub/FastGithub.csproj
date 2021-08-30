@@ -20,6 +20,12 @@
 		<ProjectReference Include="..\FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" /> 
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.2.0" />
+  </ItemGroup>
+  
 	<ItemGroup>
 		<None Include="../README.md" Link="README.md">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

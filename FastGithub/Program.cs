@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using System;
 using System.IO;
 
@@ -54,6 +55,13 @@ namespace FastGithub
                         kestrel.ListenHttpsReverseProxy();
                         kestrel.ListenHttpReverseProxy();
                         kestrel.ListenGithubSshProxy();
+                    });
+                    webBuilder.UseSerilog((hosting, logger) =>
+                    {
+                        logger
+                            .ReadFrom.Configuration(hosting.Configuration)
+                            .Enrich.FromLogContext()
+                            .WriteTo.Console(outputTemplate: "{Timestamp:O} [{Level:u3}]{NewLine}{SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}");
                     });
                 });
         }
