@@ -21,7 +21,7 @@ namespace FastGithub.Http
     {
         private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
-        private readonly TimeSpan blackIPAddressExpiration = TimeSpan.FromMinutes(10d);
+        private readonly TimeSpan timedOutIPAddressExpiration = TimeSpan.FromMinutes(10d);
 
         /// <summary>
         /// HttpClientHandler
@@ -135,7 +135,7 @@ namespace FastGithub.Http
 
             if (IPAddress.TryParse(request.RequestUri.Host, out var address))
             {
-                this.domainResolver.SetDisabled(address, this.blackIPAddressExpiration);
+                this.domainResolver.SetDisabled(address, this.timedOutIPAddressExpiration);
             }
 
             if (request.Headers.Host != null)
