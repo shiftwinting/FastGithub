@@ -74,6 +74,8 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
+        /// <exception cref="FastGithubException"></exception>
         /// <returns></returns>
         public async Task<IPAddress> ResolveAsync(DnsEndPoint domain, CancellationToken cancellationToken = default)
         {
@@ -103,6 +105,7 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <returns></returns>
         private async Task<IPAddress?> ResolveCoreAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
@@ -143,6 +146,7 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <returns></returns>
         private async Task<IPAddress?> LookupByFallbackAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
@@ -163,6 +167,7 @@ namespace FastGithub.DomainResolve
         /// <param name="dns"></param>
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <returns></returns>
         private async Task<IPAddress?> LookupAsync(IPEndPoint dns, DnsEndPoint domain, CancellationToken cancellationToken)
         {
@@ -184,6 +189,7 @@ namespace FastGithub.DomainResolve
             }
             catch (Exception ex)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 this.logger.LogWarning($"dns({dns})无法解析{domain.Host}：{ex.Message}");
                 return default;
             }
@@ -195,6 +201,7 @@ namespace FastGithub.DomainResolve
         /// <param name="addresses"></param>
         /// <param name="port"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <returns></returns>
         private async Task<IPAddress?> FindFastValueAsync(IEnumerable<IPAddress> addresses, int port, CancellationToken cancellationToken)
         {
@@ -220,6 +227,7 @@ namespace FastGithub.DomainResolve
         /// <param name="address"></param>
         /// <param name="port"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <returns></returns>
         private async Task<IPAddress?> IsAvailableAsync(IPAddress address, int port, CancellationToken cancellationToken)
         {
@@ -233,6 +241,7 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 this.SetDisabled(address);
                 return default;
             }
