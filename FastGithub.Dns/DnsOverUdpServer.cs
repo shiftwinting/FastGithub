@@ -58,7 +58,6 @@ namespace FastGithub.Dns
 
             try
             {
-                this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 this.socket.Bind(new IPEndPoint(address, port));
             }
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AccessDenied)
