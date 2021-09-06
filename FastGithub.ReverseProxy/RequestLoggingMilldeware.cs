@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -53,7 +55,7 @@ namespace FastGithub.ReverseProxy
             }
 
             var exception = context.GetForwarderErrorFeature()?.Exception;
-            if (exception == null || exception is OperationCanceledException)
+            if (IsError(exception) == false)
             {
                 this.logger.LogInformation(message);
             }
@@ -61,6 +63,21 @@ namespace FastGithub.ReverseProxy
             {
                 this.logger.LogError($"{message}{Environment.NewLine}{exception}");
             }
+        }
+
+        private static bool IsError(Exception? exception)
+        {
+            if (exception == null || exception is OperationCanceledException)
+            {
+                return false;
+            }
+
+            if (exception is IOException ioException && ioException.InnerException is ConnectionAbortedException)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
