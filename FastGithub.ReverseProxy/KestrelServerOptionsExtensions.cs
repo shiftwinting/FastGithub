@@ -32,7 +32,7 @@ namespace FastGithub
             else
             {
                 kestrel.Listen(IPAddress.Any, HTTP_PORT);
-                logger.LogInformation($"已监听http反向代理，访问 http://127.0.0.1 或本机其它任意ip可进入Dashboard");
+                logger.LogInformation($"已监听tcp端口{HTTP_PORT}，http反向代理启动完成");
             }
         }
 
@@ -63,7 +63,7 @@ namespace FastGithub
                         certService.GetOrCreateServerCert(domain)));
 
             var logger = kestrel.GetLogger();
-            logger.LogInformation($"已监听https反向代理，访问 https://127.0.0.1 或本机其它任意ip可进入Dashboard");
+            logger.LogInformation($"已监听tcp端口{HTTPS_PORT}，https反向代理启动完成");
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace FastGithub
             else
             {
                 kestrel.Listen(IPAddress.Any, sshPort, listen => listen.UseConnectionHandler<GithubSshProxyHandler>());
-                logger.LogInformation("已监听github的ssh代理");
+                logger.LogInformation($"已监听tcp端口{sshPort}，github的ssh代理启动完成");
             }
         }
 

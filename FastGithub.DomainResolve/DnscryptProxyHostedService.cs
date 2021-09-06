@@ -37,7 +37,7 @@ namespace FastGithub.DomainResolve
             try
             {
                 await this.dnscryptProxy.StartAsync(cancellationToken);
-                this.logger.LogInformation($"{this.dnscryptProxy}启动成功");
+                this.logger.LogInformation($"{this.dnscryptProxy}启动完成");
             }
             catch (Exception ex)
             {

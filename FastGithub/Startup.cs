@@ -36,6 +36,7 @@ namespace FastGithub
             services.AddReverseProxy();
 
             services.AddControllersWithViews();
+            services.AddHostedService<VersonHostedService>();
         }
 
         /// <summary>

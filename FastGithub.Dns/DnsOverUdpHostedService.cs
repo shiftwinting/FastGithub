@@ -50,7 +50,7 @@ namespace FastGithub.Dns
         {
             var dnsPort = this.options.CurrentValue.Listen.DnsPort;
             this.dnsOverUdpServer.Bind(IPAddress.Any, dnsPort);
-            this.logger.LogInformation("DNS服务启动成功");
+            this.logger.LogInformation($"已监听udp端口{dnsPort}，DNS服务启动完成");
 
             const int STANDARD_DNS_PORT = 53;
             if (dnsPort == STANDARD_DNS_PORT)
