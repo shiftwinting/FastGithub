@@ -18,8 +18,8 @@ namespace FastGithub.Http
         public string? Domain { get; set; }
 
         /// <summary>
-        /// 获取或设置Sni值的表达式 
+        /// 获取或设置Sni值
         /// </summary>
-        public TlsSniPattern TlsSniPattern { get; set; }
+        public TlsSniPattern TlsSniValue { get; set; }
     }
 }

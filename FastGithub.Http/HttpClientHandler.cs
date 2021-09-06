@@ -74,7 +74,7 @@ namespace FastGithub.Http
             {
                 Domain = uri.Host,
                 IsHttps = uri.Scheme == Uri.UriSchemeHttps,
-                TlsSniPattern = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom()
+                TlsSniValue = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom()
             };
             request.SetRequestContext(context);
 
@@ -93,7 +93,7 @@ namespace FastGithub.Http
                 }
                 uriBuilder.Host = address.ToString();
                 request.Headers.Host = context.Domain;
-                context.TlsSniPattern = context.TlsSniPattern.WithIPAddress(address);
+                context.TlsSniValue = context.TlsSniValue.WithIPAddress(address);
             }
             request.RequestUri = uriBuilder.Uri;
         }
@@ -173,7 +173,7 @@ namespace FastGithub.Http
                     await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
                     {
                         EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
-                        TargetHost = requestContext.TlsSniPattern.Value,
+                        TargetHost = requestContext.TlsSniValue.Value,
                         RemoteCertificateValidationCallback = ValidateServerCertificate
                     }, cancellationToken);
                     return sslStream;
