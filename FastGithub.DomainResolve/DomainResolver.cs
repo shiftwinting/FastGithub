@@ -83,16 +83,7 @@ namespace FastGithub.DomainResolve
             try
             {
                 await semaphore.WaitAsync();
-
-                for (var i = 0; i < 2; i++)
-                {
-                    var address = await this.ResolveCoreAsync(domain, cancellationToken);
-                    if (address != null)
-                    {
-                        return address;
-                    }
-                }
-                throw new FastGithubException($"当前解析不到{domain.Host}可用的ip，请刷新重试");
+                return await this.ResolveCoreAsync(domain, cancellationToken);
             }
             finally
             {
@@ -106,8 +97,9 @@ namespace FastGithub.DomainResolve
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="OperationCanceledException"></exception>
+        /// <exception cref="FastGithubException"></exception>
         /// <returns></returns>
-        private async Task<IPAddress?> ResolveCoreAsync(DnsEndPoint domain, CancellationToken cancellationToken)
+        private async Task<IPAddress> ResolveCoreAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
             if (this.domainResolveCache.TryGetValue<IPAddress>(domain, out var address) && address != null)
             {
@@ -115,10 +107,7 @@ namespace FastGithub.DomainResolve
             }
 
             var expiration = this.dnscryptExpiration;
-            if (this.dnscryptProxy.LocalEndPoint != null)
-            {
-                address = await this.LookupAsync(this.dnscryptProxy.LocalEndPoint, domain, cancellationToken);
-            }
+            address = await this.LookupByDnscryptAsync(domain, cancellationToken);
 
             if (address == null)
             {
@@ -128,7 +117,7 @@ namespace FastGithub.DomainResolve
 
             if (address == null)
             {
-                return null;
+                throw new FastGithubException($"当前解析不到{domain.Host}可用的ip，请刷新重试");
             }
 
             // 往往是被污染的dns
@@ -140,6 +129,31 @@ namespace FastGithub.DomainResolve
             this.domainResolveCache.Set(domain, address, expiration);
             return address;
         }
+
+
+        /// <summary>
+        /// Dnscrypt查找ip
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="maxTryCount"></param>
+        /// <returns></returns>
+        private async Task<IPAddress?> LookupByDnscryptAsync(DnsEndPoint domain, CancellationToken cancellationToken, int maxTryCount = 2)
+        {
+            if (this.dnscryptProxy.LocalEndPoint != null)
+            {
+                for (var i = 0; i < maxTryCount; i++)
+                {
+                    var address = await this.LookupAsync(this.dnscryptProxy.LocalEndPoint, domain, cancellationToken);
+                    if (address != null)
+                    {
+                        return address;
+                    }
+                }
+            }
+            return default;
+        }
+
 
         /// <summary>
         /// 回退查找ip
