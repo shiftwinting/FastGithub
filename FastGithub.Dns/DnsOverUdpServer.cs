@@ -1,6 +1,7 @@
 ﻿using DNS.Protocol;
 using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -28,10 +29,13 @@ namespace FastGithub.Dns
         /// <param name="logger"></param>
         public DnsOverUdpServer(
             RequestResolver requestResolver,
-            ILogger<DnsOverUdpServer> logger)
+            ILogger<DnsOverUdpServer> logger,
+            IOptionsMonitor<FastGithubOptions> options)
         {
             this.requestResolver = requestResolver;
             this.logger = logger;
+
+            options.OnChange(opt => SystemDnsUtil.FlushResolverCache());
         }
 
         /// <summary>

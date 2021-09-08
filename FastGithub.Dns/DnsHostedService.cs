@@ -1,7 +1,5 @@
-﻿using FastGithub.Configuration;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -13,30 +11,26 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns后台服务
     /// </summary>
-    sealed class DnsOverUdpHostedService : BackgroundService
+    sealed class DnsHostedService : BackgroundService
     {
         private readonly DnsOverUdpServer dnsOverUdpServer;
         private readonly IEnumerable<IConflictValidator> conflictValidators;
-        private readonly ILogger<DnsOverUdpHostedService> logger;
-
+        private readonly ILogger<DnsHostedService> logger;
 
         /// <summary>
         /// dns后台服务
         /// </summary>
         /// <param name="dnsOverUdpServer"></param>
         /// <param name="conflictValidators"></param>
-        /// <param name="options"></param>
         /// <param name="logger"></param>
-        public DnsOverUdpHostedService(
+        public DnsHostedService(
             DnsOverUdpServer dnsOverUdpServer,
             IEnumerable<IConflictValidator> conflictValidators,
-            IOptionsMonitor<FastGithubOptions> options,
-            ILogger<DnsOverUdpHostedService> logger)
+            ILogger<DnsHostedService> logger)
         {
             this.dnsOverUdpServer = dnsOverUdpServer;
             this.conflictValidators = conflictValidators;
-            this.logger = logger;
-            options.OnChange(opt => SystemDnsUtil.FlushResolverCache());
+            this.logger = logger;         
         }
 
         /// <summary>
@@ -54,7 +48,7 @@ namespace FastGithub.Dns
             }
             catch (Exception ex)
             {
-                this.logger.LogError($"DNS服务启动失败：{ex.Message}{Environment.NewLine}请配置系统或浏览器使用{nameof(FastGithub)}的DoH，或向系统hosts文件添加github相关域名的ip为127.0.0.1");
+                this.logger.LogError($"DNS服务启动失败：{ex.Message}{Environment.NewLine}请配置系统或浏览器使用{nameof(FastGithub)}的DoH：https://127.0.0.1/dns-query，或向系统hosts文件添加github相关域名的ip为127.0.0.1");
             }
 
             foreach (var item in this.conflictValidators)
