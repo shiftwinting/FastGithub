@@ -21,7 +21,7 @@ namespace FastGithub
             services.TryAddSingleton<DnsOverHttpsMiddleware>();
             services.AddSingleton<IConflictValidator, HostsConflictValidator>();
             services.AddSingleton<IConflictValidator, ProxyConflictValidtor>();
-            return services.AddHostedService<DnsHostedService>();
+            return services.AddHostedService<DnsOverUdpHostedService>();
         }
     }
 }

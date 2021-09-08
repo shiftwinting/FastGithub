@@ -11,11 +11,11 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns后台服务
     /// </summary>
-    sealed class DnsHostedService : BackgroundService
+    sealed class DnsOverUdpHostedService : BackgroundService
     {
         private readonly DnsOverUdpServer dnsOverUdpServer;
         private readonly IEnumerable<IConflictValidator> conflictValidators;
-        private readonly ILogger<DnsHostedService> logger;
+        private readonly ILogger<DnsOverUdpHostedService> logger;
 
         /// <summary>
         /// dns后台服务
@@ -23,10 +23,10 @@ namespace FastGithub.Dns
         /// <param name="dnsOverUdpServer"></param>
         /// <param name="conflictValidators"></param>
         /// <param name="logger"></param>
-        public DnsHostedService(
+        public DnsOverUdpHostedService(
             DnsOverUdpServer dnsOverUdpServer,
             IEnumerable<IConflictValidator> conflictValidators,
-            ILogger<DnsHostedService> logger)
+            ILogger<DnsOverUdpHostedService> logger)
         {
             this.dnsOverUdpServer = dnsOverUdpServer;
             this.conflictValidators = conflictValidators;
