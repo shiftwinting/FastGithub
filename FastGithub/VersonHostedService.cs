@@ -17,7 +17,7 @@ namespace FastGithub
         public Task StartAsync(CancellationToken cancellationToken)
         {
             var version = ProductionVersion.Current;
-            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，当前版本为v{version}");
+            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，当前版本为v{version}，访问https://github.com/dotnetcore/FastGithub关注新版本");
             return Task.CompletedTask;
         }
 

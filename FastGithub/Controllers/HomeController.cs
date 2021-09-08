@@ -1,5 +1,7 @@
-﻿using FastGithub.Models;
+﻿using FastGithub.Configuration;
+using FastGithub.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace FastGithub.Controllers
 {
@@ -14,8 +16,12 @@ namespace FastGithub.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
-            var model = new Home { Host = Request.Host.ToString() };
+            var model = new Home
+            {
+                Version = ProductionVersion.Current?.ToString(),
+                ProjectUri = "https://github.com/dotnetcore/FastGithub"
+            };
             return View(model);
-        } 
+        }
     }
 }
