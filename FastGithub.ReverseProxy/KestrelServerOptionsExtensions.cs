@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Net;
 
@@ -72,18 +71,17 @@ namespace FastGithub
         /// <param name="kestrel"></param>
         public static void ListenGithubSshProxy(this KestrelServerOptions kestrel)
         {
-            var listenOptions = kestrel.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>();
-            var sshPort = listenOptions.Value.Listen.SshPort;
+            const int SSH_PORT = 22;
             var logger = kestrel.GetLogger();
 
-            if (LocalMachine.CanListenTcp(sshPort) == false)
+            if (LocalMachine.CanListenTcp(SSH_PORT) == false)
             {
-                logger.LogWarning($"由于tcp端口{sshPort}已经被其它进程占用，github的ssh代理功能将受限");
+                logger.LogWarning($"由于tcp端口{SSH_PORT}已经被其它进程占用，github的ssh代理功能将受限");
             }
             else
             {
-                kestrel.Listen(IPAddress.Any, sshPort, listen => listen.UseConnectionHandler<GithubSshProxyHandler>());
-                logger.LogInformation($"已监听tcp端口{sshPort}，github的ssh代理启动完成");
+                kestrel.Listen(IPAddress.Any, SSH_PORT, listen => listen.UseConnectionHandler<GithubSshProxyHandler>());
+                logger.LogInformation($"已监听tcp端口{SSH_PORT}，github的ssh代理启动完成");
             }
         }
 

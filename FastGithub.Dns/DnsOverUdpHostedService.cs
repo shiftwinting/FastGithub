@@ -17,15 +17,15 @@ namespace FastGithub.Dns
     {
         private readonly DnsOverUdpServer dnsOverUdpServer;
         private readonly IEnumerable<IConflictValidator> conflictValidators;
-        private readonly IOptionsMonitor<FastGithubOptions> options;
         private readonly ILogger<DnsOverUdpHostedService> logger;
+
 
         /// <summary>
         /// dns后台服务
         /// </summary>
         /// <param name="dnsOverUdpServer"></param>
         /// <param name="conflictValidators"></param>
-        /// <param name="options"></param> 
+        /// <param name="options"></param>
         /// <param name="logger"></param>
         public DnsOverUdpHostedService(
             DnsOverUdpServer dnsOverUdpServer,
@@ -35,9 +35,7 @@ namespace FastGithub.Dns
         {
             this.dnsOverUdpServer = dnsOverUdpServer;
             this.conflictValidators = conflictValidators;
-            this.options = options;
             this.logger = logger;
-
             options.OnChange(opt => SystemDnsUtil.FlushResolverCache());
         }
 
@@ -48,26 +46,15 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            var dnsPort = this.options.CurrentValue.Listen.DnsPort;
-            this.dnsOverUdpServer.Bind(IPAddress.Any, dnsPort);
-            this.logger.LogInformation($"已监听udp端口{dnsPort}，DNS服务启动完成");
-
-            const int STANDARD_DNS_PORT = 53;
-            if (dnsPort == STANDARD_DNS_PORT)
+            try
             {
-                try
-                {
-                    SystemDnsUtil.SetAsPrimitiveDns();
-                    SystemDnsUtil.FlushResolverCache();
-                }
-                catch (Exception ex)
-                {
-                    this.logger.LogWarning(ex.Message);
-                }
+                const int DNS_PORT = 53;
+                this.dnsOverUdpServer.Listen(IPAddress.Any, DNS_PORT);
+                this.logger.LogInformation($"已监听udp端口{DNS_PORT}，DNS服务启动完成");
             }
-            else
+            catch (Exception ex)
             {
-                this.logger.LogWarning($"由于使用了非标准DNS端口{dnsPort}，你需要将{nameof(FastGithub)}设置为标准DNS的上游");
+                this.logger.LogError($"DNS服务启动失败：{ex.Message}{Environment.NewLine}请配置系统或浏览器使用{nameof(FastGithub)}的DoH，或向系统hosts文件添加github相关域名的ip为127.0.0.1");
             }
 
             foreach (var item in this.conflictValidators)
@@ -96,21 +83,6 @@ namespace FastGithub.Dns
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             this.dnsOverUdpServer.Dispose();
-            this.logger.LogInformation("DNS服务已停止");
-
-            try
-            {
-                SystemDnsUtil.RemoveFromPrimitiveDns();
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning(ex.Message);
-            }
-            finally
-            {
-                SystemDnsUtil.FlushResolverCache();
-            }
-
             return base.StopAsync(cancellationToken);
         }
     }

@@ -19,6 +19,8 @@ namespace FastGithub.Dns
         private readonly Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private readonly byte[] buffer = new byte[ushort.MaxValue];
 
+        private bool listened = false;
+
         /// <summary>
         /// dns服务器
         /// </summary>
@@ -33,12 +35,13 @@ namespace FastGithub.Dns
         }
 
         /// <summary>
-        /// 绑定地址和端口
+        /// 监听IP地址和端口
         /// </summary>
         /// <param name="address"></param>
         /// <param name="port"></param> 
-        /// <returns></returns>
-        public void Bind(IPAddress address, int port)
+        /// <exception cref="SocketException"></exception>
+        /// <exception cref="FastGithubException"></exception>
+        public void Listen(IPAddress address, int port)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -56,17 +59,17 @@ namespace FastGithub.Dns
                 this.socket.IOControl(SIO_UDP_CONNRESET, new byte[4], new byte[4]);
             }
 
+            this.socket.Bind(new IPEndPoint(address, port));
+            this.listened = true;
+
             try
             {
-                this.socket.Bind(new IPEndPoint(address, port));
+                SystemDnsUtil.SetAsPrimitiveDns();
+                SystemDnsUtil.FlushResolverCache();
             }
-            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AccessDenied)
+            catch (Exception ex)
             {
-                if (OperatingSystem.IsLinux())
-                {
-                    throw new FastGithubException($"请以root身份运行", ex);
-                }
-                throw;
+                this.logger.LogWarning(ex.Message);
             }
         }
 
@@ -77,6 +80,11 @@ namespace FastGithub.Dns
         /// <returns></returns>
         public async Task HandleAsync(CancellationToken cancellationToken)
         {
+            if (this.listened == false)
+            {
+                return;
+            }
+
             var remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             while (cancellationToken.IsCancellationRequested == false)
             {
@@ -121,6 +129,23 @@ namespace FastGithub.Dns
         public void Dispose()
         {
             this.socket.Dispose();
+            if (this.listened == false)
+            {
+                return;
+            }
+
+            try
+            {
+                SystemDnsUtil.RemoveFromPrimitiveDns();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning(ex.Message);
+            }
+            finally
+            {
+                SystemDnsUtil.FlushResolverCache();
+            }
         }
     }
 }

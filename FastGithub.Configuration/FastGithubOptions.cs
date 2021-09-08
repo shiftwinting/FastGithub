@@ -9,11 +9,6 @@ namespace FastGithub.Configuration
     public class FastGithubOptions
     {
         /// <summary>
-        /// 监听配置
-        /// </summary>
-        public ListenConfig Listen { get; set; } = new ListenConfig();
-
-        /// <summary>
         /// 回退的dns
         /// </summary>
         public DnsConfig[] FallbackDns { get; set; } = Array.Empty<DnsConfig>();
