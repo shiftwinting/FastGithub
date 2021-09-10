@@ -58,10 +58,12 @@ namespace FastGithub
                     });
                     webBuilder.UseSerilog((hosting, logger) =>
                     {
+                        var template = "{Timestamp:O} [{Level:u3}]{NewLine}{SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
                         logger
                             .ReadFrom.Configuration(hosting.Configuration)
                             .Enrich.FromLogContext()
-                            .WriteTo.Console(outputTemplate: "{Timestamp:O} [{Level:u3}]{NewLine}{SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}");
+                            .WriteTo.Console(outputTemplate: template)
+                            .WriteTo.File(Path.Combine("logs", @"log.txt"), rollingInterval: RollingInterval.Day, outputTemplate: template);
                     });
                 });
         }

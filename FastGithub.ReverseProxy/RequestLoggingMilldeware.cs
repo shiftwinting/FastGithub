@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace FastGithub.ReverseProxy
@@ -55,19 +56,28 @@ namespace FastGithub.ReverseProxy
             }
 
             var exception = context.GetForwarderErrorFeature()?.Exception;
-            if (IsError(exception) == false)
+            if (exception == null)
             {
                 this.logger.LogInformation(message);
             }
-            else
+            else if (IsError(exception))
             {
                 this.logger.LogError($"{message}{Environment.NewLine}{exception}");
             }
+            else
+            {
+                this.logger.LogWarning($"{message}{Environment.NewLine}{GetMessage(exception)}");
+            }
         }
 
-        private static bool IsError(Exception? exception)
+        /// <summary>
+        /// 是否为错误
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <returns></returns>
+        private static bool IsError(Exception exception)
         {
-            if (exception == null || exception is OperationCanceledException)
+            if (exception is OperationCanceledException)
             {
                 return false;
             }
@@ -78,6 +88,25 @@ namespace FastGithub.ReverseProxy
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 获取异常信息
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <returns></returns>
+        private static string GetMessage(Exception exception)
+        {
+            var ex = exception;
+            var builder = new StringBuilder();
+
+            while (ex != null)
+            {
+                var type = ex.GetType();
+                builder.Append(type.Namespace).Append(".").Append(type.Name).Append(": ").AppendLine(ex.Message);
+                ex = ex.InnerException;
+            }
+            return builder.ToString();
         }
     }
 }
