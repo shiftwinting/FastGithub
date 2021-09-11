@@ -29,13 +29,11 @@ namespace FastGithub
         {
             services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
 
-            services.AddConfiguration();
-            services.AddDnsServer();
+            services.AddConfiguration();           
             services.AddDomainResolve();
+            services.AddDnsServer();
             services.AddHttpClient();
             services.AddReverseProxy();
-
-            services.AddControllersWithViews();
             services.AddHostedService<VersonHostedService>();
         }
 
@@ -48,11 +46,6 @@ namespace FastGithub
             app.UseRequestLogging();
             app.UseDnsOverHttps();
             app.UseReverseProxy();
-            app.UseRouting();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
-            });
         }
     }
 }

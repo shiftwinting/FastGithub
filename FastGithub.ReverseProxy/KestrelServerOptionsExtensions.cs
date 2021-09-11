@@ -16,30 +16,48 @@ namespace FastGithub
     public static class KestrelServerOptionsExtensions
     {
         /// <summary>
-        /// 监听http的反向代理
+        /// 无限制
         /// </summary>
         /// <param name="kestrel"></param>
-        public static void ListenHttpReverseProxy(this KestrelServerOptions kestrel)
+        public static void NoLimit(this KestrelServerOptions kestrel)
         {
-            const int HTTP_PORT = 80;
-            var logger = kestrel.GetLogger();
+            kestrel.Limits.MaxRequestBodySize = null;
+        }
 
-            if (LocalMachine.CanListenTcp(HTTP_PORT) == false)
+        /// <summary>
+        /// 监听ssh
+        /// </summary>
+        /// <param name="kestrel"></param>
+        public static void ListenSsh(this KestrelServerOptions kestrel)
+        {
+            const int SSH_PORT = 22;
+            if (LocalMachine.CanListenTcp(SSH_PORT) == true)
             {
-                logger.LogWarning($"由于tcp端口{HTTP_PORT}已经被其它进程占用，http反向代理功能将受限");
-            }
-            else
-            {
-                kestrel.Listen(IPAddress.Any, HTTP_PORT);
-                logger.LogInformation($"已监听tcp端口{HTTP_PORT}，http反向代理启动完成");
+                kestrel.Listen(IPAddress.Any, SSH_PORT, listen => listen.UseConnectionHandler<GithubSshProxyHandler>());
+                kestrel.GetLogger().LogInformation($"已监听tcp端口{SSH_PORT}，github的ssh代理启动完成");
             }
         }
 
         /// <summary>
-        /// 监听https的反向代理
+        /// 监听http
         /// </summary>
         /// <param name="kestrel"></param>
-        public static void ListenHttpsReverseProxy(this KestrelServerOptions kestrel)
+        public static void ListenHttp(this KestrelServerOptions kestrel)
+        {
+            const int HTTP_PORT = 80;
+            if (LocalMachine.CanListenTcp(HTTP_PORT) == true)
+            {
+                kestrel.Listen(IPAddress.Any, HTTP_PORT);
+                kestrel.GetLogger().LogInformation($"已监听tcp端口{HTTP_PORT}，http反向代理启动完成");
+            }
+        }
+
+        /// <summary>
+        /// 监听https
+        /// </summary>
+        /// <param name="kestrel"></param>
+        /// <exception cref="FastGithubException"></exception>
+        public static void ListenHttps(this KestrelServerOptions kestrel)
         {
             const int HTTPS_PORT = 443;
             if (OperatingSystem.IsWindows())
@@ -49,7 +67,7 @@ namespace FastGithub
 
             if (LocalMachine.CanListenTcp(HTTPS_PORT) == false)
             {
-                throw new FastGithubException($"由于tcp端口{HTTPS_PORT}已经被其它进程占用，{nameof(FastGithub)}无法进行必须的https反向代理");
+                throw new FastGithubException($"tcp端口{HTTPS_PORT}已经被其它进程占用");
             }
 
             var certService = kestrel.ApplicationServices.GetRequiredService<CertService>();
@@ -65,25 +83,6 @@ namespace FastGithub
             logger.LogInformation($"已监听tcp端口{HTTPS_PORT}，https反向代理启动完成");
         }
 
-        /// <summary>
-        /// 监听github的ssh的代理
-        /// </summary>
-        /// <param name="kestrel"></param>
-        public static void ListenGithubSshProxy(this KestrelServerOptions kestrel)
-        {
-            const int SSH_PORT = 22;
-            var logger = kestrel.GetLogger();
-
-            if (LocalMachine.CanListenTcp(SSH_PORT) == false)
-            {
-                logger.LogWarning($"由于tcp端口{SSH_PORT}已经被其它进程占用，github的ssh代理功能将受限");
-            }
-            else
-            {
-                kestrel.Listen(IPAddress.Any, SSH_PORT, listen => listen.UseConnectionHandler<GithubSshProxyHandler>());
-                logger.LogInformation($"已监听tcp端口{SSH_PORT}，github的ssh代理启动完成");
-            }
-        }
 
         /// <summary>
         /// 获取日志

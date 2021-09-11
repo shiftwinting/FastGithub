@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@ namespace FastGithub.Dns
         {
             this.dnsOverUdpServer = dnsOverUdpServer;
             this.conflictValidators = conflictValidators;
-            this.logger = logger;         
+            this.logger = logger;
         }
 
         /// <summary>
@@ -48,7 +49,12 @@ namespace FastGithub.Dns
             }
             catch (Exception ex)
             {
-                this.logger.LogError($"DNS服务启动失败：{ex.Message}{Environment.NewLine}请配置系统或浏览器使用{nameof(FastGithub)}的DoH：https://127.0.0.1/dns-query，或向系统hosts文件添加github相关域名的ip为127.0.0.1");
+                var builder = new StringBuilder().AppendLine($"DNS服务启动失败({ex.Message})，你可以选择如下的一种操作：");
+                builder.AppendLine($"1. 关闭占用udp53端口的进程然后重新打开本程序");
+                builder.AppendLine($"2. 向系统hosts文件添加要加速的域名的ip为127.0.0.1");
+                builder.AppendLine($"3. 配置系统或浏览器使用DNS over HTTPS：https://127.0.0.1/dns-query");
+                builder.Append($"4. 在局域网其它设备上运行本程序，然后将本机DNS设置为局域网设备的IP");
+                this.logger.LogError(builder.ToString());
             }
 
             foreach (var item in this.conflictValidators)

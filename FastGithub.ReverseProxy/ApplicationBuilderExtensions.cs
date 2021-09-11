@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace FastGithub
 {
     /// <summary>
-    /// https反向代理的中间件扩展
+    /// ApplicationBuilder扩展
     /// </summary>
-    public static class ReverseProxyApplicationBuilderExtensions
+    public static class ApplicationBuilderExtensions
     {
         /// <summary>
         /// 使用请求日志中间件
@@ -28,7 +28,7 @@ namespace FastGithub
         public static IApplicationBuilder UseReverseProxy(this IApplicationBuilder app)
         {
             var middleware = app.ApplicationServices.GetRequiredService<ReverseProxyMiddleware>();
-            return app.Use(next => context => middleware.InvokeAsync(context, next));
+            return app.Use(next => context => middleware.InvokeAsync(context));
         }
     }
 }

@@ -51,10 +51,10 @@ namespace FastGithub
                     webBuilder.UseShutdownTimeout(TimeSpan.FromSeconds(2d));
                     webBuilder.UseKestrel(kestrel =>
                     {
-                        kestrel.Limits.MaxRequestBodySize = null;
-                        kestrel.ListenHttpsReverseProxy();
-                        kestrel.ListenHttpReverseProxy();
-                        kestrel.ListenGithubSshProxy();
+                        kestrel.NoLimit();
+                        kestrel.ListenSsh();
+                        kestrel.ListenHttp();
+                        kestrel.ListenHttps();
                     });
                     webBuilder.UseSerilog((hosting, logger) =>
                     {

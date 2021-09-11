@@ -6,7 +6,7 @@ namespace FastGithub
     /// <summary>
     /// https反向代理的服务注册扩展
     /// </summary>
-    public static class ReverseProxyServiceCollectionExtensions
+    public static class ServiceCollectionExtensions
     {
         /// <summary>
         /// 添加https反向代理

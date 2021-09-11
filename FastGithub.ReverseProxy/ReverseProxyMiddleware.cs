@@ -17,6 +17,7 @@ namespace FastGithub.ReverseProxy
         private readonly IHttpClientFactory httpClientFactory;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<ReverseProxyMiddleware> logger;
+        private readonly DomainConfig defaultDomainConfig = new() { TlsSni = true };
 
         public ReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
@@ -34,16 +35,24 @@ namespace FastGithub.ReverseProxy
         /// 处理请求
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="next"></param>
         /// <returns></returns>
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        public async Task InvokeAsync(HttpContext context)
         {
             var host = context.Request.Host.Host;
             if (this.fastGithubConfig.TryGetDomainConfig(host, out var domainConfig) == false)
             {
-                await next(context);
+                domainConfig = this.defaultDomainConfig;
             }
-            else if (domainConfig.Response != null)
+
+            if (domainConfig.Response == null)
+            {
+                var scheme = context.Request.Scheme;
+                var destinationPrefix = GetDestinationPrefix(scheme, host, domainConfig.Destination);
+                var httpClient = this.httpClientFactory.CreateHttpClient(domainConfig);
+                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
+                await HandleErrorAsync(context, error);
+            }
+            else
             {
                 context.Response.StatusCode = domainConfig.Response.StatusCode;
                 context.Response.ContentType = domainConfig.Response.ContentType;
@@ -51,14 +60,6 @@ namespace FastGithub.ReverseProxy
                 {
                     await context.Response.WriteAsync(domainConfig.Response.ContentValue);
                 }
-            }
-            else
-            {
-                var scheme = context.Request.Scheme;
-                var destinationPrefix = GetDestinationPrefix(scheme, host, domainConfig.Destination);
-                var httpClient = this.httpClientFactory.CreateHttpClient(domainConfig);
-                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
-                await HandleErrorAsync(context, error);
             }
         }
 
@@ -91,13 +92,7 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         private static async Task HandleErrorAsync(HttpContext context, ForwarderError error)
         {
-            if (error == ForwarderError.None)
-            {
-                return;
-            }
-
-            var errorFeature = context.GetForwarderErrorFeature();
-            if (errorFeature == null || context.Response.HasStarted)
+            if (error == ForwarderError.None || context.Response.HasStarted)
             {
                 return;
             }
@@ -105,7 +100,7 @@ namespace FastGithub.ReverseProxy
             await context.Response.WriteAsJsonAsync(new
             {
                 error = error.ToString(),
-                message = errorFeature.Exception?.Message
+                message = context.GetForwarderErrorFeature()?.Exception?.Message
             });
         }
     }
