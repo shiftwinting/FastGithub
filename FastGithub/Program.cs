@@ -52,9 +52,9 @@ namespace FastGithub
                     webBuilder.UseKestrel(kestrel =>
                     {
                         kestrel.NoLimit();
-                        kestrel.ListenSsh();
+                        kestrel.ListenHttps(); 
                         kestrel.ListenHttp();
-                        kestrel.ListenHttps();
+                        kestrel.ListenSsh();                                   
                     });
                     webBuilder.UseSerilog((hosting, logger) =>
                     {
