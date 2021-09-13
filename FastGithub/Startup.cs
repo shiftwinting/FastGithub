@@ -1,7 +1,9 @@
 using FastGithub.Configuration;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace FastGithub
@@ -49,11 +51,21 @@ namespace FastGithub
             app.UseReverseProxy();
 
             app.UseRouting();
-            app.UseEndpoints(endpoint => endpoint.MapFallback(context =>
+            app.UseEndpoints(endpoint =>
             {
-                context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
-                return Task.CompletedTask;
-            }));
+                endpoint.Map("/", async context =>
+                {
+                    var certFile = $"CACert/{nameof(FastGithub)}.cer";
+                    context.Response.ContentType = "application/x-x509-ca-cert";
+                    context.Response.Headers.Add("Content-Disposition", $"attachment;filename={Path.GetFileName(certFile)}");
+                    await context.Response.SendFileAsync(certFile);
+                });
+                endpoint.MapFallback(context =>
+                {
+                    context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
+                    return Task.CompletedTask;
+                });
+            });
         }
     }
 }
