@@ -2,6 +2,7 @@ using FastGithub.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -29,7 +30,7 @@ namespace FastGithub
         {
             services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
 
-            services.AddConfiguration();           
+            services.AddConfiguration();
             services.AddDomainResolve();
             services.AddDnsServer();
             services.AddHttpClient();
@@ -46,6 +47,13 @@ namespace FastGithub
             app.UseRequestLogging();
             app.UseDnsOverHttps();
             app.UseReverseProxy();
+
+            app.UseRouting();
+            app.UseEndpoints(endpoint => endpoint.MapFallback(context =>
+            {
+                context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
+                return Task.CompletedTask;
+            }));
         }
     }
 }

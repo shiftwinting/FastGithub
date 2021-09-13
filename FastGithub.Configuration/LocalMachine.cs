@@ -58,26 +58,7 @@ namespace FastGithub.Configuration
         public static bool ContainsIPAddress(IPAddress address)
         {
             return GetAllIPAddresses().Contains(address);
-        }
-
-        /// <summary>
-        /// 获取所有域名和ip
-        /// </summary>
-        /// <returns></returns>
-        public static HashSet<string> GetAllHostNames()
-        {
-            var hashSet = new HashSet<string>
-            {
-                Name,
-                "localhost",
-            };
-
-            foreach (var address in GetAllIPAddresses())
-            {
-                hashSet.Add(address.ToString());
-            }
-            return hashSet;
-        }
+        } 
 
         /// <summary>
         /// 获取与远程节点通讯的的本机IP地址
