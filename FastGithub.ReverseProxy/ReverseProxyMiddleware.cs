@@ -3,6 +3,7 @@ using FastGithub.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
@@ -17,6 +18,7 @@ namespace FastGithub.ReverseProxy
         private readonly IHttpClientFactory httpClientFactory;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<ReverseProxyMiddleware> logger;
+        private readonly HashSet<string> localHostNames = LocalMachine.GetAllHostNames();
         private readonly DomainConfig defaultDomainConfig = new() { TlsSni = true };
 
         public ReverseProxyMiddleware(
@@ -35,10 +37,17 @@ namespace FastGithub.ReverseProxy
         /// 处理请求
         /// </summary>
         /// <param name="context"></param>
+        /// <param name="next"?
         /// <returns></returns>
-        public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var host = context.Request.Host.Host;
+            if (this.localHostNames.Contains(host) == true)
+            {
+                await next(context);
+                return;
+            }
+
             if (this.fastGithubConfig.TryGetDomainConfig(host, out var domainConfig) == false)
             {
                 domainConfig = this.defaultDomainConfig;
