@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -74,18 +75,43 @@ namespace FastGithub.ReverseProxy
             }
             else if (OperatingSystem.IsLinux())
             {
-                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请根据具体linux发行版安装CA证书");
+                this.logger.LogWarning($"请根据具体linux发行版手工安装CA证书{this.CaCerFilePath}");
             }
             else if (OperatingSystem.IsMacOS())
             {
-                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请手工安装CA证书然后设置信任CA证书");
+                this.logger.LogWarning($"请手工安装CA证书然后设置信任CA证书{this.CaCerFilePath}");
             }
             else
             {
-                this.logger.LogWarning($"不支持自动安装证书{this.CaCerFilePath}：请根据你的系统平台手工安装和信任CA证书");
+                this.logger.LogWarning($"请根据你的系统平台手工安装和信任CA证书{this.CaCerFilePath}");
             }
 
-            GitUtil.ConfigSslverify(false);
+            GitConfigSslverify(false);
+        }
+
+        /// <summary>
+        /// 设置ssl验证
+        /// </summary>
+        /// <param name="value">是否验证</param>
+        /// <returns></returns>
+        public static bool GitConfigSslverify(bool value)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = $"config --global http.sslverify {value.ToString().ToLower()}",
+                    UseShellExecute = true,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                });
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -113,9 +139,9 @@ namespace FastGithub.ReverseProxy
                 }
                 store.Close();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                this.logger.LogWarning($"安装证书{this.CaCerFilePath}失败：请手动安装到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”", ex);
+                this.logger.LogWarning($"请手工安装CA证书{this.CaCerFilePath}到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
             }
         }
 

@@ -27,17 +27,17 @@ namespace FastGithub.ReverseProxy
         /// <summary>
         /// ssh连接后
         /// </summary>
-        /// <param name="connection"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public override async Task OnConnectedAsync(ConnectionContext connection)
+        public override async Task OnConnectedAsync(ConnectionContext context)
         {
             var address = await this.domainResolver.ResolveAsync(this.githubSshEndPoint);
             using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(address, this.githubSshEndPoint.Port);
             var targetStream = new NetworkStream(socket, ownsSocket: false);
 
-            var task1 = targetStream.CopyToAsync(connection.Transport.Output);
-            var task2 = connection.Transport.Input.CopyToAsync(targetStream);
+            var task1 = targetStream.CopyToAsync(context.Transport.Output);
+            var task2 = context.Transport.Input.CopyToAsync(targetStream);
             await Task.WhenAny(task1, task2);
         }
     }
