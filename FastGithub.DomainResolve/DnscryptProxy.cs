@@ -35,7 +35,7 @@ namespace FastGithub.DomainResolve
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
-            var port = LocalMachine.GetAvailablePort(IPAddress.Loopback.AddressFamily, min: 5353);
+            var port = LocalMachine.GetAvailablePort(IPAddress.Loopback.AddressFamily, min: 5533);
             var localEndPoint = new IPEndPoint(IPAddress.Loopback, port);
 
             await TomlUtil.SetListensAsync(tomlPath, localEndPoint, cancellationToken);
