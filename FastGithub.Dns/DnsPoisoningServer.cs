@@ -6,6 +6,7 @@ using PacketDotNet;
 using System;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using WinDivertSharp;
@@ -20,7 +21,14 @@ namespace FastGithub.Dns
         const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsPoisoningServer> logger;
-        private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d);
+        private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d); 
+
+        /// <summary>
+        /// 刷新DNS缓存
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
+        private static extern void DnsFlushResolverCache();  
 
         /// <summary>
         /// dns投毒后台服务
@@ -53,7 +61,7 @@ namespace FastGithub.Dns
             using var winDivertBuffer = new WinDivertBuffer(packetBuffer);
             var winDivertAddress = new WinDivertAddress();
 
-            SystemDnsUtil.FlushResolverCache();
+            DnsFlushResolverCache();
             while (cancellationToken.IsCancellationRequested == false)
             {
                 if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength))
@@ -73,6 +81,7 @@ namespace FastGithub.Dns
             }
 
             WinDivert.WinDivertClose(handle);
+            DnsFlushResolverCache();
         }
 
         /// <summary>
