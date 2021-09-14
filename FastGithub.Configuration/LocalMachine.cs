@@ -85,7 +85,7 @@ namespace FastGithub.Configuration
         /// <param name="addressFamily"></param>
         /// <param name="min">最小值</param>
         /// <returns></returns>
-        public static int GetAvailablePort(AddressFamily addressFamily, int min = 1024)
+        public static int GetAvailablePort(AddressFamily addressFamily, int min = 1025)
         {
             var hashSet = new HashSet<int>();
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();

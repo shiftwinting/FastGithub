@@ -10,6 +10,17 @@ namespace FastGithub
     public static class ApplicationBuilderExtensions
     {
         /// <summary>
+        /// 使用http代理中间件
+        /// </summary>
+        /// <param name="app"></param> 
+        /// <returns></returns>
+        public static IApplicationBuilder UseHttpProxy(this IApplicationBuilder app)
+        {
+            var middleware = app.ApplicationServices.GetRequiredService<HttpProxyMiddleware>();
+            return app.Use(next => context => middleware.InvokeAsync(context, next));
+        }
+
+        /// <summary>
         /// 使用请求日志中间件
         /// </summary>
         /// <param name="app"></param> 
@@ -25,9 +36,9 @@ namespace FastGithub
         /// </summary>
         /// <param name="app"></param> 
         /// <returns></returns>
-        public static IApplicationBuilder UseReverseProxy(this IApplicationBuilder app)
+        public static IApplicationBuilder UseHttpReverseProxy(this IApplicationBuilder app)
         {
-            var middleware = app.ApplicationServices.GetRequiredService<ReverseProxyMiddleware>();
+            var middleware = app.ApplicationServices.GetRequiredService<HttpReverseProxyMiddleware>();
             return app.Use(next => context => middleware.InvokeAsync(context, next));
         }
     }

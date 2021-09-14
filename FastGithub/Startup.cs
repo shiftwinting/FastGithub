@@ -1,9 +1,9 @@
 using FastGithub.Configuration;
+using FastGithub.ReverseProxy;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
+using System;
 using System.Threading.Tasks;
 
 namespace FastGithub
@@ -34,10 +34,14 @@ namespace FastGithub
 
             services.AddConfiguration();
             services.AddDomainResolve();
-            services.AddDnsServer();
             services.AddHttpClient();
             services.AddReverseProxy();
             services.AddHostedService<VersonHostedService>();
+
+            if (OperatingSystem.IsWindows())
+            {
+                services.AddDnsPoisoning();
+            }
         }
 
         /// <summary>
@@ -46,26 +50,31 @@ namespace FastGithub
         /// <param name="app"></param>
         public void Configure(IApplicationBuilder app)
         {
-            app.UseRequestLogging();
-            app.UseDnsOverHttps();
-            app.UseReverseProxy();
-
-            app.UseRouting();
-            app.UseEndpoints(endpoint =>
+            if (OperatingSystem.IsWindows())
             {
-                endpoint.Map("/", async context =>
-                {
-                    var certFile = $"CACert/{nameof(FastGithub)}.cer";
-                    context.Response.ContentType = "application/x-x509-ca-cert";
-                    context.Response.Headers.Add("Content-Disposition", $"attachment;filename={Path.GetFileName(certFile)}");
-                    await context.Response.SendFileAsync(certFile);
-                });
-                endpoint.MapFallback(context =>
+                app.UseRequestLogging();
+                app.UseHttpReverseProxy();
+                app.UseRouting();
+                app.UseEndpoints(endpoint => endpoint.MapFallback(context =>
                 {
                     context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
                     return Task.CompletedTask;
+                }));
+            }
+            else
+            {
+                var portService = app.ApplicationServices.GetRequiredService<PortService>();
+                app.MapWhen(context => context.Connection.LocalPort == portService.HttpProxyPort, appBuilder =>
+                {
+                    appBuilder.UseHttpProxy();
                 });
-            });
+
+                app.MapWhen(context => context.Connection.LocalPort != portService.HttpProxyPort, appBuilder =>
+                {
+                    appBuilder.UseRequestLogging();
+                    appBuilder.UseHttpReverseProxy();
+                });
+            }
         }
     }
 }

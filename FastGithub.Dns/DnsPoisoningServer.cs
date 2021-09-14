@@ -16,19 +16,19 @@ namespace FastGithub.Dns
     /// <summary>
     /// dns投毒服务
     /// </summary>   
+    [SupportedOSPlatform("windows")]
     sealed class DnsPoisoningServer
     {
         const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsPoisoningServer> logger;
-        private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d); 
+        private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d);
 
         /// <summary>
         /// 刷新DNS缓存
-        /// </summary>
-        [SupportedOSPlatform("windows")]
+        /// </summary>    
         [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
-        private static extern void DnsFlushResolverCache();  
+        private static extern void DnsFlushResolverCache();
 
         /// <summary>
         /// dns投毒后台服务
@@ -47,7 +47,6 @@ namespace FastGithub.Dns
         /// DNS投毒
         /// </summary>
         /// <param name="cancellationToken"></param>
-        [SupportedOSPlatform("windows")]
         public void DnsPoisoning(CancellationToken cancellationToken)
         {
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);

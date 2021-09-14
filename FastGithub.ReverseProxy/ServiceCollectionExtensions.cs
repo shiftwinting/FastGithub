@@ -19,8 +19,10 @@ namespace FastGithub
                 .AddMemoryCache()
                 .AddHttpForwarder()
                 .AddSingleton<CertService>()
-                .AddSingleton<RequestLoggingMiddleware>()
-                .AddSingleton<ReverseProxyMiddleware>();
+                .AddSingleton<PortService>()
+                .AddSingleton<HttpProxyMiddleware>()
+                .AddSingleton<RequestLoggingMiddleware>()                
+                .AddSingleton<HttpReverseProxyMiddleware>();
         }
     }
 }

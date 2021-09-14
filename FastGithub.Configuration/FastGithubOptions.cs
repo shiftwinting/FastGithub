@@ -9,6 +9,11 @@ namespace FastGithub.Configuration
     public class FastGithubOptions
     {
         /// <summary>
+        /// http代理端口
+        /// </summary>
+        public int HttpProxyPort { get; set; }
+
+        /// <summary>
         /// 回退的dns
         /// </summary>
         public DnsConfig[] FallbackDns { get; set; } = Array.Empty<DnsConfig>();

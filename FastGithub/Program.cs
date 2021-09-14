@@ -52,9 +52,17 @@ namespace FastGithub
                     webBuilder.UseKestrel(kestrel =>
                     {
                         kestrel.NoLimit();
-                        kestrel.ListenHttps(); 
-                        kestrel.ListenHttp();
-                        kestrel.ListenSsh();                                   
+                        kestrel.ListenHttpsReverseProxy();
+
+                        if (OperatingSystem.IsWindows())
+                        {
+                            kestrel.ListenHttpReverseProxy();
+                            kestrel.ListenSshReverseProxy();
+                        }
+                        else
+                        {
+                            kestrel.ListenHttpProxy();
+                        }
                     });
                     webBuilder.UseSerilog((hosting, logger) =>
                     {

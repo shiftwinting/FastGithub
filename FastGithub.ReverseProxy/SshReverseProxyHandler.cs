@@ -10,7 +10,7 @@ namespace FastGithub.ReverseProxy
     /// <summary>
     /// github的ssh代理处理者
     /// </summary>
-    sealed class GithubSshProxyHandler : ConnectionHandler
+    sealed class SshReverseProxyHandler : ConnectionHandler
     {
         private readonly IDomainResolver domainResolver;
         private readonly DnsEndPoint githubSshEndPoint = new("ssh.github.com", 443);
@@ -19,7 +19,7 @@ namespace FastGithub.ReverseProxy
         /// github的ssh代理处理者
         /// </summary>
         /// <param name="domainResolver"></param>
-        public GithubSshProxyHandler(IDomainResolver domainResolver)
+        public SshReverseProxyHandler(IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
         }
