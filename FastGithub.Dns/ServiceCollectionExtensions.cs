@@ -18,7 +18,8 @@ namespace FastGithub
         {
             services.TryAddSingleton<RequestResolver>();
             services.TryAddSingleton<DnsOverUdpServer>();
-            services.TryAddSingleton<DnsOverHttpsMiddleware>();
+            services.TryAddSingleton<DnsPoisoningServer>();
+            services.TryAddSingleton<DnsOverHttpsMiddleware>();          
             services.AddSingleton<IConflictValidator, HostsConflictValidator>();
             services.AddSingleton<IConflictValidator, ProxyConflictValidtor>();
             return services.AddHostedService<DnsOverUdpHostedService>();

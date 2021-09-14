@@ -47,11 +47,6 @@ namespace FastGithub.Dns
         /// <exception cref="FastGithubException"></exception>
         public void Listen(IPAddress address, int port)
         {
-            if (OperatingSystem.IsWindows())
-            {
-                UdpTable.KillPortOwner(port);
-            }
-
             if (LocalMachine.CanListenUdp(port) == false)
             {
                 throw new FastGithubException($"udp端口{port}已经被其它进程占用");
