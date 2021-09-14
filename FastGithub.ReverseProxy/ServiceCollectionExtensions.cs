@@ -4,12 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace FastGithub
 {
     /// <summary>
-    /// https反向代理的服务注册扩展
+    /// http反向代理的服务注册扩展
     /// </summary>
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// 添加https反向代理
+        /// 添加http反向代理
         /// </summary>
         /// <param name="services"></param> 
         /// <returns></returns>
@@ -18,8 +18,7 @@ namespace FastGithub
             return services
                 .AddMemoryCache()
                 .AddHttpForwarder()
-                .AddSingleton<CertService>()
-                .AddSingleton<PortService>()
+                .AddSingleton<CertService>() 
                 .AddSingleton<HttpProxyMiddleware>()
                 .AddSingleton<RequestLoggingMiddleware>()                
                 .AddSingleton<HttpReverseProxyMiddleware>();

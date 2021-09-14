@@ -11,17 +11,17 @@ namespace FastGithub
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// 注册dns投毒服务
+        /// 注册dns拦截器
         /// </summary>
         /// <param name="services"></param> 
         /// <returns></returns>
         [SupportedOSPlatform("windows")]
-        public static IServiceCollection AddDnsPoisoning(this IServiceCollection services)
-        { 
-            services.TryAddSingleton<DnsPoisoningServer>();
+        public static IServiceCollection AddDnsInterceptor(this IServiceCollection services)
+        {
+            services.TryAddSingleton<DnsInterceptor>();
             services.AddSingleton<IConflictValidator, HostsConflictValidator>();
             services.AddSingleton<IConflictValidator, ProxyConflictValidtor>();
-            return services.AddHostedService<DnsDnsPoisoningHostedService>();
+            return services.AddHostedService<DnsInterceptHostedService>();
         }
     }
 }

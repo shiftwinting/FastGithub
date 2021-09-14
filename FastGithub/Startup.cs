@@ -1,10 +1,9 @@
 using FastGithub.Configuration;
-using FastGithub.ReverseProxy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
-using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -40,7 +39,7 @@ namespace FastGithub
 
             if (OperatingSystem.IsWindows())
             {
-                services.AddDnsPoisoning();
+                services.AddDnsInterceptor();
             }
         }
 
@@ -54,22 +53,16 @@ namespace FastGithub
             {
                 app.UseRequestLogging();
                 app.UseHttpReverseProxy();
-                app.UseRouting();
-                app.UseEndpoints(endpoint => endpoint.MapFallback(context =>
-                {
-                    context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
-                    return Task.CompletedTask;
-                }));
             }
             else
             {
-                var portService = app.ApplicationServices.GetRequiredService<PortService>();
-                app.MapWhen(context => context.Connection.LocalPort == portService.HttpProxyPort, appBuilder =>
+                var httpProxyPort = app.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value.HttpProxyPort;
+                app.MapWhen(context => context.Connection.LocalPort == httpProxyPort, appBuilder =>
                 {
                     appBuilder.UseHttpProxy();
                 });
 
-                app.MapWhen(context => context.Connection.LocalPort != portService.HttpProxyPort, appBuilder =>
+                app.MapWhen(context => context.Connection.LocalPort != httpProxyPort, appBuilder =>
                 {
                     appBuilder.UseRequestLogging();
                     appBuilder.UseHttpReverseProxy();

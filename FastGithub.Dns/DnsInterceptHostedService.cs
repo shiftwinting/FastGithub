@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Hosting;
-using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -8,24 +7,24 @@ using System.Threading.Tasks;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// dns投毒后台服务
+    /// dns拦截后台服务
     /// </summary>
     [SupportedOSPlatform("windows")]
-    sealed class DnsDnsPoisoningHostedService : BackgroundService
+    sealed class DnsInterceptHostedService : BackgroundService
     {
-        private readonly DnsPoisoningServer dnsPoisoningServer;
+        private readonly DnsInterceptor dnsInterceptor;
         private readonly IEnumerable<IConflictValidator> conflictValidators;
 
         /// <summary>
-        /// dns后台服务
+        /// dns拦截后台服务
         /// </summary> 
-        /// <param name="dnsPoisoningServer"></param>
+        /// <param name="dnsInterceptor"></param>
         /// <param name="conflictValidators"></param>
-        public DnsDnsPoisoningHostedService(
-            DnsPoisoningServer dnsPoisoningServer,
+        public DnsInterceptHostedService(
+            DnsInterceptor dnsInterceptor,
             IEnumerable<IConflictValidator> conflictValidators)
         {
-            this.dnsPoisoningServer = dnsPoisoningServer;
+            this.dnsInterceptor = dnsInterceptor;
             this.conflictValidators = conflictValidators;
         }
 
@@ -37,15 +36,11 @@ namespace FastGithub.Dns
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Yield();
-
-            if (OperatingSystem.IsWindows())
+            foreach (var item in this.conflictValidators)
             {
-                foreach (var item in this.conflictValidators)
-                {
-                    await item.ValidateAsync();
-                }
-                this.dnsPoisoningServer.DnsPoisoning(stoppingToken);
+                await item.ValidateAsync();
             }
+            this.dnsInterceptor.Intercept(stoppingToken);
         }
     }
 }

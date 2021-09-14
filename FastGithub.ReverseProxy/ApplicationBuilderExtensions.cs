@@ -17,7 +17,7 @@ namespace FastGithub
         public static IApplicationBuilder UseHttpProxy(this IApplicationBuilder app)
         {
             var middleware = app.ApplicationServices.GetRequiredService<HttpProxyMiddleware>();
-            return app.Use(next => context => middleware.InvokeAsync(context, next));
+            return app.Use(next => context => middleware.InvokeAsync(context));
         }
 
         /// <summary>

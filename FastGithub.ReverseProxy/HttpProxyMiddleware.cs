@@ -20,7 +20,6 @@ namespace FastGithub.ReverseProxy
         private readonly FastGithubConfig fastGithubConfig;
         private readonly IDomainResolver domainResolver;
         private readonly IHttpForwarder httpForwarder;
-        private readonly PortService portService;
         private readonly SocketsHttpHandler socketsHttpHandler = new() { UseCookies = false, UseProxy = false, AllowAutoRedirect = false, AutomaticDecompression = DecompressionMethods.None };
 
         /// <summary>
@@ -29,26 +28,22 @@ namespace FastGithub.ReverseProxy
         /// <param name="fastGithubConfig"></param>
         /// <param name="domainResolver"></param>
         /// <param name="httpForwarder"></param>
-        /// <param name="portService"></param>
         public HttpProxyMiddleware(
             FastGithubConfig fastGithubConfig,
             IDomainResolver domainResolver,
-            IHttpForwarder httpForwarder,
-            PortService portService)
+            IHttpForwarder httpForwarder)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.domainResolver = domainResolver;
             this.httpForwarder = httpForwarder;
-            this.portService = portService;
         }
 
         /// <summary>
         /// 处理请求
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="next"></param>
         /// <returns></returns>
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        public async Task InvokeAsync(HttpContext context)
         {
             if (context.Request.Method != HttpMethods.Connect)
             {
@@ -77,7 +72,6 @@ namespace FastGithub.ReverseProxy
             }
         }
 
-
         /// <summary>
         /// 获取目标终节点
         /// </summary>
@@ -85,28 +79,28 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         private async Task<EndPoint> GetTargetEndPointAsync(HttpRequest request)
         {
-            var domain = request.Host.Host;
-            var port = request.Host.Port ?? 443;
+            var targetHost = request.Host.Host;
+            var targetPort = request.Host.Port ?? 443;
 
-            if (IPAddress.TryParse(domain, out var address) == true)
+            if (IPAddress.TryParse(targetHost, out var address) == true)
             {
-                return new IPEndPoint(address, port);
+                return new IPEndPoint(address, targetPort);
             }
 
-            if (this.fastGithubConfig.TryGetDomainConfig(domain, out _) == false)
+            if (this.fastGithubConfig.TryGetDomainConfig(targetHost, out _) == false)
             {
-                return new DnsEndPoint(domain, port);
+                return new DnsEndPoint(targetHost, targetPort);
             }
 
             // https，走反向代理中间人
-            if (port == 443)
+            if (targetPort == 443)
             {
-                return new IPEndPoint(IPAddress.Loopback, this.portService.HttpsReverseProxyPort);
+                return new IPEndPoint(IPAddress.Loopback, HttpsReverseProxyPort.Value);
             }
 
             // dns优选
-            address = await this.domainResolver.ResolveAsync(new DnsEndPoint(domain, port));
-            return new IPEndPoint(address, port);
+            address = await this.domainResolver.ResolveAsync(new DnsEndPoint(targetHost, targetPort));
+            return new IPEndPoint(address, targetPort);
         }
     }
 }

@@ -14,14 +14,14 @@ using WinDivertSharp;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// dns投毒服务
+    /// dns拦截器
     /// </summary>   
     [SupportedOSPlatform("windows")]
-    sealed class DnsPoisoningServer
+    sealed class DnsInterceptor
     {
         const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<DnsPoisoningServer> logger;
+        private readonly ILogger<DnsInterceptor> logger;
         private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d);
 
         /// <summary>
@@ -35,19 +35,19 @@ namespace FastGithub.Dns
         /// </summary>
         /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
-        public DnsPoisoningServer(
+        public DnsInterceptor(
             FastGithubConfig fastGithubConfig,
-            ILogger<DnsPoisoningServer> logger)
+            ILogger<DnsInterceptor> logger)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
 
         /// <summary>
-        /// DNS投毒
+        /// DNS拦截
         /// </summary>
         /// <param name="cancellationToken"></param>
-        public void DnsPoisoning(CancellationToken cancellationToken)
+        public void Intercept(CancellationToken cancellationToken)
         {
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.Zero)
