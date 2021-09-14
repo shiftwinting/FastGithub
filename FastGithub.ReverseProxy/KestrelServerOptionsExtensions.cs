@@ -7,8 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
+using System.Net.Http;
 
 namespace FastGithub
 {
@@ -32,14 +33,48 @@ namespace FastGithub
         /// <param name="kestrel"></param>
         public static void ListenHttpProxy(this KestrelServerOptions kestrel)
         {
-            var httpProxyPort = kestrel.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value.HttpProxyPort;
+            var options = kestrel.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value;
+            var httpProxyPort = options.HttpProxyPort;
+
             if (LocalMachine.CanListenTcp(httpProxyPort) == false)
             {
                 throw new FastGithubException($"tcp端口{httpProxyPort}已经被其它进程占用，请在配置文件更换{nameof(FastGithubOptions.HttpProxyPort)}为其它端口");
             }
 
+            var logger = kestrel.GetLogger();
             kestrel.Listen(IPAddress.Loopback, httpProxyPort);
-            kestrel.GetLogger().LogInformation($"已监听http://127.0.0.1:{httpProxyPort}，http代理启动完成");
+            logger.LogInformation($"已监听http://127.0.0.1:{httpProxyPort}，http代理启动完成");
+
+            if (SystemHasSetHttpProxy() == false)
+            {
+                logger.LogWarning($"请设置系统或浏览器代理为：http://127.0.0.1:{httpProxyPort}，或自动代理为http://127.0.0.1:{httpProxyPort}/proxy.pac");
+            }
+
+            bool SystemHasSetHttpProxy()
+            {
+                var systemProxy = HttpClient.DefaultProxy;
+                if (systemProxy == null)
+                {
+                    return false;
+                }
+
+                var domainPattern = options.DomainConfigs.Keys.FirstOrDefault();
+                if (domainPattern == null)
+                {
+                    return true;
+                }
+
+                var destination = new Uri($"https://{domainPattern.Replace('*', 'a')}");
+                var proxyServer = systemProxy.GetProxy(destination);
+                if (proxyServer == null)
+                {
+                    return false;
+                }
+
+                var loopbackProxyUri = new Uri($"http://127.0.0.1:{httpProxyPort}");
+                var localhostProxyUri = new Uri($"http://localhost:{httpProxyPort}");
+                return proxyServer == loopbackProxyUri || proxyServer == localhostProxyUri;
+            }
         }
 
         /// <summary>
