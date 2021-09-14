@@ -49,25 +49,17 @@ namespace FastGithub
         /// <param name="app"></param>
         public void Configure(IApplicationBuilder app)
         {
-            if (OperatingSystem.IsWindows())
+            var httpProxyPort = app.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value.HttpProxyPort;
+            app.MapWhen(context => context.Connection.LocalPort == httpProxyPort, appBuilder =>
             {
-                app.UseRequestLogging();
-                app.UseHttpReverseProxy();
-            }
-            else
-            {
-                var httpProxyPort = app.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value.HttpProxyPort;
-                app.MapWhen(context => context.Connection.LocalPort == httpProxyPort, appBuilder =>
-                {
-                    appBuilder.UseHttpProxy();
-                });
+                appBuilder.UseHttpProxy();
+            });
 
-                app.MapWhen(context => context.Connection.LocalPort != httpProxyPort, appBuilder =>
-                {
-                    appBuilder.UseRequestLogging();
-                    appBuilder.UseHttpReverseProxy();
-                });
-            }
+            app.MapWhen(context => context.Connection.LocalPort != httpProxyPort, appBuilder =>
+            {
+                appBuilder.UseRequestLogging();
+                appBuilder.UseHttpReverseProxy();
+            });
         }
     }
 }

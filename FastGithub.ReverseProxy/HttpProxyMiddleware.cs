@@ -7,6 +7,7 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
@@ -20,7 +21,7 @@ namespace FastGithub.ReverseProxy
         private readonly FastGithubConfig fastGithubConfig;
         private readonly IDomainResolver domainResolver;
         private readonly IHttpForwarder httpForwarder;
-        private readonly SocketsHttpHandler socketsHttpHandler = new() { UseCookies = false, UseProxy = false, AllowAutoRedirect = false, AutomaticDecompression = DecompressionMethods.None };
+        private readonly HttpMessageInvoker httpClient;
 
         /// <summary>
         /// http代理中间件
@@ -36,6 +37,7 @@ namespace FastGithub.ReverseProxy
             this.fastGithubConfig = fastGithubConfig;
             this.domainResolver = domainResolver;
             this.httpForwarder = httpForwarder;
+            this.httpClient = new HttpMessageInvoker(CreateHttpHandler(), disposeHandler: false);
         }
 
         /// <summary>
@@ -45,11 +47,26 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.Request.Method != HttpMethods.Connect)
+            if (context.Request.Method == HttpMethods.Get && context.Request.Path == "/proxy.pac")
             {
-                var httpClient = new HttpMessageInvoker(this.socketsHttpHandler, false);
+                var buidler = new StringBuilder();
+                buidler.AppendLine("function FindProxyForURL(url, host){");
+                buidler.AppendLine($"    var proxy = 'PROXY {context.Request.Host}';");
+                foreach (var domain in this.fastGithubConfig.GetDomainPatterns())
+                {
+                    buidler.AppendLine($"    if (shExpMatch(host, '{domain}')) return proxy;");
+                }
+                buidler.AppendLine("    return 'DIRECT';");
+                buidler.AppendLine("}");
+                var pacString = buidler.ToString();
+
+                context.Response.ContentType = "application/x-ns-proxy-autoconfig";
+                await context.Response.WriteAsync(pacString);
+            }
+            else if (context.Request.Method != HttpMethods.Connect)
+            {
                 var destinationPrefix = $"{context.Request.Scheme}://{context.Request.Host}";
-                await this.httpForwarder.SendAsync(context, destinationPrefix, httpClient);
+                await this.httpForwarder.SendAsync(context, destinationPrefix, this.httpClient);
             }
             else
             {
@@ -101,6 +118,22 @@ namespace FastGithub.ReverseProxy
             // dns优选
             address = await this.domainResolver.ResolveAsync(new DnsEndPoint(targetHost, targetPort));
             return new IPEndPoint(address, targetPort);
+        }
+
+        /// <summary>
+        /// 创建httpHandler
+        /// </summary>
+        /// <returns></returns>
+        private static SocketsHttpHandler CreateHttpHandler()
+        {
+            return new()
+            {
+                Proxy = null,
+                UseProxy = false,
+                UseCookies = false,
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.None
+            };
         }
     }
 }

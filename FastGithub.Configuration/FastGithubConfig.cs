@@ -102,5 +102,14 @@ namespace FastGithub.Configuration
                 return key == null ? null : this.domainConfigs[key];
             }
         }
+
+        /// <summary>
+        /// 获取所有域名表达式
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetDomainPatterns()
+        {
+            return this.domainConfigs.Keys.Select(item => item.ToString()).ToArray();
+        }
     }
 }

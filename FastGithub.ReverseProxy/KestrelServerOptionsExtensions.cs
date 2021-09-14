@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace FastGithub
 {

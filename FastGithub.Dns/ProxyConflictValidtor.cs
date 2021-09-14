@@ -50,11 +50,15 @@ namespace FastGithub.Dns
                 return;
             }
 
+            var httpProxyPort = this.options.Value.HttpProxyPort;
+            var loopbackProxyUri = new Uri($"http://127.0.0.1:{httpProxyPort}");
+            var localhostProxyUri = new Uri($"http://localhost:{httpProxyPort}");
+
             foreach (var domain in this.options.Value.DomainConfigs.Keys)
             {
                 var destination = new Uri($"https://{domain.Replace('*', 'a')}");
                 var proxyServer = systemProxy.GetProxy(destination);
-                if (proxyServer != null)
+                if (proxyServer != null && proxyServer != loopbackProxyUri && proxyServer != localhostProxyUri)
                 {
                     this.logger.LogError($"由于系统配置了{proxyServer}代理{domain}，{nameof(FastGithub)}无法加速相关域名");
                 }
