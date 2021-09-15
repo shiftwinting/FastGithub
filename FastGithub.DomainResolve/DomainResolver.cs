@@ -31,7 +31,7 @@ namespace FastGithub.DomainResolve
         private readonly TimeSpan disableIPExpiration = TimeSpan.FromMinutes(2d);
 
         private readonly TimeSpan dnscryptExpiration = TimeSpan.FromMinutes(10d);
-        private readonly TimeSpan fallbackExpiration = TimeSpan.FromMinutes(2d);
+        private readonly TimeSpan systemExpiration = TimeSpan.FromMinutes(2d);
         private readonly TimeSpan loopbackExpiration = TimeSpan.FromSeconds(5d);
         private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
 
@@ -111,8 +111,13 @@ namespace FastGithub.DomainResolve
 
             if (address == null)
             {
-                expiration = this.fallbackExpiration;
-                address = await this.LookupAsync(null, domain, cancellationToken);
+                address = await this.LookupByDnscryptAsync(domain, cancellationToken);
+            }
+
+            if (address == null)
+            {
+                expiration = this.systemExpiration;
+                address = await this.LookupByDnsSystemAsync(domain, cancellationToken);
             }
 
             if (address == null)
@@ -141,61 +146,62 @@ namespace FastGithub.DomainResolve
         private async Task<IPAddress?> LookupByDnscryptAsync(DnsEndPoint domain, CancellationToken cancellationToken, int maxTryCount = 2)
         {
             var dns = this.dnscryptProxy.LocalEndPoint;
-            if (dns != null)
+            if (dns == null)
             {
-                for (var i = 0; i < maxTryCount; i++)
-                {
-                    var address = await this.LookupAsync(dns, domain, cancellationToken);
-                    if (address != null)
-                    {
-                        return address;
-                    }
-                }
+                return null;
             }
-            return default;
-        }
 
-        /// <summary>
-        /// 查找最快的可用ip
-        /// </summary>
-        /// <param name="dns"></param>
-        /// <param name="domain"></param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="OperationCanceledException"></exception>
-        /// <returns></returns>
-        private async Task<IPAddress?> LookupAsync(IPEndPoint? dns, DnsEndPoint domain, CancellationToken cancellationToken)
-        {
-            var dnsName = dns?.ToString() ?? "System";
             try
             {
-                IEnumerable<IPAddress> addresses;
-                if (dns != null)
-                {
-                    var dnsClient = new DnsClient(dns);
-                    addresses = await dnsClient.Lookup(domain.Host, RecordType.A, cancellationToken);
-                }
-                else
-                {
-                    var addrs = await Dns.GetHostAddressesAsync(domain.Host);
-                    addresses = addrs.Where(item => item.AddressFamily == AddressFamily.InterNetwork);
-                }
-
-                addresses = addresses.Where(address => this.disableIPAddressCache.TryGetValue(address, out _) == false).ToList();
+                var dnsClient = new DnsClient(dns);
+                var addresses = await dnsClient.Lookup(domain.Host, RecordType.A, cancellationToken);
                 var address = await this.FindFastValueAsync(addresses, domain.Port, cancellationToken);
                 if (address == null)
                 {
-                    this.logger.LogWarning($"dns({dnsName})解析不到{domain.Host}可用的ip解析");
+                    this.logger.LogWarning($"dns({dns})解析不到{domain.Host}可用的ip解析");
                 }
                 else
                 {
-                    this.logger.LogInformation($"dns({dnsName}): {domain.Host}->{address}");
+                    this.logger.LogInformation($"dns({dns}): {domain.Host}->{address}");
                 }
                 return address;
             }
             catch (Exception ex)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                this.logger.LogWarning($"dns({dnsName})无法解析{domain.Host}：{ex.Message}");
+                this.logger.LogWarning($"dns({dns})无法解析{domain.Host}：{ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 系统DNS查找ip
+        /// </summary> 
+        /// <param name="domain"></param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException"></exception>
+        /// <returns></returns>
+        private async Task<IPAddress?> LookupByDnsSystemAsync(DnsEndPoint domain, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var allAddresses = await Dns.GetHostAddressesAsync(domain.Host);
+                var addresses = allAddresses.Where(item => item.AddressFamily == AddressFamily.InterNetwork);
+                var address = await this.FindFastValueAsync(addresses, domain.Port, cancellationToken);
+                if (address == null)
+                {
+                    this.logger.LogWarning($"dns(系统)解析不到{domain.Host}可用的ip解析");
+                }
+                else
+                {
+                    this.logger.LogInformation($"dns(系统): {domain.Host}->{address}");
+                }
+                return address;
+            }
+            catch (Exception ex)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                this.logger.LogWarning($"dns(系统)无法解析{domain.Host}：{ex.Message}");
                 return default;
             }
         }
@@ -210,6 +216,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress?> FindFastValueAsync(IEnumerable<IPAddress> addresses, int port, CancellationToken cancellationToken)
         {
+            addresses = addresses.Where(IsEnableIPAddress).ToArray();
             if (addresses.Any() == false)
             {
                 return default;
@@ -223,6 +230,11 @@ namespace FastGithub.DomainResolve
             var tasks = addresses.Select(address => this.IsAvailableAsync(address, port, cancellationToken));
             var fastTask = await Task.WhenAny(tasks);
             return await fastTask;
+
+            bool IsEnableIPAddress(IPAddress address)
+            {
+                return this.disableIPAddressCache.TryGetValue(address, out _) == false;
+            }
         }
 
 
