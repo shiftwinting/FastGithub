@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using WinDivertSharp;
+using WinDivertSharp.WinAPI;
 
 namespace FastGithub.Dns
 {
@@ -19,7 +20,8 @@ namespace FastGithub.Dns
     [SupportedOSPlatform("windows")]
     sealed class DnsInterceptor
     {
-        const string DNS_FILTER = "udp.DstPort == 53";
+        private const string DNS_FILTER = "udp.DstPort == 53";
+        private const int ERROR_IO_PENDING = 997;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
         private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d);
@@ -47,7 +49,7 @@ namespace FastGithub.Dns
         /// DNS拦截
         /// </summary>
         /// <param name="cancellationToken"></param>
-        public void Intercept(CancellationToken cancellationToken)
+        unsafe public void Intercept(CancellationToken cancellationToken)
         {
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.Zero)
@@ -55,28 +57,58 @@ namespace FastGithub.Dns
                 return;
             }
 
+            DnsFlushResolverCache();
+
             var packetLength = 0U;
             var packetBuffer = new byte[ushort.MaxValue];
             using var winDivertBuffer = new WinDivertBuffer(packetBuffer);
             var winDivertAddress = new WinDivertAddress();
+            using var ioEvent = new AutoResetEvent(false);
 
-            DnsFlushResolverCache();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength))
+                winDivertAddress.Reset();
+                var overlapped = new NativeOverlapped
                 {
-                    try
+                    EventHandle = ioEvent.SafeWaitHandle.DangerousGetHandle()
+                };
+
+                // false表示异步完成
+                if (WinDivert.WinDivertRecvEx(handle, winDivertBuffer, 0, ref winDivertAddress, ref packetLength, ref overlapped) == false)
+                {
+                    var error = Marshal.GetLastWin32Error();
+                    if (error != ERROR_IO_PENDING)
                     {
-                        this.ProcessDnsPacket(packetBuffer, ref packetLength);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.LogWarning(ex.Message);
+                        this.logger.LogWarning($"Unknown IO error ID {error} while awaiting overlapped result.");
+                        continue;
                     }
 
-                    WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-                    WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
+                    while (ioEvent.WaitOne(TimeSpan.FromSeconds(1d)) == false)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                    }
+
+                    var asyncPacketLength = 0U;
+                    if (Kernel32.GetOverlappedResult(handle, ref overlapped, ref asyncPacketLength, false) == false)
+                    {
+                        this.logger.LogWarning("Failed to get overlapped result.");
+                        continue;
+                    }
+
+                    packetLength = asyncPacketLength;
                 }
+
+                try
+                {
+                    this.ProcessDnsPacket(packetBuffer, ref packetLength);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(ex.Message);
+                }
+
+                WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
+                WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
             }
 
             WinDivert.WinDivertClose(handle);
