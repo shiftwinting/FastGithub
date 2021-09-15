@@ -49,7 +49,7 @@ namespace FastGithub.Dns
         /// DNS拦截
         /// </summary>
         /// <param name="cancellationToken"></param>
-        unsafe public void Intercept(CancellationToken cancellationToken)
+        public void Intercept(CancellationToken cancellationToken)
         {
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.Zero)
@@ -63,56 +63,73 @@ namespace FastGithub.Dns
             var packetBuffer = new byte[ushort.MaxValue];
             using var winDivertBuffer = new WinDivertBuffer(packetBuffer);
             var winDivertAddress = new WinDivertAddress();
-            using var ioEvent = new AutoResetEvent(false);
 
             while (cancellationToken.IsCancellationRequested == false)
             {
-                winDivertAddress.Reset();
-                var overlapped = new NativeOverlapped
+                if (this.WinDivertRecvEx(handle, winDivertBuffer, ref winDivertAddress, ref packetLength, cancellationToken))
                 {
-                    EventHandle = ioEvent.SafeWaitHandle.DangerousGetHandle()
-                };
-
-                // false表示异步完成
-                if (WinDivert.WinDivertRecvEx(handle, winDivertBuffer, 0, ref winDivertAddress, ref packetLength, ref overlapped) == false)
-                {
-                    var error = Marshal.GetLastWin32Error();
-                    if (error != ERROR_IO_PENDING)
+                    try
                     {
-                        this.logger.LogWarning($"Unknown IO error ID {error} while awaiting overlapped result.");
-                        continue;
+                        this.ProcessDnsPacket(packetBuffer, ref packetLength);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.LogWarning(ex.Message);
                     }
 
-                    while (ioEvent.WaitOne(TimeSpan.FromSeconds(1d)) == false)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                    }
-
-                    var asyncPacketLength = 0U;
-                    if (Kernel32.GetOverlappedResult(handle, ref overlapped, ref asyncPacketLength, false) == false)
-                    {
-                        this.logger.LogWarning("Failed to get overlapped result.");
-                        continue;
-                    }
-
-                    packetLength = asyncPacketLength;
+                    WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
+                    WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
                 }
-
-                try
-                {
-                    this.ProcessDnsPacket(packetBuffer, ref packetLength);
-                }
-                catch (Exception ex)
-                {
-                    this.logger.LogWarning(ex.Message);
-                }
-
-                WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-                WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
             }
 
             WinDivert.WinDivertClose(handle);
             DnsFlushResolverCache();
+        }
+
+        /// <summary>
+        /// 接收数据
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="winDivertBuffer"></param>
+        /// <param name="winDivertAddress"></param>
+        /// <param name="packetLength"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private bool WinDivertRecvEx(IntPtr handle, WinDivertBuffer winDivertBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength, CancellationToken cancellationToken)
+        {
+            using var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, null);
+            var overlapped = new NativeOverlapped
+            {
+                EventHandle = waitHandle.SafeWaitHandle.DangerousGetHandle()
+            };
+
+            winDivertAddress.Reset();
+            if (WinDivert.WinDivertRecvEx(handle, winDivertBuffer, 0, ref winDivertAddress, ref packetLength, ref overlapped))
+            {
+                return true;
+            }
+
+            var error = Marshal.GetLastWin32Error();
+            if (error != ERROR_IO_PENDING)
+            {
+                this.logger.LogWarning($"Unknown IO error ID {error} while awaiting overlapped result.");
+                return false;
+            }
+
+            while (waitHandle.WaitOne(TimeSpan.FromSeconds(1d)) == false)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            var asyncPacketLength = 0U;
+            if (Kernel32.GetOverlappedResult(handle, ref overlapped, ref asyncPacketLength, false) == false)
+            {
+                this.logger.LogWarning("Failed to get overlapped result.");
+                return false;
+            }
+
+            packetLength = asyncPacketLength;
+            return true;
         }
 
         /// <summary>
@@ -140,14 +157,14 @@ namespace FastGithub.Dns
             }
 
             // 反转ip
-            var sourAddress = ipPacket.SourceAddress;
+            var sourceAddress = ipPacket.SourceAddress;
             ipPacket.SourceAddress = ipPacket.DestinationAddress;
-            ipPacket.DestinationAddress = sourAddress;
+            ipPacket.DestinationAddress = sourceAddress;
 
             // 反转端口
-            var sourPort = udpPacket.SourcePort;
+            var sourcePort = udpPacket.SourcePort;
             udpPacket.SourcePort = udpPacket.DestinationPort;
-            udpPacket.DestinationPort = sourPort;
+            udpPacket.DestinationPort = sourcePort;
 
             // 设置dns响应
             var response = Response.FromRequest(request);
