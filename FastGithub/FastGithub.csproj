@@ -31,7 +31,7 @@
 		<None Include="../README.md" Link="README.md">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="../README.pdf" Link="README.pdf">
+		<None Include="../README.html" Link="README.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="../LICENSE" Link="LICENSE">
