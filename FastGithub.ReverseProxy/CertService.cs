@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub.ReverseProxy
@@ -182,10 +183,7 @@ namespace FastGithub.ReverseProxy
             }
 
             yield return LocalMachine.Name;
-            foreach (var address in LocalMachine.GetAllIPv4Addresses())
-            {
-                yield return address.ToString();
-            }
+            yield return IPAddress.Loopback.ToString();
         }
     }
 }

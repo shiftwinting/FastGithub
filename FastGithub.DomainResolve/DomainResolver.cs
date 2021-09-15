@@ -112,7 +112,7 @@ namespace FastGithub.DomainResolve
             if (address == null)
             {
                 expiration = this.fallbackExpiration;
-                address = await this.LookupByFallbackAsync(domain, cancellationToken);
+                address = await this.LookupAsync(null, domain, cancellationToken);
             }
 
             if (address == null)
@@ -140,36 +140,16 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress?> LookupByDnscryptAsync(DnsEndPoint domain, CancellationToken cancellationToken, int maxTryCount = 2)
         {
-            if (this.dnscryptProxy.LocalEndPoint != null)
+            var dns = this.dnscryptProxy.LocalEndPoint;
+            if (dns != null)
             {
                 for (var i = 0; i < maxTryCount; i++)
                 {
-                    var address = await this.LookupAsync(this.dnscryptProxy.LocalEndPoint, domain, cancellationToken);
+                    var address = await this.LookupAsync(dns, domain, cancellationToken);
                     if (address != null)
                     {
                         return address;
                     }
-                }
-            }
-            return default;
-        }
-
-
-        /// <summary>
-        /// 回退查找ip
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="OperationCanceledException"></exception>
-        /// <returns></returns>
-        private async Task<IPAddress?> LookupByFallbackAsync(DnsEndPoint domain, CancellationToken cancellationToken)
-        {
-            foreach (var dns in this.fastGithubConfig.FallbackDns)
-            {
-                var address = await this.LookupAsync(dns, domain, cancellationToken);
-                if (address != null)
-                {
-                    return address;
                 }
             }
             return default;
@@ -183,28 +163,39 @@ namespace FastGithub.DomainResolve
         /// <param name="cancellationToken"></param>
         /// <exception cref="OperationCanceledException"></exception>
         /// <returns></returns>
-        private async Task<IPAddress?> LookupAsync(IPEndPoint dns, DnsEndPoint domain, CancellationToken cancellationToken)
+        private async Task<IPAddress?> LookupAsync(IPEndPoint? dns, DnsEndPoint domain, CancellationToken cancellationToken)
         {
+            var dnsName = dns?.ToString() ?? "System";
             try
             {
-                var dnsClient = new DnsClient(dns);
-                var addresses = await dnsClient.Lookup(domain.Host, RecordType.A, cancellationToken);
+                IEnumerable<IPAddress> addresses;
+                if (dns != null)
+                {
+                    var dnsClient = new DnsClient(dns);
+                    addresses = await dnsClient.Lookup(domain.Host, RecordType.A, cancellationToken);
+                }
+                else
+                {
+                    var addrs = await Dns.GetHostAddressesAsync(domain.Host);
+                    addresses = addrs.Where(item => item.AddressFamily == AddressFamily.InterNetwork);
+                }
+
                 addresses = addresses.Where(address => this.disableIPAddressCache.TryGetValue(address, out _) == false).ToList();
                 var address = await this.FindFastValueAsync(addresses, domain.Port, cancellationToken);
                 if (address == null)
                 {
-                    this.logger.LogWarning($"dns({dns})解析不到{domain.Host}可用的ip解析");
+                    this.logger.LogWarning($"dns({dnsName})解析不到{domain.Host}可用的ip解析");
                 }
                 else
                 {
-                    this.logger.LogInformation($"dns({dns}): {domain.Host}->{address}");
+                    this.logger.LogInformation($"dns({dnsName}): {domain.Host}->{address}");
                 }
                 return address;
             }
             catch (Exception ex)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                this.logger.LogWarning($"dns({dns})无法解析{domain.Host}：{ex.Message}");
+                this.logger.LogWarning($"dns({dnsName})无法解析{domain.Host}：{ex.Message}");
                 return default;
             }
         }
