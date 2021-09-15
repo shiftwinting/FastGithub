@@ -114,7 +114,7 @@ namespace FastGithub.DomainResolve
                 address = await this.LookupByDnscryptAsync(domain, cancellationToken);
             }
 
-            if (address == null)
+            if (address == null && OperatingSystem.IsWindows() == false)
             {
                 expiration = this.systemExpiration;
                 address = await this.LookupByDnsSystemAsync(domain, cancellationToken);
@@ -141,9 +141,8 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
-        /// <param name="maxTryCount"></param>
         /// <returns></returns>
-        private async Task<IPAddress?> LookupByDnscryptAsync(DnsEndPoint domain, CancellationToken cancellationToken, int maxTryCount = 2)
+        private async Task<IPAddress?> LookupByDnscryptAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
             var dns = this.dnscryptProxy.LocalEndPoint;
             if (dns == null)
@@ -180,7 +179,7 @@ namespace FastGithub.DomainResolve
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="OperationCanceledException"></exception>
-        /// <returns></returns>
+        /// <returns></returns>        
         private async Task<IPAddress?> LookupByDnsSystemAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
             try
