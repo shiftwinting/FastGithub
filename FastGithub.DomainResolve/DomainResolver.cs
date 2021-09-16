@@ -1,4 +1,5 @@
-﻿using DNS.Client.RequestResolver;
+﻿using DNS.Client;
+using DNS.Client.RequestResolver;
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
 using FastGithub.Configuration;
@@ -178,7 +179,11 @@ namespace FastGithub.DomainResolve
         {
             try
             {
-                var request = new Request();
+                var request = new Request
+                {
+                    RecursionDesired = true,
+                    OperationCode = OperationCode.Query
+                };
                 request.Questions.Add(new Question(new Domain(domain.Host), RecordType.A));
 
                 using var timeoutTokenSource = new CancellationTokenSource(this.lookupTimeout);
@@ -288,7 +293,8 @@ namespace FastGithub.DomainResolve
 
             public Task<IResponse> Resolve(IRequest request, CancellationToken cancellationToken = default)
             {
-                return this.resolver.Resolve(request, cancellationToken);
+                var clientRequest = new ClientRequest(this.resolver, request);
+                return clientRequest.Resolve(cancellationToken);
             }
 
             public override string ToString()

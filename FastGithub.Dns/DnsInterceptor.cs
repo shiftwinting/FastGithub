@@ -70,7 +70,7 @@ namespace FastGithub.Dns
                 {
                     try
                     {
-                        this.ProcessDnsPacket(packetBuffer, ref packetLength);
+                        this.ProcessDnsPacket(packetBuffer, ref winDivertAddress, ref packetLength);
                     }
                     catch (Exception ex)
                     {
@@ -136,7 +136,9 @@ namespace FastGithub.Dns
         /// 处理DNS数据包
         /// </summary>
         /// <param name="packetBuffer"></param>
-        private void ProcessDnsPacket(byte[] packetBuffer, ref uint packetLength)
+        /// <param name="winDivertAddress"></param>
+        /// <param name="packetLength"></param>
+        private void ProcessDnsPacket(byte[] packetBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
         {
             var packetData = packetBuffer.AsSpan(0, (int)packetLength).ToArray();
             var packet = Packet.ParsePacket(LinkLayers.Raw, packetData);
@@ -144,6 +146,11 @@ namespace FastGithub.Dns
             var udpPacket = (UdpPacket)ipPacket.PayloadPacket;
 
             var request = Request.FromArray(udpPacket.PayloadData);
+            if (request.OperationCode != OperationCode.Query)
+            {
+                return;
+            }
+
             var question = request.Questions.FirstOrDefault();
             if (question == null || question.Type != RecordType.A)
             {
@@ -175,6 +182,16 @@ namespace FastGithub.Dns
             // 修改数据内容和数据长度
             packet.Bytes.CopyTo(packetBuffer, 0);
             packetLength = (uint)packet.Bytes.Length;
+
+            // 反转方向
+            if (winDivertAddress.Direction == WinDivertDirection.Inbound)
+            {
+                winDivertAddress.Direction = WinDivertDirection.Outbound;
+            }
+            else
+            {
+                winDivertAddress.Direction = WinDivertDirection.Inbound;
+            }
         }
     }
 }
