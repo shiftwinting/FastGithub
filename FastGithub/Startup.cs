@@ -1,10 +1,9 @@
 using FastGithub.Configuration;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using System;
 
 namespace FastGithub
 {
@@ -34,10 +33,14 @@ namespace FastGithub
 
             services.AddConfiguration();
             services.AddDomainResolve();
-            services.AddDnsServer();
             services.AddHttpClient();
             services.AddReverseProxy();
-            services.AddHostedService<VersonHostedService>();
+            services.AddHostedService<AppHostedService>();
+
+            if (OperatingSystem.IsWindows())
+            {
+                services.AddDnsInterceptor();
+            }
         }
 
         /// <summary>
@@ -46,25 +49,16 @@ namespace FastGithub
         /// <param name="app"></param>
         public void Configure(IApplicationBuilder app)
         {
-            app.UseRequestLogging();
-            app.UseDnsOverHttps();
-            app.UseReverseProxy();
-
-            app.UseRouting();
-            app.UseEndpoints(endpoint =>
+            var httpProxyPort = app.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value.HttpProxyPort;
+            app.MapWhen(context => context.Connection.LocalPort == httpProxyPort, appBuilder =>
             {
-                endpoint.Map("/", async context =>
-                {
-                    var certFile = $"CACert/{nameof(FastGithub)}.cer";
-                    context.Response.ContentType = "application/x-x509-ca-cert";
-                    context.Response.Headers.Add("Content-Disposition", $"attachment;filename={Path.GetFileName(certFile)}");
-                    await context.Response.SendFileAsync(certFile);
-                });
-                endpoint.MapFallback(context =>
-                {
-                    context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
-                    return Task.CompletedTask;
-                });
+                appBuilder.UseHttpProxy();
+            });
+
+            app.MapWhen(context => context.Connection.LocalPort != httpProxyPort, appBuilder =>
+            {
+                appBuilder.UseRequestLogging();
+                appBuilder.UseHttpReverseProxy();
             });
         }
     }

@@ -1,6 +1,7 @@
 ﻿using FastGithub.Dns;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Runtime.Versioning;
 
 namespace FastGithub
 {
@@ -10,18 +11,17 @@ namespace FastGithub
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// 注册dns服务
+        /// 注册dns拦截器
         /// </summary>
         /// <param name="services"></param> 
         /// <returns></returns>
-        public static IServiceCollection AddDnsServer(this IServiceCollection services)
+        [SupportedOSPlatform("windows")]
+        public static IServiceCollection AddDnsInterceptor(this IServiceCollection services)
         {
-            services.TryAddSingleton<RequestResolver>();
-            services.TryAddSingleton<DnsOverUdpServer>();
-            services.TryAddSingleton<DnsOverHttpsMiddleware>();
+            services.TryAddSingleton<DnsInterceptor>();
             services.AddSingleton<IConflictValidator, HostsConflictValidator>();
             services.AddSingleton<IConflictValidator, ProxyConflictValidtor>();
-            return services.AddHostedService<DnsOverUdpHostedService>();
+            return services.AddHostedService<DnsInterceptHostedService>();
         }
     }
 }

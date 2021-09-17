@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
@@ -18,66 +17,35 @@ namespace FastGithub.Configuration
         public static string Name => Environment.MachineName;
 
         /// <summary>
-        /// 获取本机设备所有IP
+        /// 获取可用的随机Tcp端口
         /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="min">最小值</param>
         /// <returns></returns>
-        public static IEnumerable<IPAddress> GetAllIPAddresses()
+        public static int GetAvailableTcpPort(AddressFamily addressFamily, int min = 1025)
         {
-            yield return IPAddress.Loopback;
-            yield return IPAddress.IPv6Loopback;
+            var hashSet = new HashSet<int>();
+            var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
 
-            foreach (var @interface in NetworkInterface.GetAllNetworkInterfaces())
+            foreach (var item in tcpListeners)
             {
-                foreach (var addressInfo in @interface.GetIPProperties().UnicastAddresses)
+                if (item.AddressFamily == addressFamily)
                 {
-                    yield return addressInfo.Address;
+                    hashSet.Add(item.Port);
                 }
             }
-        }
 
-        /// <summary>
-        /// 获取本机设备所有IPv4
-        /// </summary>
-        /// <returns></returns>
-        public static IEnumerable<IPAddress> GetAllIPv4Addresses()
-        {
-            foreach (var address in GetAllIPAddresses())
+            for (var port = min; port < ushort.MaxValue; port++)
             {
-                if (address.AddressFamily == AddressFamily.InterNetwork)
+                if (hashSet.Contains(port) == false)
                 {
-                    yield return address;
+                    return port;
                 }
             }
+
+            throw new FastGithubException("当前无可用的端口");
         }
 
-        /// <summary>
-        /// 返回本机设备是否包含指定IP
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public static bool ContainsIPAddress(IPAddress address)
-        {
-            return GetAllIPAddresses().Contains(address);
-        } 
-
-        /// <summary>
-        /// 获取与远程节点通讯的的本机IP地址
-        /// </summary>
-        /// <param name="remoteEndPoint">远程地址</param>
-        /// <returns></returns>
-        public static IPAddress? GetLocalIPAddress(EndPoint remoteEndPoint)
-        {
-            try
-            {
-                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                socket.Connect(remoteEndPoint);
-                return socket.LocalEndPoint is IPEndPoint localEndPoint ? localEndPoint.Address : default;
-            }
-            catch (Exception)
-            {
-                return default;
-            }
-        }
 
         /// <summary>
         /// 获取可用的随机端口
@@ -85,7 +53,7 @@ namespace FastGithub.Configuration
         /// <param name="addressFamily"></param>
         /// <param name="min">最小值</param>
         /// <returns></returns>
-        public static int GetAvailablePort(AddressFamily addressFamily, int min = 1024)
+        public static int GetAvailablePort(AddressFamily addressFamily, int min = 1025)
         {
             var hashSet = new HashSet<int>();
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
@@ -127,17 +95,6 @@ namespace FastGithub.Configuration
         {
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             return tcpListeners.Any(item => item.Port == port) == false;
-        }
-
-        /// <summary>
-        /// 是否可以监听指定udp端口
-        /// </summary>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        public static bool CanListenUdp(int port)
-        {
-            var udpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
-            return udpListeners.Any(item => item.Port == port) == false;
         }
     }
 }

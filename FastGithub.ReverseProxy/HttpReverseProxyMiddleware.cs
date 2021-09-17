@@ -11,18 +11,18 @@ namespace FastGithub.ReverseProxy
     /// <summary>
     /// 反向代理中间件
     /// </summary>
-    sealed class ReverseProxyMiddleware
+    sealed class HttpReverseProxyMiddleware
     {
         private readonly IHttpForwarder httpForwarder;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<ReverseProxyMiddleware> logger;
+        private readonly ILogger<HttpReverseProxyMiddleware> logger;
 
-        public ReverseProxyMiddleware(
+        public HttpReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
             IHttpClientFactory httpClientFactory,
             FastGithubConfig fastGithubConfig,
-            ILogger<ReverseProxyMiddleware> logger)
+            ILogger<HttpReverseProxyMiddleware> logger)
         {
             this.httpForwarder = httpForwarder;
             this.httpClientFactory = httpClientFactory;

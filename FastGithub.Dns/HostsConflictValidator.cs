@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -47,7 +46,6 @@ namespace FastGithub.Dns
                 return;
             }
 
-            var localAddresses = LocalMachine.GetAllIPv4Addresses().ToArray();
             var lines = await File.ReadAllLinesAsync(hostsPath);
             foreach (var line in lines)
             {
@@ -55,7 +53,7 @@ namespace FastGithub.Dns
                 {
                     continue;
                 }
-                if (localAddresses.Contains(record.Address) == true)
+                if (IPAddress.Loopback.Equals(record.Address) == true)
                 {
                     continue;
                 }

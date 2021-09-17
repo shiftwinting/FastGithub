@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FastGithub.Configuration
 {
@@ -9,9 +8,9 @@ namespace FastGithub.Configuration
     public class FastGithubOptions
     {
         /// <summary>
-        /// 回退的dns
+        /// http代理端口
         /// </summary>
-        public DnsConfig[] FallbackDns { get; set; } = Array.Empty<DnsConfig>();
+        public int HttpProxyPort { get; set; }
 
         /// <summary>
         /// 代理的域名配置

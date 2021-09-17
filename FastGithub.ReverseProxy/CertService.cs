@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub.ReverseProxy
@@ -15,7 +16,7 @@ namespace FastGithub.ReverseProxy
     /// </summary>
     sealed class CertService
     {
-        private const string CAPATH = "CACert";
+        private const string CACert_PATH = "cacert";
         private const int KEY_SIZE_BITS = 2048;
         private readonly IMemoryCache serverCertCache;
         private readonly ILogger<CertService> logger;
@@ -24,12 +25,12 @@ namespace FastGithub.ReverseProxy
         /// <summary>
         /// 获取证书文件路径
         /// </summary>
-        public string CaCerFilePath { get; } = $"{CAPATH}/{nameof(FastGithub)}.cer";
+        public string CaCerFilePath { get; } = $"{CACert_PATH}/fastgithub.cer";
 
         /// <summary>
         /// 获取私钥文件路径
         /// </summary>
-        public string CaKeyFilePath { get; } = $"{CAPATH}/{nameof(FastGithub)}.key";
+        public string CaKeyFilePath { get; } = $"{CACert_PATH}/fastgithub.key";
 
         /// <summary>
         /// 证书服务
@@ -42,7 +43,7 @@ namespace FastGithub.ReverseProxy
             this.serverCertCache = serverCertCache;
             this.logger = logger;
 
-            Directory.CreateDirectory(CAPATH);
+            Directory.CreateDirectory(CACert_PATH);
         }
 
         /// <summary>
@@ -182,10 +183,7 @@ namespace FastGithub.ReverseProxy
             }
 
             yield return LocalMachine.Name;
-            foreach (var address in LocalMachine.GetAllIPv4Addresses())
-            {
-                yield return address.ToString();
-            }
+            yield return IPAddress.Loopback.ToString();
         }
     }
 }

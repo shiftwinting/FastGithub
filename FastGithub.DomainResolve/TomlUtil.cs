@@ -1,10 +1,6 @@
-﻿using FastGithub.Configuration;
-using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Tommy;
@@ -29,45 +25,6 @@ namespace FastGithub.DomainResolve
                 endpoint.ToString()
             };
             return SetAsync(tomlPath, "listen_addresses", value, cancellationToken);
-        }
-
-        /// <summary>
-        /// 设置ecs
-        /// </summary>
-        /// <param name="tomlPath"></param> 
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public static async Task<bool> SetEdnsClientSubnetAsync(string tomlPath, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var address = await GetPublicIPAddressAsync(cancellationToken);
-                var value = new TomlArray
-                {
-                    $"{address}/32"
-                };
-                await SetAsync(tomlPath, "edns_client_subnet", value, cancellationToken);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 获取公网ip
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private static async Task<IPAddress> GetPublicIPAddressAsync(CancellationToken cancellationToken)
-        {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3d) };
-            var response = await httpClient.GetStringAsync("https://pv.sohu.com/cityjson?ie=utf-8", cancellationToken);
-            var match = Regex.Match(response, @"\d+\.\d+\.\d+\.\d+");
-            return match.Success && IPAddress.TryParse(match.Value, out var address)
-                ? address
-                : throw new FastGithubException("无法获取外网ip");
         }
 
         /// <summary>
