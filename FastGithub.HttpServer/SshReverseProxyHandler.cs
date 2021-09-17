@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.HttpServer
 {
     /// <summary>
     /// github的ssh代理处理者

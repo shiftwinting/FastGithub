@@ -6,7 +6,7 @@ using System;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.HttpServer
 {
     /// <summary>
     /// 反向代理中间件

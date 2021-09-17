@@ -9,14 +9,14 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.HttpServer
 {
     /// <summary>
     /// 证书服务
     /// </summary>
     sealed class CertService
     {
-        private const string CACert_PATH = "cacert";
+        private const string CACERT_PATH = "cacert";
         private const int KEY_SIZE_BITS = 2048;
         private readonly IMemoryCache serverCertCache;
         private readonly ILogger<CertService> logger;
@@ -25,12 +25,12 @@ namespace FastGithub.ReverseProxy
         /// <summary>
         /// 获取证书文件路径
         /// </summary>
-        public string CaCerFilePath { get; } = $"{CACert_PATH}/fastgithub.cer";
+        public string CaCerFilePath { get; } = $"{CACERT_PATH}/fastgithub.cer";
 
         /// <summary>
         /// 获取私钥文件路径
         /// </summary>
-        public string CaKeyFilePath { get; } = $"{CACert_PATH}/fastgithub.key";
+        public string CaKeyFilePath { get; } = $"{CACERT_PATH}/fastgithub.key";
 
         /// <summary>
         /// 证书服务
@@ -42,8 +42,7 @@ namespace FastGithub.ReverseProxy
         {
             this.serverCertCache = serverCertCache;
             this.logger = logger;
-
-            Directory.CreateDirectory(CACert_PATH);
+            Directory.CreateDirectory(CACERT_PATH);
         }
 
         /// <summary>

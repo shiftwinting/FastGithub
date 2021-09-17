@@ -1,4 +1,4 @@
-﻿using FastGithub.ReverseProxy;
+﻿using FastGithub.HttpServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

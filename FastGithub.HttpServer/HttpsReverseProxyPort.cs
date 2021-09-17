@@ -2,7 +2,7 @@
 using System;
 using System.Net.Sockets;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.HttpServer
 {
     /// <summary>
     /// https反向代理端口

@@ -1,4 +1,4 @@
-﻿using FastGithub.ReverseProxy;
+﻿using FastGithub.HttpServer;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FastGithub

@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
     <ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
     <ProjectReference Include="..\FastGithub.DomainResolve\FastGithub.DomainResolve.csproj" />
-    <ProjectReference Include="..\FastGithub.ReverseProxy\FastGithub.ReverseProxy.csproj" />
+    <ProjectReference Include="..\FastGithub.HttpServer\FastGithub.HttpServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

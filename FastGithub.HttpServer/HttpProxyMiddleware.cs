@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
-namespace FastGithub.ReverseProxy
+namespace FastGithub.HttpServer
 {
     /// <summary>
     /// http代理中间件
@@ -96,8 +96,9 @@ namespace FastGithub.ReverseProxy
         /// <returns></returns>
         private async Task<EndPoint> GetTargetEndPointAsync(HttpRequest request)
         {
+            const int HTTPS_PORT = 443;
             var targetHost = request.Host.Host;
-            var targetPort = request.Host.Port ?? 443;
+            var targetPort = request.Host.Port ?? HTTPS_PORT;
 
             if (IPAddress.TryParse(targetHost, out var address) == true)
             {
@@ -110,7 +111,7 @@ namespace FastGithub.ReverseProxy
             }
 
             // https，走反向代理中间人
-            if (targetPort == 443)
+            if (targetPort == HTTPS_PORT)
             {
                 return new IPEndPoint(IPAddress.Loopback, HttpsReverseProxyPort.Value);
             }
