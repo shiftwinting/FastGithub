@@ -73,26 +73,31 @@ namespace FastGithub.Dns
                 {
                     try
                     {
-                        this.ProcessDnsPacket(packetBuffer, ref winDivertAddress, ref packetLength);
+                        if (this.ModifyDnsPacket(packetBuffer, ref winDivertAddress, ref packetLength))
+                        {
+                            WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
+                        }
                     }
                     catch (Exception ex)
                     {
                         this.logger.LogWarning(ex.Message);
                     }
-
-                    WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-                    WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
+                    finally
+                    {
+                        WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// 处理DNS数据包
+        /// 修改DNS数据包
         /// </summary>
         /// <param name="packetBuffer"></param>
         /// <param name="winDivertAddress"></param>
         /// <param name="packetLength"></param>
-        private void ProcessDnsPacket(byte[] packetBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
+        /// <returns></returns>
+        private bool ModifyDnsPacket(byte[] packetBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
         {
             var packetData = packetBuffer.AsSpan(0, (int)packetLength).ToArray();
             var packet = Packet.ParsePacket(LinkLayers.Raw, packetData);
@@ -102,19 +107,19 @@ namespace FastGithub.Dns
             var request = Request.FromArray(udpPacket.PayloadData);
             if (request.OperationCode != OperationCode.Query)
             {
-                return;
+                return false;
             }
 
             var question = request.Questions.FirstOrDefault();
             if (question == null || question.Type != RecordType.A)
             {
-                return;
+                return false;
             }
 
             var domain = question.Name;
             if (this.fastGithubConfig.IsMatch(domain.ToString()) == false)
             {
-                return;
+                return false;
             }
 
             // 反转ip
@@ -148,6 +153,7 @@ namespace FastGithub.Dns
             }
 
             this.logger.LogInformation($"已拦截dns查询{domain}并伪造响应内容为{IPAddress.Loopback}");
+            return true;
         }
     }
 }
