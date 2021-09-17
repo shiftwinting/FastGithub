@@ -5,17 +5,17 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 如果不能下载[releases](https://github.com/dotnetcore/FastGithub)里发布的程序，可以到Q群`307306673`里面的群文件下载。
 
 ### 2 部署方式
-#### 2.1 windows本机
+#### 2.1 windows-x64
 * 双击运行fastgithub.exe程序
 * `fastgithub.exe start` // 以windows服务安装并启动
 * `fastgithub.exe stop` // 以windows服务卸载并删除
 
-#### 2.2 linux本机
+#### 2.2 linux-x64
 * 执行`sudo ./fastgithub`
 * 手工安装cacert/fastgithub.cer到受信任的根证书颁发机构
 * 手工设置系统代理为http://127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac
 
-#### 2.3 macOS本机
+#### 2.3 macOS-x64
 * 双击运行fastgithub程序
 * 手工安装cacert/fastgithub.cer并设置信任
 * 手工设置系统代理为http://127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac
