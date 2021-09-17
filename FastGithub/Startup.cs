@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
+using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -59,6 +60,13 @@ namespace FastGithub
             {
                 appBuilder.UseRequestLogging();
                 appBuilder.UseHttpReverseProxy();
+
+                appBuilder.UseRouting();
+                appBuilder.UseEndpoints(endpoint => endpoint.MapFallback(context =>
+                {
+                    context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
+                    return Task.CompletedTask;
+                }));
             });
         }
     }

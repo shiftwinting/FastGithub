@@ -23,7 +23,7 @@ namespace FastGithub
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation($"{nameof(FastGithub)}止停止运行");
+            this.logger.LogInformation($"{nameof(FastGithub)}已停止运行");
             return Task.CompletedTask;
         }
     }

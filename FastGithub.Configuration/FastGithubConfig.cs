@@ -28,7 +28,7 @@ namespace FastGithub.Configuration
         {
             this.logger = logger;
             var opt = options.CurrentValue;
-             
+
             this.domainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
 
@@ -42,7 +42,7 @@ namespace FastGithub.Configuration
         private void Update(FastGithubOptions options)
         {
             try
-            { 
+            {
                 this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
                 this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
             }
@@ -74,7 +74,7 @@ namespace FastGithub.Configuration
         /// <returns></returns>
         public bool IsMatch(string domain)
         {
-            return this.domainConfigs.Keys.Any(item => item.IsMatch(domain));
+            return this.TryGetDomainConfig(domain, out _);
         }
 
         /// <summary>

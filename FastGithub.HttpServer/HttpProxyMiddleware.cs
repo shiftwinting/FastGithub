@@ -105,7 +105,7 @@ namespace FastGithub.HttpServer
                 return new IPEndPoint(address, targetPort);
             }
 
-            if (this.fastGithubConfig.TryGetDomainConfig(targetHost, out _) == false)
+            if (this.fastGithubConfig.IsMatch(targetHost) == false)
             {
                 return new DnsEndPoint(targetHost, targetPort);
             }
