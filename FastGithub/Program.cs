@@ -48,6 +48,7 @@ namespace FastGithub
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    webBuilder.UseShutdownTimeout(TimeSpan.FromSeconds(1d));
                     webBuilder.UseKestrel(kestrel =>
                     {
                         kestrel.NoLimit();
