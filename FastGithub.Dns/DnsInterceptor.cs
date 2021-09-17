@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using WinDivertSharp;
-using WinDivertSharp.WinAPI;
 
 namespace FastGithub.Dns
 {
@@ -57,16 +56,21 @@ namespace FastGithub.Dns
                 return;
             }
 
-            DnsFlushResolverCache();
+            cancellationToken.Register(hwnd =>
+            {
+                WinDivert.WinDivertClose((IntPtr)hwnd!);
+                DnsFlushResolverCache();
+            }, handle);
 
             var packetLength = 0U;
             var packetBuffer = new byte[ushort.MaxValue];
             using var winDivertBuffer = new WinDivertBuffer(packetBuffer);
             var winDivertAddress = new WinDivertAddress();
 
+            DnsFlushResolverCache();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                if (this.WinDivertRecvEx(handle, winDivertBuffer, ref winDivertAddress, ref packetLength, cancellationToken))
+                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength))
                 {
                     try
                     {
@@ -81,55 +85,6 @@ namespace FastGithub.Dns
                     WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
                 }
             }
-
-            WinDivert.WinDivertClose(handle);
-            DnsFlushResolverCache();
-        }
-
-        /// <summary>
-        /// 接收数据
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="winDivertBuffer"></param>
-        /// <param name="winDivertAddress"></param>
-        /// <param name="packetLength"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private bool WinDivertRecvEx(IntPtr handle, WinDivertBuffer winDivertBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength, CancellationToken cancellationToken)
-        {
-            using var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, null);
-            var overlapped = new NativeOverlapped
-            {
-                EventHandle = waitHandle.SafeWaitHandle.DangerousGetHandle()
-            };
-
-            winDivertAddress.Reset();
-            if (WinDivert.WinDivertRecvEx(handle, winDivertBuffer, 0, ref winDivertAddress, ref packetLength, ref overlapped))
-            {
-                return true;
-            }
-
-            var error = Marshal.GetLastWin32Error();
-            if (error != ERROR_IO_PENDING)
-            {
-                this.logger.LogWarning($"Unknown IO error ID {error} while awaiting overlapped result.");
-                return false;
-            }
-
-            while (waitHandle.WaitOne(TimeSpan.FromSeconds(1d)) == false)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            var asyncPacketLength = 0U;
-            if (Kernel32.GetOverlappedResult(handle, ref overlapped, ref asyncPacketLength, false) == false)
-            {
-                this.logger.LogWarning("Failed to get overlapped result.");
-                return false;
-            }
-
-            packetLength = asyncPacketLength;
-            return true;
         }
 
         /// <summary>
