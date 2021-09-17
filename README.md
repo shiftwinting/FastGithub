@@ -6,18 +6,18 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 
 ### 2 部署方式
 #### 2.1 windows本机
-* 双击运行FastGithub.exe程序
-* `FastGithub.exe start` // 以windows服务安装并启动
-* `FastGithub.exe stop` // 以windows服务卸载并删除
+* 双击运行fastgithub.exe程序
+* `fastgithub.exe start` // 以windows服务安装并启动
+* `fastgithub.exe stop` // 以windows服务卸载并删除
 
 #### 2.2 linux本机
-* 执行`sudo ./FastGithub`
-* 手工安装CACert/FastGithub.cer到受信任的根证书颁发机构
+* 执行`sudo ./fastgithub`
+* 手工安装cacert/fastgithub.cer到受信任的根证书颁发机构
 * 手工设置系统代理为http://127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac
 
 #### 2.3 macOS本机
-* 双击运行FastGithub程序
-* 手工安装CACert/FastGithub.cer并设置信任
+* 双击运行fastgithub程序
+* 手工安装cacert/fastgithub.cer并设置信任
 * 手工设置系统代理为http://127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac
 
   
@@ -30,11 +30,11 @@ git操作提示`SSL certificate problem`</br>
 #### 3.2 firefox
 firefox提示`连接有潜在的安全问题`</br>
 
-设置->隐私与安全->证书->查看证书->证书颁发机构，导入FastGithub.cer，勾选信任由此证书颁发机构来标识网站
+设置->隐私与安全->证书->查看证书->证书颁发机构，导入fastgithub.cer，勾选信任由此证书颁发机构来标识网站
   
 
 ### 4 安全性说明
-FastGithub为每台不同的主机生成自颁发CA证书，保存在CACert文件夹下。客户端设备需要安装和无条件信任自颁发的CA证书，请不要将证书私钥泄露给他人，以免造成损失。
+FastGithub为每台不同的主机生成自颁发CA证书，保存在cacert文件夹下。客户端设备需要安装和无条件信任自颁发的CA证书，请不要将证书私钥泄露给他人，以免造成损失。
 
 ### 5 合法性说明
 《国际联网暂行规定》第六条规定：“计算机信息网络直接进行国际联网，必须使用邮电部国家公用电信网提供的国际出入口信道。任何单位和个人不得自行建立或者使用其他信道进行国际联网。”

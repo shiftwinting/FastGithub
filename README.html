@@ -372,20 +372,20 @@ code {
 <h3 id="2-%E9%83%A8%E7%BD%B2%E6%96%B9%E5%BC%8F">2 部署方式</h3>
 <h4 id="21-windows%E6%9C%AC%E6%9C%BA">2.1 windows本机</h4>
 <ul>
-<li>双击运行FastGithub.exe程序</li>
-<li><code>FastGithub.exe start</code> // 以windows服务安装并启动</li>
-<li><code>FastGithub.exe stop</code> // 以windows服务卸载并删除</li>
+<li>双击运行fastgithub.exe程序</li>
+<li><code>fastgithub.exe start</code> // 以windows服务安装并启动</li>
+<li><code>fastgithub.exe stop</code> // 以windows服务卸载并删除</li>
 </ul>
 <h4 id="22-linux%E6%9C%AC%E6%9C%BA">2.2 linux本机</h4>
 <ul>
-<li>执行<code>sudo ./FastGithub</code></li>
-<li>手工安装CACert/FastGithub.cer到受信任的根证书颁发机构</li>
+<li>执行<code>sudo ./fastgithub</code></li>
+<li>手工安装cacert/fastgithub.cer到受信任的根证书颁发机构</li>
 <li>手工设置系统代理为http://127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac</li>
 </ul>
 <h4 id="23-macos%E6%9C%AC%E6%9C%BA">2.3 macOS本机</h4>
 <ul>
-<li>双击运行FastGithub程序</li>
-<li>手工安装CACert/FastGithub.cer并设置信任</li>
+<li>双击运行fastgithub程序</li>
+<li>手工安装cacert/fastgithub.cer并设置信任</li>
 <li>手工设置系统代理为http://127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac</li>
 </ul>
 <h3 id="3-%E8%AF%81%E4%B9%A6%E9%AA%8C%E8%AF%81">3 证书验证</h3>
@@ -394,9 +394,9 @@ code {
 <p>需要关闭git的证书验证：<code>git config --global http.sslverify false</code></p>
 <h4 id="32-firefox">3.2 firefox</h4>
 <p>firefox提示<code>连接有潜在的安全问题</code></br></p>
-<p>设置-&gt;隐私与安全-&gt;证书-&gt;查看证书-&gt;证书颁发机构，导入FastGithub.cer，勾选信任由此证书颁发机构来标识网站</p>
+<p>设置-&gt;隐私与安全-&gt;证书-&gt;查看证书-&gt;证书颁发机构，导入fastgithub.cer，勾选信任由此证书颁发机构来标识网站</p>
 <h3 id="4-%E5%AE%89%E5%85%A8%E6%80%A7%E8%AF%B4%E6%98%8E">4 安全性说明</h3>
-<p>FastGithub为每台不同的主机生成自颁发CA证书，保存在CACert文件夹下。客户端设备需要安装和无条件信任自颁发的CA证书，请不要将证书私钥泄露给他人，以免造成损失。</p>
+<p>FastGithub为每台不同的主机生成自颁发CA证书，保存在cacert文件夹下。客户端设备需要安装和无条件信任自颁发的CA证书，请不要将证书私钥泄露给他人，以免造成损失。</p>
 <h3 id="5-%E5%90%88%E6%B3%95%E6%80%A7%E8%AF%B4%E6%98%8E">5 合法性说明</h3>
 <p>《国际联网暂行规定》第六条规定：“计算机信息网络直接进行国际联网，必须使用邮电部国家公用电信网提供的国际出入口信道。任何单位和个人不得自行建立或者使用其他信道进行国际联网。”
 FastGithub本地代理使用的都是“公用电信网提供的国际出入口信道”，从国外Github服务器到国内用户电脑上FastGithub程序的流量，使用的是正常流量通道，其间未对流量进行任何额外加密（仅有网页原有的TLS加密，区别于VPN的流量加密），而FastGithub获取到网页数据之后发生的整个代理过程完全在国内，不再适用国际互联网相关之规定。</p>
