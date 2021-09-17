@@ -22,7 +22,7 @@ namespace FastGithub.Dns
         private const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
-        private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan ttl = TimeSpan.FromMinutes(2d);
 
         /// <summary>
         /// 刷新DNS缓存
@@ -118,14 +118,14 @@ namespace FastGithub.Dns
             }
 
             // 反转ip
-            var sourceAddress = ipPacket.SourceAddress;
-            ipPacket.SourceAddress = ipPacket.DestinationAddress;
-            ipPacket.DestinationAddress = sourceAddress;
+            var destAddress = ipPacket.DestinationAddress;
+            ipPacket.DestinationAddress = ipPacket.SourceAddress;
+            ipPacket.SourceAddress = destAddress;
 
             // 反转端口
-            var sourcePort = udpPacket.SourcePort;
-            udpPacket.SourcePort = udpPacket.DestinationPort;
-            udpPacket.DestinationPort = sourcePort;
+            var destPort = udpPacket.DestinationPort;
+            udpPacket.DestinationPort = udpPacket.SourcePort;
+            udpPacket.SourcePort = destPort;
 
             // 设置dns响应
             var response = Response.FromRequest(request);
@@ -146,6 +146,8 @@ namespace FastGithub.Dns
             {
                 winDivertAddress.Direction = WinDivertDirection.Inbound;
             }
+
+            this.logger.LogInformation($"已拦截dns查询{domain}并伪造响应内容为{IPAddress.Loopback}");
         }
     }
 }
