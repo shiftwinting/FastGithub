@@ -8,8 +8,7 @@
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 		<PackageReference Include="DNS" Version="6.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-		<PackageReference Include="PacketDotNet" Version="1.3.0" />
-    <PackageReference Include="WinDivertSharp" Version="1.4.3.3" />
+		<PackageReference Include="WinDivertSharp" Version="1.4.3.3" />
 	</ItemGroup>
 
 	<ItemGroup>

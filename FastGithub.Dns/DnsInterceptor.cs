@@ -2,8 +2,8 @@
 using DNS.Protocol.ResourceRecords;
 using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
-using PacketDotNet;
 using System;
+using System.Buffers.Binary;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -62,8 +62,7 @@ namespace FastGithub.Dns
             }, handle);
 
             var packetLength = 0U;
-            var packetBuffer = new byte[ushort.MaxValue];
-            using var winDivertBuffer = new WinDivertBuffer(packetBuffer);
+            using var winDivertBuffer = new WinDivertBuffer();
             var winDivertAddress = new WinDivertAddress();
 
             DnsFlushResolverCache();
@@ -73,10 +72,7 @@ namespace FastGithub.Dns
                 {
                     try
                     {
-                        if (this.ModifyDnsPacket(packetBuffer, ref winDivertAddress, ref packetLength))
-                        {
-                            WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-                        }
+                        this.ModifyDnsPacket(winDivertBuffer, ref winDivertAddress, ref packetLength);
                     }
                     catch (Exception ex)
                     {
@@ -93,54 +89,53 @@ namespace FastGithub.Dns
         /// <summary>
         /// 修改DNS数据包
         /// </summary>
-        /// <param name="packetBuffer"></param>
+        /// <param name="winDivertBuffer"></param>
         /// <param name="winDivertAddress"></param>
-        /// <param name="packetLength"></param>
-        /// <returns></returns>
-        private bool ModifyDnsPacket(byte[] packetBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
+        /// <param name="packetLength"></param> 
+        unsafe private void ModifyDnsPacket(WinDivertBuffer winDivertBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
         {
-            var packetData = packetBuffer.AsSpan(0, (int)packetLength).ToArray();
-            var packet = Packet.ParsePacket(LinkLayers.Raw, packetData);
-            var ipPacket = (IPPacket)packet.PayloadPacket;
-            var udpPacket = (UdpPacket)ipPacket.PayloadPacket;
+            var packet = WinDivert.WinDivertHelperParsePacket(winDivertBuffer, packetLength);
+            var requestPayload = new Span<byte>(packet.PacketPayload, (int)packet.PacketPayloadLength).ToArray();
 
-            var request = Request.FromArray(udpPacket.PayloadData);
+            var request = Request.FromArray(requestPayload);
             if (request.OperationCode != OperationCode.Query)
             {
-                return false;
+                return;
             }
 
             var question = request.Questions.FirstOrDefault();
             if (question == null || question.Type != RecordType.A)
             {
-                return false;
+                return;
             }
 
             var domain = question.Name;
             if (this.fastGithubConfig.IsMatch(domain.ToString()) == false)
             {
-                return false;
+                return;
             }
 
-            // 反转ip
-            var destAddress = ipPacket.DestinationAddress;
-            ipPacket.DestinationAddress = ipPacket.SourceAddress;
-            ipPacket.SourceAddress = destAddress;
-
-            // 反转端口
-            var destPort = udpPacket.DestinationPort;
-            udpPacket.DestinationPort = udpPacket.SourcePort;
-            udpPacket.SourcePort = destPort;
-
-            // 设置dns响应
+            // dns响应数据
             var response = Response.FromRequest(request);
             var record = new IPAddressResourceRecord(domain, IPAddress.Loopback, this.ttl);
             response.AnswerRecords.Add(record);
-            udpPacket.PayloadData = response.ToArray();
+            var responsePayload = response.ToArray();
 
-            // 修改数据内容和数据长度
-            packet.Bytes.CopyTo(packetBuffer, 0);
-            packetLength = (uint)packet.Bytes.Length;
+            // 修改payload和包长 
+            responsePayload.CopyTo(new Span<byte>(packet.PacketPayload, responsePayload.Length));
+            packetLength += (uint)responsePayload.Length - packet.PacketPayloadLength;
+
+            // 修改ip包
+            var destAddress = packet.IPv4Header->DstAddr;
+            packet.IPv4Header->DstAddr = packet.IPv4Header->SrcAddr;
+            packet.IPv4Header->SrcAddr = destAddress;
+            packet.IPv4Header->Length = BinaryPrimitives.ReverseEndianness((ushort)packetLength);
+
+            // 修改udp包
+            var destPort = packet.UdpHeader->DstPort;
+            packet.UdpHeader->DstPort = packet.UdpHeader->SrcPort;
+            packet.UdpHeader->SrcPort = destPort;
+            packet.UdpHeader->Length = BinaryPrimitives.ReverseEndianness((ushort)(responsePayload.Length + 8));
 
             // 反转方向
             if (winDivertAddress.Direction == WinDivertDirection.Inbound)
@@ -152,8 +147,8 @@ namespace FastGithub.Dns
                 winDivertAddress.Direction = WinDivertDirection.Inbound;
             }
 
+            WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
             this.logger.LogInformation($"已拦截dns查询{domain}并伪造响应内容为{IPAddress.Loopback}");
-            return true;
         }
     }
 }
