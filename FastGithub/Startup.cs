@@ -35,7 +35,7 @@ namespace FastGithub
             services.AddDomainResolve();
             services.AddHttpClient();
             services.AddReverseProxy();
-            services.AddHostedService<VersonHostedService>();
+            services.AddHostedService<AppHostedService>();
 
             if (OperatingSystem.IsWindows())
             {
