@@ -126,10 +126,20 @@ namespace FastGithub.Dns
             packetLength += (uint)responsePayload.Length - packet.PacketPayloadLength;
 
             // 修改ip包
-            var destAddress = packet.IPv4Header->DstAddr;
-            packet.IPv4Header->DstAddr = packet.IPv4Header->SrcAddr;
-            packet.IPv4Header->SrcAddr = destAddress;
-            packet.IPv4Header->Length = BinaryPrimitives.ReverseEndianness((ushort)packetLength);
+            if (packet.IPv4Header != null)
+            {
+                var destAddress = packet.IPv4Header->DstAddr;
+                packet.IPv4Header->DstAddr = packet.IPv4Header->SrcAddr;
+                packet.IPv4Header->SrcAddr = destAddress;
+                packet.IPv4Header->Length = BinaryPrimitives.ReverseEndianness((ushort)packetLength);
+            }
+            else
+            {
+                var destAddress = packet.IPv6Header->DstAddr;
+                packet.IPv6Header->DstAddr = packet.IPv6Header->SrcAddr;
+                packet.IPv6Header->SrcAddr = destAddress;
+                packet.IPv6Header->Length = BinaryPrimitives.ReverseEndianness((ushort)packetLength);
+            }
 
             // 修改udp包
             var destPort = packet.UdpHeader->DstPort;
