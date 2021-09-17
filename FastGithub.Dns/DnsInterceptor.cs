@@ -20,10 +20,9 @@ namespace FastGithub.Dns
     sealed class DnsInterceptor
     {
         private const string DNS_FILTER = "udp.DstPort == 53";
-        private const int ERROR_IO_PENDING = 997;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
-        private readonly TimeSpan ttl = TimeSpan.FromSeconds(10d);
+        private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
 
         /// <summary>
         /// 刷新DNS缓存
