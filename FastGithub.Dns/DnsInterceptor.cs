@@ -123,7 +123,7 @@ namespace FastGithub.Dns
 
             // 修改payload和包长 
             responsePayload.CopyTo(new Span<byte>(packet.PacketPayload, responsePayload.Length));
-            packetLength += (uint)responsePayload.Length - packet.PacketPayloadLength;
+            packetLength = (uint)((int)packetLength + responsePayload.Length - requestPayload.Length);
 
             // 修改ip包
             if (packet.IPv4Header != null)
@@ -145,7 +145,7 @@ namespace FastGithub.Dns
             var destPort = packet.UdpHeader->DstPort;
             packet.UdpHeader->DstPort = packet.UdpHeader->SrcPort;
             packet.UdpHeader->SrcPort = destPort;
-            packet.UdpHeader->Length = BinaryPrimitives.ReverseEndianness((ushort)(responsePayload.Length + 8));
+            packet.UdpHeader->Length = BinaryPrimitives.ReverseEndianness((ushort)(sizeof(UdpHeader) + responsePayload.Length));
 
             // 反转方向
             if (winDivertAddress.Direction == WinDivertDirection.Inbound)
