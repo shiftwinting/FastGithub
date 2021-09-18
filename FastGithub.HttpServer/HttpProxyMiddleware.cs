@@ -1,6 +1,4 @@
-﻿using FastGithub.Configuration;
-using FastGithub.DomainResolve;
-using Microsoft.AspNetCore.Connections.Features;
+﻿using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
@@ -58,7 +56,7 @@ namespace FastGithub.HttpServer
             var host = context.Request.Host;
             if (this.IsFastGithubServer(host) == true)
             {
-                var proxyPac = this.GetProxyPacString(host);
+                var proxyPac = this.CreateProxyPac(host);
                 context.Response.ContentType = "application/x-ns-proxy-autoconfig";
                 context.Response.Headers.Add("Content-Disposition", $"attachment;filename=proxy.pac");
                 await context.Response.WriteAsync(proxyPac);
@@ -105,15 +103,15 @@ namespace FastGithub.HttpServer
         }
 
         /// <summary>
-        /// 获取proxypac脚本
+        /// 创建proxypac脚本
         /// </summary>
         /// <param name="host"></param>
         /// <returns></returns>
-        private string GetProxyPacString(HostString host)
+        private string CreateProxyPac(HostString host)
         {
             var buidler = new StringBuilder();
             buidler.AppendLine("function FindProxyForURL(url, host){");
-            buidler.AppendLine($"    var proxy = 'PROXY {host.Host}';");
+            buidler.AppendLine($"    var proxy = 'PROXY {host}';");
             foreach (var domain in this.fastGithubConfig.GetDomainPatterns())
             {
                 buidler.AppendLine($"    if (shExpMatch(host, '{domain}')) return proxy;");
