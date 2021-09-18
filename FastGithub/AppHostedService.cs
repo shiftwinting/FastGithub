@@ -62,7 +62,7 @@ namespace FastGithub
                 await Task.Delay(TimeSpan.FromSeconds(1d), stoppingToken);
                 if (await this.UseFastGithubProxyAsync() == false)
                 {
-                    this.logger.LogWarning($"请手工设置系统http/https代理为127.0.0.1:38457或自动代理为http://127.0.0.1:38457/proxy.pac");
+                    this.logger.LogWarning($"请手工设置系统http/https代理为127.0.0.1:38457或自动代理为http://127.0.0.1:38457");
                 }
             }
         }

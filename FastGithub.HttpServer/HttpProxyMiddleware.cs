@@ -3,6 +3,7 @@ using FastGithub.DomainResolve;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.Options;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
@@ -18,9 +19,13 @@ namespace FastGithub.HttpServer
     /// </summary>
     sealed class HttpProxyMiddleware
     {
+        private const string LOOPBACK = "127.0.0.1";
+        private const string LOCALHOST = "localhost";
+
         private readonly FastGithubConfig fastGithubConfig;
         private readonly IDomainResolver domainResolver;
         private readonly IHttpForwarder httpForwarder;
+        private readonly IOptions<FastGithubOptions> options;
         private readonly HttpMessageInvoker httpClient;
 
         /// <summary>
@@ -29,14 +34,17 @@ namespace FastGithub.HttpServer
         /// <param name="fastGithubConfig"></param>
         /// <param name="domainResolver"></param>
         /// <param name="httpForwarder"></param>
+        /// <param name="options"></param>
         public HttpProxyMiddleware(
             FastGithubConfig fastGithubConfig,
             IDomainResolver domainResolver,
-            IHttpForwarder httpForwarder)
+            IHttpForwarder httpForwarder,
+            IOptions<FastGithubOptions> options)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.domainResolver = domainResolver;
             this.httpForwarder = httpForwarder;
+            this.options = options;
             this.httpClient = new HttpMessageInvoker(CreateHttpHandler(), disposeHandler: false);
         }
 
@@ -47,15 +55,17 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.Request.Method == HttpMethods.Get && context.Request.Path == "/proxy.pac")
+            var host = context.Request.Host;
+            if (this.IsFastGithubServer(host) == true)
             {
+                var proxyPac = this.GetProxyPacString(host);
                 context.Response.ContentType = "application/x-ns-proxy-autoconfig";
-                var pacString = this.GetProxyPacString(context);
-                await context.Response.WriteAsync(pacString);
+                context.Response.Headers.Add("Content-Disposition", $"attachment;filename=proxy.pac");
+                await context.Response.WriteAsync(proxyPac);
             }
             else if (context.Request.Method == HttpMethods.Connect)
             {
-                var endpoint = await this.GetTargetEndPointAsync(context.Request);
+                var endpoint = await this.GetTargetEndPointAsync(host);
                 using var targetSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 await targetSocket.ConnectAsync(endpoint);
 
@@ -81,15 +91,29 @@ namespace FastGithub.HttpServer
 
 
         /// <summary>
+        /// 是否为fastgithub服务
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
+        private bool IsFastGithubServer(HostString host)
+        {
+            if (host.Host == LOOPBACK || host.Host == LOCALHOST)
+            {
+                return host.Port == this.options.Value.HttpProxyPort;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// 获取proxypac脚本
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="host"></param>
         /// <returns></returns>
-        private string GetProxyPacString(HttpContext context)
+        private string GetProxyPacString(HostString host)
         {
             var buidler = new StringBuilder();
             buidler.AppendLine("function FindProxyForURL(url, host){");
-            buidler.AppendLine($"    var proxy = 'PROXY {context.Request.Host}';");
+            buidler.AppendLine($"    var proxy = 'PROXY {host.Host}';");
             foreach (var domain in this.fastGithubConfig.GetDomainPatterns())
             {
                 buidler.AppendLine($"    if (shExpMatch(host, '{domain}')) return proxy;");
@@ -102,13 +126,13 @@ namespace FastGithub.HttpServer
         /// <summary>
         /// 获取目标终节点
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name="host"></param>
         /// <returns></returns>
-        private async Task<EndPoint> GetTargetEndPointAsync(HttpRequest request)
+        private async Task<EndPoint> GetTargetEndPointAsync(HostString host)
         {
             const int HTTPS_PORT = 443;
-            var targetHost = request.Host.Host;
-            var targetPort = request.Host.Port ?? HTTPS_PORT;
+            var targetHost = host.Host;
+            var targetPort = host.Port ?? HTTPS_PORT;
 
             if (IPAddress.TryParse(targetHost, out var address) == true)
             {

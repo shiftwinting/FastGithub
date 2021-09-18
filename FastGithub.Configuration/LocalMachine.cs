@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -10,12 +9,7 @@ namespace FastGithub.Configuration
     /// 提供本机设备信息
     /// </summary>
     public static class LocalMachine
-    {
-        /// <summary>
-        /// 获取设备名
-        /// </summary>
-        public static string Name => Environment.MachineName;
-
+    { 
         /// <summary>
         /// 获取可用的随机Tcp端口
         /// </summary>

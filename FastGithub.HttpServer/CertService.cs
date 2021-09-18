@@ -181,7 +181,7 @@ namespace FastGithub.HttpServer
                 yield break;
             }
 
-            yield return LocalMachine.Name;
+            yield return Environment.MachineName;
             yield return IPAddress.Loopback.ToString();
         }
     }

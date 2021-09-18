@@ -13,12 +13,12 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 #### 2.2 linux-x64
 * 执行`sudo ./fastgithub`
 * 手工安装cacert/fastgithub.cer到受信任的根证书颁发机构
-* 手工设置系统http/https代理为`127.0.0.1:38457`或自动代理为`http://127.0.0.1:38457/proxy.pac`
+* 手工设置系统http/https代理为`127.0.0.1:38457`或自动代理为`http://127.0.0.1:38457`
 
 #### 2.3 macOS-x64
 * 双击运行fastgithub程序
 * 手工安装cacert/fastgithub.cer并设置信任
-* 手工设置系统http/https代理为`127.0.0.1:38457`或自动代理为`http://127.0.0.1:38457/proxy.pac`
+* 手工设置系统http/https代理为`127.0.0.1:38457`或自动代理为`http://127.0.0.1:38457`
 
   
 ### 3 证书验证
