@@ -9,28 +9,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="../@libs/dnscrypt-proxy.toml" Link="dnscryptproxy/dnscrypt-proxy.toml">
+		<None Include="../@dnscrypt-proxy/*" Link="dnscrypt-proxy/%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="../@libs/LICENSE" Link="dnscryptproxy/LICENSE">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-		<None Include="../@libs/windows-x64/dnscrypt-proxy.exe" Link="dnscryptproxy/dnscrypt-proxy.exe">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-		<None Include="../@libs/linux-x64/dnscrypt-proxy" Link="dnscryptproxy/dnscrypt-proxy">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-		<None Include="../@libs/osx-x64/dnscrypt-proxy" Link="dnscryptproxy/dnscrypt-proxy">
+		<None Include="../@dnscrypt-proxy/$(RuntimeIdentifier)/dnscrypt-proxy.exe" Link="dnscrypt-proxy/%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

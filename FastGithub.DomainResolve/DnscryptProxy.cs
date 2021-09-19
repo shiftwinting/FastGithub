@@ -17,7 +17,7 @@ namespace FastGithub.DomainResolve
     /// </summary>
     sealed class DnscryptProxy
     {
-        private const string PATH = "dnscryptproxy";
+        private const string PATH = "dnscrypt-proxy";
         private const string NAME = "dnscrypt-proxy";
 
         /// <summary>
@@ -82,15 +82,7 @@ namespace FastGithub.DomainResolve
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             var udpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
 
-            foreach (var endPoint in tcpListeners)
-            {
-                if (endPoint.AddressFamily == addressFamily)
-                {
-                    hashSet.Add(endPoint.Port);
-                }
-            }
-
-            foreach (var endPoint in udpListeners)
+            foreach (var endPoint in tcpListeners.Concat(udpListeners))
             {
                 if (endPoint.AddressFamily == addressFamily)
                 {
