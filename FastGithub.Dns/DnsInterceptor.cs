@@ -2,6 +2,7 @@
 using DNS.Protocol.ResourceRecords;
 using FastGithub.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Buffers.Binary;
 using System.Linq;
@@ -29,18 +30,21 @@ namespace FastGithub.Dns
         /// </summary>    
         [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
         private static extern void DnsFlushResolverCache();
-
         /// <summary>
-        /// dns投毒后台服务
+        /// dns拦截器
         /// </summary>
         /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
+        /// <param name="options"></param>
         public DnsInterceptor(
             FastGithubConfig fastGithubConfig,
-            ILogger<DnsInterceptor> logger)
+            ILogger<DnsInterceptor> logger,
+            IOptionsMonitor<FastGithubOptions> options)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
+
+            options.OnChange(_ => DnsFlushResolverCache());
         }
 
         /// <summary>
