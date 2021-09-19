@@ -38,8 +38,8 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            var host = context.Request.Host.Host;
-            if (this.fastGithubConfig.TryGetDomainConfig(host, out var domainConfig) == false)
+            var host = context.Request.Host;
+            if (this.fastGithubConfig.TryGetDomainConfig(host.Host, out var domainConfig) == false)
             {
                 await next(context);
             }
@@ -69,7 +69,7 @@ namespace FastGithub.HttpServer
         /// <param name="host"></param>
         /// <param name="destination"></param>
         /// <returns></returns>
-        private string GetDestinationPrefix(string scheme, string host, Uri? destination)
+        private string GetDestinationPrefix(string scheme, HostString host, Uri? destination)
         {
             var defaultValue = $"{scheme}://{host}/";
             if (destination == null)

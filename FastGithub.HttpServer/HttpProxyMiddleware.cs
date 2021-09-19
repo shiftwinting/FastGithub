@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Connections.Features;
+﻿using FastGithub.Configuration;
+using FastGithub.DomainResolve;
+using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
@@ -97,7 +99,7 @@ namespace FastGithub.HttpServer
         {
             if (host.Host == LOOPBACK || host.Host == LOCALHOST)
             {
-                return host.Port == this.options.Value.HttpProxyPort;
+                return host.Port == null || host.Port == this.options.Value.HttpProxyPort;
             }
             return false;
         }
