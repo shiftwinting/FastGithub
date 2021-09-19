@@ -23,7 +23,7 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 ### 3 加速原理
 #### 3.1 windows
 1. 客户端访问`https://github.com`
-2. 客户端向dns查询github.com的ip，fastgithub拦截dns数据包并伪造解析结果为127.0.1
+2. 客户端向dns查询github.com的ip，fastgithub拦截dns数据包并伪造解析结果为127.0.0.1
 3. 客户端请求到fastgithub的`https://127.0.0.1:443`
 4. fastgithub使用fastgithub.cer颁发服务器证书给客户端
 5. fastgithub查询和计算github.com最快的ip

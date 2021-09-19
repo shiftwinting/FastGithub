@@ -392,7 +392,7 @@ code {
 <h4 id="31-windows">3.1 windows</h4>
 <ol>
 <li>客户端访问<code>https://github.com</code></li>
-<li>客户端向dns查询github.com的ip，fastgithub拦截dns数据包并伪造解析结果为127.0.1</li>
+<li>客户端向dns查询github.com的ip，fastgithub拦截dns数据包并伪造解析结果为127.0.0.1</li>
 <li>客户端请求到fastgithub的<code>https://127.0.0.1:443</code></li>
 <li>fastgithub使用fastgithub.cer颁发服务器证书给客户端</li>
 <li>fastgithub查询和计算github.com最快的ip</li>
