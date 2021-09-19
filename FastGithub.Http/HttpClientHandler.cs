@@ -126,9 +126,7 @@ namespace FastGithub.Http
         /// <param name="exception"></param>
         private void InterceptRequestException(HttpRequestMessage request, HttpRequestException exception)
         {
-            if (request.RequestUri == null ||
-                exception.InnerException is not SocketException socketException ||
-                socketException.SocketErrorCode != SocketError.TimedOut)
+            if (request.RequestUri == null || IsTimedOutSocketError(exception) == false)
             {
                 return;
             }
@@ -141,6 +139,21 @@ namespace FastGithub.Http
             if (request.Headers.Host != null)
             {
                 this.domainResolver.FlushDomain(new DnsEndPoint(request.Headers.Host, request.RequestUri.Port));
+            }
+
+
+            static bool IsTimedOutSocketError(HttpRequestException exception)
+            {
+                var inner = exception.InnerException;
+                while (inner != null)
+                {
+                    if (inner is SocketException socketException && socketException.SocketErrorCode == SocketError.TimedOut)
+                    {
+                        return true;
+                    }
+                    inner = inner.InnerException;
+                }
+                return false;
             }
         }
 
