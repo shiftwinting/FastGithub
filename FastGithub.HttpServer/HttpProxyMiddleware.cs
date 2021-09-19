@@ -99,7 +99,7 @@ namespace FastGithub.HttpServer
         {
             if (host.Host == LOOPBACK || host.Host == LOCALHOST)
             {
-                return host.Port == null || host.Port == this.options.Value.HttpProxyPort;
+                return host.Port == this.options.Value.HttpProxyPort;
             }
             return false;
         }
@@ -107,16 +107,16 @@ namespace FastGithub.HttpServer
         /// <summary>
         /// 创建proxypac脚本
         /// </summary>
-        /// <param name="host"></param>
+        /// <param name="proxyHost"></param>
         /// <returns></returns>
-        private string CreateProxyPac(HostString host)
+        private string CreateProxyPac(HostString proxyHost)
         {
             var buidler = new StringBuilder();
             buidler.AppendLine("function FindProxyForURL(url, host){");
-            buidler.AppendLine($"    var proxy = 'PROXY {host}';");
+            buidler.AppendLine($"    var fastgithub = 'PROXY {proxyHost}';");
             foreach (var domain in this.fastGithubConfig.GetDomainPatterns())
             {
-                buidler.AppendLine($"    if (shExpMatch(host, '{domain}')) return proxy;");
+                buidler.AppendLine($"    if (shExpMatch(host, '{domain}')) return fastgithub;");
             }
             buidler.AppendLine("    return 'DIRECT';");
             buidler.AppendLine("}");
