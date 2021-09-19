@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -101,20 +102,21 @@ namespace FastGithub.Dns
             var packet = WinDivert.WinDivertHelperParsePacket(winDivertBuffer, packetLength);
             var requestPayload = new Span<byte>(packet.PacketPayload, (int)packet.PacketPayloadLength).ToArray();
 
-            var request = Request.FromArray(requestPayload);
-            if (request.OperationCode != OperationCode.Query)
+            if (TryParseRequest(requestPayload, out var request) == false ||
+                request.OperationCode != OperationCode.Query ||
+                request.Questions.Count == 0)
             {
                 return;
             }
 
-            var question = request.Questions.FirstOrDefault();
-            if (question == null || question.Type != RecordType.A)
+            var question = request.Questions.First();
+            if (question.Type != RecordType.A)
             {
                 return;
             }
 
             var domain = question.Name;
-            if (this.fastGithubConfig.IsMatch(domain.ToString()) == false)
+            if (this.fastGithubConfig.IsMatch(question.Name.ToString()) == false)
             {
                 return;
             }
@@ -163,6 +165,27 @@ namespace FastGithub.Dns
 
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
             this.logger.LogInformation($"已拦截dns查询{domain}并伪造解析结果为{IPAddress.Loopback}");
+        }
+
+
+        /// <summary>
+        /// 尝试解析请求
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        static bool TryParseRequest(byte[] payload, [MaybeNullWhen(false)] out Request request)
+        {
+            try
+            {
+                request = Request.FromArray(payload);
+                return true;
+            }
+            catch (Exception)
+            {
+                request = null;
+                return false;
+            }
         }
     }
 }

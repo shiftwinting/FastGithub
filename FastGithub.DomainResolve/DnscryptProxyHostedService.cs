@@ -9,7 +9,7 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// DnscryptProxy后台服务
     /// </summary>
-    sealed class DnscryptProxyHostedService : IHostedService
+    sealed class DnscryptProxyHostedService : BackgroundService
     {
         private readonly ILogger<DnscryptProxyHostedService> logger;
         private readonly DnscryptProxy dnscryptProxy;
@@ -30,13 +30,13 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 启动dnscrypt-proxy
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
-                await this.dnscryptProxy.StartAsync(cancellationToken);
+                await this.dnscryptProxy.StartAsync(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -49,7 +49,7 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -59,7 +59,7 @@ namespace FastGithub.DomainResolve
             {
                 this.logger.LogWarning($"{this.dnscryptProxy}停止失败：{ex.Message}");
             }
-            return Task.CompletedTask;
+            return base.StopAsync(cancellationToken);
         }
     }
 }
