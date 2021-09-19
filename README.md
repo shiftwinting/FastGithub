@@ -11,7 +11,7 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 * `fastgithub.exe stop` // 以windows服务卸载并删除
 
 #### 2.2 linux-x64
-* 执行`sudo ./fastgithub`
+* 执行`./fastgithub`
 * 安装cacert/fastgithub.cer到受信任的根证书颁发机构
 * 设置系统自动代理为`http://127.0.0.1:38457`，或手动代理http/https为`127.0.0.1:38457`
 
