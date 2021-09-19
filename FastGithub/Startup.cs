@@ -64,7 +64,7 @@ namespace FastGithub
                 appBuilder.UseRouting();
                 appBuilder.UseEndpoints(endpoint => endpoint.MapFallback(context =>
                 {
-                    context.Response.Redirect("https://github.com/dotnetcore/FastGithub");
+                    context.Response.Redirect("https://github.com/dotnetcore/fastgithub");
                     return Task.CompletedTask;
                 }));
             });

@@ -35,7 +35,7 @@ namespace FastGithub
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             var version = ProductionVersion.Current;
-            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，当前版本为v{version}，访问https://github.com/dotnetcore/FastGithub关注新版本");
+            this.logger.LogInformation($"{nameof(FastGithub)}启动完成，当前版本为v{version}，访问 https://github.com/dotnetcore/fastgithub 关注新版本");
             return base.StartAsync(cancellationToken);
         }
 
@@ -62,7 +62,7 @@ namespace FastGithub
                 await Task.Delay(TimeSpan.FromSeconds(1d), stoppingToken);
                 if (await this.UseFastGithubProxyAsync() == false)
                 {
-                    this.logger.LogWarning($"请设置系统自动代理为http://127.0.0.1:38457，或http/https手动代理为127.0.0.1:38457");
+                    this.logger.LogWarning($"请设置系统自动代理为http://127.0.0.1:38457，或手动代理http/https为127.0.0.1:38457");
                 }
             }
         }
