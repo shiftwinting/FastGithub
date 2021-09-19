@@ -7,7 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace FastGithub
 {
@@ -36,7 +39,7 @@ namespace FastGithub
             var options = kestrel.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value;
             var httpProxyPort = options.HttpProxyPort;
 
-            if (LocalMachine.CanListenTcp(httpProxyPort) == false)
+            if (CanListenTcp(httpProxyPort) == false)
             {
                 throw new FastGithubException($"tcp端口{httpProxyPort}已经被其它进程占用，请在配置文件更换{nameof(FastGithubOptions.HttpProxyPort)}为其它端口");
             }
@@ -53,7 +56,7 @@ namespace FastGithub
         public static void ListenSshReverseProxy(this KestrelServerOptions kestrel)
         {
             const int SSH_PORT = 22;
-            if (LocalMachine.CanListenTcp(SSH_PORT) == true)
+            if (CanListenTcp(SSH_PORT) == true)
             {
                 kestrel.Listen(IPAddress.Loopback, SSH_PORT, listen => listen.UseConnectionHandler<SshReverseProxyHandler>());
                 kestrel.GetLogger().LogInformation($"已监听ssh://{IPAddress.Loopback}:{SSH_PORT}，github的ssh反向代理服务启动完成");
@@ -67,7 +70,7 @@ namespace FastGithub
         public static void ListenHttpReverseProxy(this KestrelServerOptions kestrel)
         {
             const int HTTP_PORT = 80;
-            if (LocalMachine.CanListenTcp(HTTP_PORT) == true)
+            if (CanListenTcp(HTTP_PORT) == true)
             {
                 kestrel.Listen(IPAddress.Loopback, HTTP_PORT);
                 kestrel.GetLogger().LogInformation($"已监听http://{IPAddress.Loopback}:{HTTP_PORT}，http反向代理服务启动完成");
@@ -88,7 +91,7 @@ namespace FastGithub
                 TcpTable.KillPortOwner(httpsPort);
             }
 
-            if (LocalMachine.CanListenTcp(httpsPort) == false)
+            if (CanListenTcp(httpsPort) == false)
             {
                 throw new FastGithubException($"tcp端口{httpsPort}已经被其它进程占用");
             }
@@ -120,6 +123,18 @@ namespace FastGithub
         {
             var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
             return loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(HttpServer)}");
+        }
+
+        /// <summary>
+        /// 是否可以监听指定tcp端口
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="addressFamily"></param>
+        /// <returns></returns>
+        private static bool CanListenTcp(int port, AddressFamily addressFamily = AddressFamily.InterNetwork)
+        {
+            var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            return tcpListeners.Any(item => item.AddressFamily == addressFamily && item.Port == port) == false;
         }
     }
 }

@@ -1,9 +1,12 @@
 ﻿using FastGithub.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,7 +38,7 @@ namespace FastGithub.DomainResolve
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
-            var port = LocalMachine.GetAvailablePort(IPAddress.Loopback.AddressFamily, min: 5533);
+            var port = GetAvailablePort(IPAddress.Loopback.AddressFamily);
             var localEndPoint = new IPEndPoint(IPAddress.Loopback, port);
             await TomlUtil.SetListensAsync(tomlPath, localEndPoint, cancellationToken);
 
@@ -63,6 +66,47 @@ namespace FastGithub.DomainResolve
                 this.process.EnableRaisingEvents = true;
                 this.process.Exited += Process_Exited;
             }
+        }
+
+
+
+        /// <summary>
+        /// 获取可用的随机端口
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="min">最小值</param>
+        /// <returns></returns>
+        private static int GetAvailablePort(AddressFamily addressFamily, int min = 5533)
+        {
+            var hashSet = new HashSet<int>();
+            var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            var udpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
+
+            foreach (var endPoint in tcpListeners)
+            {
+                if (endPoint.AddressFamily == addressFamily)
+                {
+                    hashSet.Add(endPoint.Port);
+                }
+            }
+
+            foreach (var endPoint in udpListeners)
+            {
+                if (endPoint.AddressFamily == addressFamily)
+                {
+                    hashSet.Add(endPoint.Port);
+                }
+            }
+
+            for (var port = min; port < IPEndPoint.MaxPort; port++)
+            {
+                if (hashSet.Contains(port) == false)
+                {
+                    return port;
+                }
+            }
+
+            throw new FastGithubException("当前无可用的端口");
         }
 
         /// <summary>
