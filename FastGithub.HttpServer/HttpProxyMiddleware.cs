@@ -145,8 +145,8 @@ namespace FastGithub.HttpServer
                 return new DnsEndPoint(targetHost, targetPort);
             }
 
-            // 目标端口为443，走https代理中间人
-            if (targetPort == HTTPS_PORT)
+            // 目标端口为443，走https代理中间人           
+            if (targetPort == HTTPS_PORT && targetHost != "ssh.github.com")
             {
                 return new IPEndPoint(IPAddress.Loopback, HttpsReverseProxyPort.Value);
             }
