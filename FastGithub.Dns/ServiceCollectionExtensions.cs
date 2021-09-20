@@ -19,8 +19,8 @@ namespace FastGithub
         public static IServiceCollection AddDnsInterceptor(this IServiceCollection services)
         {
             services.TryAddSingleton<DnsInterceptor>();
-            services.AddSingleton<IConflictValidator, HostsConflictValidator>();
-            services.AddSingleton<IConflictValidator, ProxyConflictValidtor>();
+            services.AddSingleton<IConflictSolver, HostsConflictSolver>();
+            services.AddSingleton<IConflictSolver, ProxyConflictSolver>();
             return services.AddHostedService<DnsInterceptHostedService>();
         }
     }

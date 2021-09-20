@@ -13,19 +13,47 @@ namespace FastGithub.Dns
     sealed class DnsInterceptHostedService : BackgroundService
     {
         private readonly DnsInterceptor dnsInterceptor;
-        private readonly IEnumerable<IConflictValidator> conflictValidators;
+        private readonly IEnumerable<IConflictSolver> conflictSolvers;
 
         /// <summary>
         /// dns拦截后台服务
         /// </summary> 
         /// <param name="dnsInterceptor"></param>
-        /// <param name="conflictValidators"></param>
+        /// <param name="conflictSolvers"></param>
         public DnsInterceptHostedService(
             DnsInterceptor dnsInterceptor,
-            IEnumerable<IConflictValidator> conflictValidators)
+            IEnumerable<IConflictSolver> conflictSolvers)
         {
             this.dnsInterceptor = dnsInterceptor;
-            this.conflictValidators = conflictValidators;
+            this.conflictSolvers = conflictSolvers;
+        }
+
+        /// <summary>
+        /// 启动时处理冲突
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task StartAsync(CancellationToken cancellationToken)
+        {
+            foreach (var solver in this.conflictSolvers)
+            {
+                await solver.SolveAsync(cancellationToken);
+            }
+            await base.StartAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// 停止时恢复冲突
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            foreach (var solver in this.conflictSolvers)
+            {
+                await solver.RestoreAsync(cancellationToken);
+            }
+            await base.StopAsync(cancellationToken);
         }
 
         /// <summary>
@@ -36,10 +64,6 @@ namespace FastGithub.Dns
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Yield();
-            foreach (var item in this.conflictValidators)
-            {
-                await item.ValidateAsync();
-            }
             this.dnsInterceptor.Intercept(stoppingToken);
         }
     }
