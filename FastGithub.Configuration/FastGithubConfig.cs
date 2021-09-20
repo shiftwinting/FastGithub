@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
+﻿using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 
 namespace FastGithub.Configuration
 {
@@ -13,22 +12,24 @@ namespace FastGithub.Configuration
     /// </summary>
     public class FastGithubConfig
     {
-        private readonly ILogger<FastGithubConfig> logger;
         private SortedDictionary<DomainPattern, DomainConfig> domainConfigs;
         private ConcurrentDictionary<string, DomainConfig?> domainConfigCache;
+
+        /// <summary>
+        /// 回退的dns
+        /// </summary>
+        public IPEndPoint[] FallbackDns { get; set; }
 
         /// <summary>
         /// FastGithub配置
         /// </summary>
         /// <param name="options"></param>
         /// <param name="logger"></param>
-        public FastGithubConfig(
-            IOptionsMonitor<FastGithubOptions> options,
-            ILogger<FastGithubConfig> logger)
+        public FastGithubConfig(IOptionsMonitor<FastGithubOptions> options)
         {
-            this.logger = logger;
             var opt = options.CurrentValue;
 
+            this.FallbackDns = ConvertToIPEndPoints(opt.FallbackDns).ToArray();
             this.domainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
 
@@ -41,14 +42,24 @@ namespace FastGithub.Configuration
         /// <param name="options"></param>
         private void Update(FastGithubOptions options)
         {
-            try
+            this.FallbackDns = ConvertToIPEndPoints(options.FallbackDns).ToArray();
+            this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
+            this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
+        }
+
+        /// <summary>
+        /// 转换为IPEndPoint
+        /// </summary>
+        /// <param name="ipEndPoints"></param>
+        /// <returns></returns>
+        private static IEnumerable<IPEndPoint> ConvertToIPEndPoints(IEnumerable<string> ipEndPoints)
+        {
+            foreach (var item in ipEndPoints)
             {
-                this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
-                this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex.Message);
+                if (IPEndPoint.TryParse(item, out var endPoint))
+                {
+                    yield return endPoint;
+                }
             }
         }
 

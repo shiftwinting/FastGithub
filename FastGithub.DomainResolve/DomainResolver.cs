@@ -22,6 +22,7 @@ namespace FastGithub.DomainResolve
         private readonly IMemoryCache disableIPAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private readonly DnscryptProxy dnscryptProxy;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DomainResolver> logger;
 
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
@@ -31,19 +32,22 @@ namespace FastGithub.DomainResolve
         private readonly TimeSpan fallbackExpiration = TimeSpan.FromMinutes(2d);
         private readonly TimeSpan loopbackExpiration = TimeSpan.FromSeconds(5d);
 
-        private readonly IPEndPoint fallbackDns = new(IPAddress.Parse("114.114.114.114"), 53);
         private readonly ConcurrentDictionary<DnsEndPoint, SemaphoreSlim> semaphoreSlims = new();
 
         /// <summary>
         /// 域名解析器
-        /// </summary>  
+        /// </summary>
         /// <param name="dnscryptProxy"></param>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
         public DomainResolver(
+
             DnscryptProxy dnscryptProxy,
+            FastGithubConfig fastGithubConfig,
             ILogger<DomainResolver> logger)
         {
             this.dnscryptProxy = dnscryptProxy;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
 
@@ -107,11 +111,6 @@ namespace FastGithub.DomainResolve
 
             if (address == null)
             {
-                address = await this.LookupByDnscryptAsync(domain, cancellationToken);
-            }
-
-            if (address == null)
-            {
                 expiration = this.fallbackExpiration;
                 address = await this.LookupByFallbackAsync(domain, cancellationToken);
             }
@@ -147,7 +146,8 @@ namespace FastGithub.DomainResolve
             }
 
             var dnsClient = new DnsClient(dns, forceTcp: false);
-            return await this.LookupAsync(dnsClient, domain, cancellationToken);
+            var address = await this.LookupAsync(dnsClient, domain, cancellationToken);
+            return address ?? await this.LookupAsync(dnsClient, domain, cancellationToken);
         }
 
         /// <summary>
@@ -159,8 +159,16 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>        
         private async Task<IPAddress?> LookupByFallbackAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
-            var dnsClient = new DnsClient(this.fallbackDns, forceTcp: true);
-            return await this.LookupAsync(dnsClient, domain, cancellationToken);
+            foreach (var dns in this.fastGithubConfig.FallbackDns)
+            {
+                var dnsClient = new DnsClient(dns, forceTcp: true);
+                var address = await this.LookupAsync(dnsClient, domain, cancellationToken);
+                if (address != null)
+                {
+                    return address;
+                }
+            }
+            return default;
         }
 
         /// <summary>
