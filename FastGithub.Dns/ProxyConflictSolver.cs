@@ -119,7 +119,7 @@ namespace FastGithub.Dns
                 var proxyServer = HttpClient.DefaultProxy.GetProxy(destination);
                 if (proxyServer != null)
                 {
-                    this.logger.LogError($"由于系统配置了{proxyServer}代理{domain}，{nameof(FastGithub)}无法加速相关域名");
+                    this.logger.LogError($"由于系统配置了代理{proxyServer}，{nameof(FastGithub)}无法加速{domain}");
                 }
             }
         }

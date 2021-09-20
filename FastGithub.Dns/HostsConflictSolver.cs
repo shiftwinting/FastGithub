@@ -20,8 +20,7 @@ namespace FastGithub.Dns
         /// host文件冲解决者
         /// </summary>
         /// <param name="fastGithubConfig"></param>
-        public HostsConflictSolver(
-            FastGithubConfig fastGithubConfig)
+        public HostsConflictSolver(FastGithubConfig fastGithubConfig)
         {
             this.fastGithubConfig = fastGithubConfig;
         }
