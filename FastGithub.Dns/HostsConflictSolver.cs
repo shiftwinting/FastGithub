@@ -39,12 +39,14 @@ namespace FastGithub.Dns
                 return;
             }
 
+            var hasConflicting = false;
             var hostsBuilder = new StringBuilder();
             var lines = await File.ReadAllLinesAsync(hostsPath, cancellationToken);
             foreach (var line in lines)
             {
                 if (this.IsConflictingLine(line))
                 {
+                    hasConflicting = true;
                     hostsBuilder.AppendLine($"# {line}");
                 }
                 else
@@ -53,8 +55,11 @@ namespace FastGithub.Dns
                 }
             }
 
-            File.SetAttributes(hostsPath, FileAttributes.Normal);
-            await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), cancellationToken);
+            if (hasConflicting == true)
+            {
+                File.SetAttributes(hostsPath, FileAttributes.Normal);
+                await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), cancellationToken);
+            }
         }
 
         /// <summary>
