@@ -12,7 +12,7 @@
 		<None Include="../@dnscrypt-proxy/*" Link="dnscrypt-proxy/%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="../@dnscrypt-proxy/$(RuntimeIdentifier)/dnscrypt-proxy.exe" Link="dnscrypt-proxy/%(Filename)%(Extension)">
+		<None Include="../@dnscrypt-proxy/$(RuntimeIdentifier)/*" Link="dnscrypt-proxy/%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
