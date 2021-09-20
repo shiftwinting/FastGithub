@@ -1,5 +1,4 @@
-﻿using FastGithub.Configuration;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -75,15 +74,15 @@ namespace FastGithub.HttpServer
             }
             else if (OperatingSystem.IsLinux())
             {
-                this.logger.LogWarning($"请根据具体linux发行版手工安装CA证书{this.CaCerFilePath}");
+                this.logger.LogWarning($"请根据具体linux发行版手动安装CA证书{this.CaCerFilePath}");
             }
             else if (OperatingSystem.IsMacOS())
             {
-                this.logger.LogWarning($"请手工安装CA证书然后设置信任CA证书{this.CaCerFilePath}");
+                this.logger.LogWarning($"请手动安装CA证书然后设置信任CA证书{this.CaCerFilePath}");
             }
             else
             {
-                this.logger.LogWarning($"请根据你的系统平台手工安装和信任CA证书{this.CaCerFilePath}");
+                this.logger.LogWarning($"请根据你的系统平台手动安装和信任CA证书{this.CaCerFilePath}");
             }
 
             GitConfigSslverify(false);
@@ -141,7 +140,7 @@ namespace FastGithub.HttpServer
             }
             catch (Exception)
             {
-                this.logger.LogWarning($"请手工安装CA证书{this.CaCerFilePath}到“将所有的证书都放入下载存储”\\“受信任的根证书颁发机构”");
+                this.logger.LogWarning($"请手动安装CA证书{this.CaCerFilePath}到“将所有的证书都放入下列存储”\\“受信任的根证书颁发机构”");
             }
         }
 

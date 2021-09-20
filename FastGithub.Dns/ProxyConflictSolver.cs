@@ -22,6 +22,7 @@ namespace FastGithub.Dns
         private const int INTERNET_OPTION_REFRESH = 37;
         private const int INTERNET_OPTION_PROXY_SETTINGS_CHANGED = 95;
 
+        private const char PROXYOVERRIDE_SEPARATOR = ';';
         private const string PROXYOVERRIDE_KEY = "ProxyOverride";
         private const string INTERNET_SETTINGS = @"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
@@ -108,7 +109,8 @@ namespace FastGithub.Dns
         /// </summary>
         private void CheckProxyConflict()
         {
-            if (HttpClient.DefaultProxy == null)
+            var systemProxy = HttpClient.DefaultProxy;
+            if (systemProxy == null)
             {
                 return;
             }
@@ -116,10 +118,10 @@ namespace FastGithub.Dns
             foreach (var domain in this.options.Value.DomainConfigs.Keys)
             {
                 var destination = new Uri($"https://{domain.Replace('*', 'a')}");
-                var proxyServer = HttpClient.DefaultProxy.GetProxy(destination);
+                var proxyServer = systemProxy.GetProxy(destination);
                 if (proxyServer != null)
                 {
-                    this.logger.LogError($"由于系统配置了代理{proxyServer}，{nameof(FastGithub)}无法加速{domain}");
+                    this.logger.LogError($"由于系统设置了代理{proxyServer}，{nameof(FastGithub)}无法加速{domain}");
                 }
             }
         }
@@ -132,7 +134,15 @@ namespace FastGithub.Dns
         private static string[] GetProxyOvride(RegistryKey registryKey)
         {
             var value = registryKey.GetValue(PROXYOVERRIDE_KEY, null)?.ToString();
-            return value == null ? Array.Empty<string>() : value.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            if (value == null)
+            {
+                return Array.Empty<string>();
+            }
+
+            return value
+                .Split(PROXYOVERRIDE_SEPARATOR, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim())
+                .ToArray();
         }
 
         /// <summary>
@@ -142,7 +152,7 @@ namespace FastGithub.Dns
         /// <param name="items"></param>
         private static void SetProxyOvride(RegistryKey registryKey, IEnumerable<string> items)
         {
-            var value = string.Join(';', items);
+            var value = string.Join(PROXYOVERRIDE_SEPARATOR, items);
             registryKey.SetValue(PROXYOVERRIDE_KEY, value, RegistryValueKind.String);
             InternetSetOption(IntPtr.Zero, INTERNET_OPTION_PROXY_SETTINGS_CHANGED, IntPtr.Zero, 0);
             InternetSetOption(IntPtr.Zero, INTERNET_OPTION_REFRESH, IntPtr.Zero, 0);
