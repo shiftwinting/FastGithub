@@ -145,7 +145,7 @@ namespace FastGithub.DomainResolve
                 return null;
             }
 
-            var dnsClient = new DnsClient(dns, forceTcp: false);
+            var dnsClient = new DnsClient(dns);
             var address = await this.LookupAsync(dnsClient, domain, cancellationToken);
             return address ?? await this.LookupAsync(dnsClient, domain, cancellationToken);
         }
@@ -161,7 +161,7 @@ namespace FastGithub.DomainResolve
         {
             foreach (var dns in this.fastGithubConfig.FallbackDns)
             {
-                var dnsClient = new DnsClient(dns, forceTcp: true);
+                var dnsClient = new DnsClient(dns);
                 var address = await this.LookupAsync(dnsClient, domain, cancellationToken);
                 if (address != null)
                 {

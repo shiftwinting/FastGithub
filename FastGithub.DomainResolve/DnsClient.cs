@@ -23,11 +23,10 @@ namespace FastGithub.DomainResolve
         /// DNS客户端
         /// </summary>
         /// <param name="dns"></param>
-        /// <param name="forceTcp"></param>
-        public DnsClient(IPEndPoint dns, bool forceTcp)
+        public DnsClient(IPEndPoint dns)
         {
             this.dns = dns;
-            this.resolver = forceTcp
+            this.resolver = dns.Port == 53
                 ? new TcpRequestResolver(dns)
                 : new UdpRequestResolver(dns, new TcpRequestResolver(dns));
         }
