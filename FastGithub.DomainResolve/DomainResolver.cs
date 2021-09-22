@@ -101,6 +101,11 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress> ResolveCoreAsync(DnsEndPoint domain, CancellationToken cancellationToken)
         {
+            if (domain.Host == "localhost")
+            {
+                return IPAddress.Loopback;
+            }
+
             if (this.domainResolveCache.TryGetValue<IPAddress>(domain, out var address) && address != null)
             {
                 return address;
