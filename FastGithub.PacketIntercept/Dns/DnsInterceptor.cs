@@ -25,13 +25,14 @@ namespace FastGithub.PacketIntercept.Dns
         private const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
-        private readonly TimeSpan ttl = TimeSpan.FromMinutes(2d);
+        private readonly TimeSpan ttl = TimeSpan.FromMinutes(10d);
 
         /// <summary>
         /// 刷新DNS缓存
         /// </summary>    
         [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
         private static extern void DnsFlushResolverCache();
+
         /// <summary>
         /// dns拦截器
         /// </summary>
