@@ -1,4 +1,6 @@
 ﻿using FastGithub.PacketIntercept;
+using FastGithub.PacketIntercept.Dns;
+using FastGithub.PacketIntercept.Tcp;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Runtime.Versioning;
@@ -18,9 +20,9 @@ namespace FastGithub
         [SupportedOSPlatform("windows")]
         public static IServiceCollection AddPacketIntercept(this IServiceCollection services)
         {
-            services.AddSingleton<IConflictSolver, HostsConflictSolver>();
-            services.AddSingleton<IConflictSolver, ProxyConflictSolver>();
-            services.TryAddSingleton<DnsInterceptor>();
+            services.AddSingleton<IDnsConflictSolver, HostsConflictSolver>();
+            services.AddSingleton<IDnsConflictSolver, ProxyConflictSolver>();
+            services.TryAddSingleton<IDnsInterceptor, DnsInterceptor>();
             services.AddHostedService<DnsInterceptHostedService>();
 
             services.AddSingleton<ITcpInterceptor, SshInterceptor>();

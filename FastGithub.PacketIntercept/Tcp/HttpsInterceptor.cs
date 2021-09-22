@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Runtime.Versioning;
 
-namespace FastGithub.PacketIntercept
+namespace FastGithub.PacketIntercept.Tcp
 {
     /// <summary>
     /// https拦截器

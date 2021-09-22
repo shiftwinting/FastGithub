@@ -31,20 +31,8 @@ namespace FastGithub.PacketIntercept
         /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var tasks = this.tcpInterceptors.Select(item => this.InterceptAsync(item, stoppingToken));
+            var tasks = this.tcpInterceptors.Select(item => item.InterceptAsync(stoppingToken));
             return Task.WhenAll(tasks);
-        }
-
-        /// <summary>
-        /// 拦截
-        /// </summary>
-        /// <param name="interceptor"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task InterceptAsync(ITcpInterceptor interceptor, CancellationToken cancellationToken)
-        {
-            await Task.Yield();
-            interceptor.Intercept(cancellationToken);
         }
     }
 }

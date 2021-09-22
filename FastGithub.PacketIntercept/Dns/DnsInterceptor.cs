@@ -11,15 +11,16 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
+using System.Threading.Tasks;
 using WinDivertSharp;
 
-namespace FastGithub.PacketIntercept
+namespace FastGithub.PacketIntercept.Dns
 {
     /// <summary>
     /// dns拦截器
     /// </summary>   
     [SupportedOSPlatform("windows")]
-    sealed class DnsInterceptor
+    sealed class DnsInterceptor : IDnsInterceptor
     {
         private const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
@@ -52,8 +53,11 @@ namespace FastGithub.PacketIntercept
         /// DNS拦截
         /// </summary>
         /// <param name="cancellationToken"></param>
-        public void Intercept(CancellationToken cancellationToken)
+        /// <returns></returns>
+        public async Task InterceptAsync(CancellationToken cancellationToken)
         {
+            await Task.Yield();
+
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.Zero)
             {
@@ -163,7 +167,7 @@ namespace FastGithub.PacketIntercept
             {
                 winDivertAddress.Direction = WinDivertDirection.Inbound;
             }
-           
+
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
             this.logger.LogInformation($"{domain} => {IPAddress.Loopback}");
         }

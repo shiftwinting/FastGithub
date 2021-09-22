@@ -6,7 +6,7 @@ namespace FastGithub.PacketIntercept
     /// <summary>
     /// Dns冲突解决者
     /// </summary>
-    interface IConflictSolver
+    interface IDnsConflictSolver
     {
         /// <summary>
         /// 解决冲突

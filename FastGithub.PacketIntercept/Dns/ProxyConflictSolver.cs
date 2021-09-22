@@ -11,13 +11,13 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.PacketIntercept
+namespace FastGithub.PacketIntercept.Dns
 {
     /// <summary>
     /// 代理冲突解决者
     /// </summary>
     [SupportedOSPlatform("windows")]
-    sealed class ProxyConflictSolver : IConflictSolver
+    sealed class ProxyConflictSolver : IDnsConflictSolver
     {
         private const int INTERNET_OPTION_REFRESH = 37;
         private const int INTERNET_OPTION_PROXY_SETTINGS_CHANGED = 95;

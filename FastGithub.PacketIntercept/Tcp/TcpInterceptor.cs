@@ -4,9 +4,10 @@ using System.Buffers.Binary;
 using System.Net;
 using System.Runtime.Versioning;
 using System.Threading;
+using System.Threading.Tasks;
 using WinDivertSharp;
 
-namespace FastGithub.PacketIntercept
+namespace FastGithub.PacketIntercept.Tcp
 {
     /// <summary>
     /// tcp拦截器
@@ -37,12 +38,14 @@ namespace FastGithub.PacketIntercept
         /// 拦截指定端口的数据包
         /// </summary>
         /// <param name="cancellationToken"></param>
-        public void Intercept(CancellationToken cancellationToken)
+        public async Task InterceptAsync(CancellationToken cancellationToken)
         {
             if (this.oldServerPort == this.newServerPort)
             {
                 return;
             }
+
+            await Task.Yield();
 
             var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.Zero)

@@ -2,20 +2,20 @@
 using Microsoft.Extensions.Logging;
 using System.Runtime.Versioning;
 
-namespace FastGithub.PacketIntercept
+namespace FastGithub.PacketIntercept.Tcp
 {
     /// <summary>
-    /// http拦截器
+    /// ssh拦截器
     /// </summary>   
     [SupportedOSPlatform("windows")]
-    sealed class HttpInterceptor : TcpInterceptor
+    sealed class SshInterceptor : TcpInterceptor
     {
         /// <summary>
-        /// http拦截器
+        /// ssh拦截器
         /// </summary>
         /// <param name="logger"></param>
-        public HttpInterceptor(ILogger<HttpInterceptor> logger)
-            : base(80, ReverseProxyPort.Http, logger)
+        public SshInterceptor(ILogger<HttpInterceptor> logger)
+            : base(22, ReverseProxyPort.Ssh, logger)
         {
         }
     }

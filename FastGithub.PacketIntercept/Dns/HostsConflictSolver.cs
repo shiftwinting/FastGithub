@@ -6,13 +6,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.PacketIntercept
+namespace FastGithub.PacketIntercept.Dns
 {
     /// <summary>
     /// host文件冲解决者
     /// </summary>
     [SupportedOSPlatform("windows")]
-    sealed class HostsConflictSolver : IConflictSolver
+    sealed class HostsConflictSolver : IDnsConflictSolver
     {
         private readonly FastGithubConfig fastGithubConfig;
 

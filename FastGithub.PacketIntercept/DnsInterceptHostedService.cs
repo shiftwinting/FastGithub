@@ -12,8 +12,8 @@ namespace FastGithub.PacketIntercept
     [SupportedOSPlatform("windows")]
     sealed class DnsInterceptHostedService : BackgroundService
     {
-        private readonly DnsInterceptor dnsInterceptor;
-        private readonly IEnumerable<IConflictSolver> conflictSolvers;
+        private readonly IDnsInterceptor dnsInterceptor;
+        private readonly IEnumerable<IDnsConflictSolver> conflictSolvers;
 
         /// <summary>
         /// dns拦截后台服务
@@ -21,8 +21,8 @@ namespace FastGithub.PacketIntercept
         /// <param name="dnsInterceptor"></param>
         /// <param name="conflictSolvers"></param>
         public DnsInterceptHostedService(
-            DnsInterceptor dnsInterceptor,
-            IEnumerable<IConflictSolver> conflictSolvers)
+            IDnsInterceptor dnsInterceptor,
+            IEnumerable<IDnsConflictSolver> conflictSolvers)
         {
             this.dnsInterceptor = dnsInterceptor;
             this.conflictSolvers = conflictSolvers;
@@ -61,10 +61,9 @@ namespace FastGithub.PacketIntercept
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Yield();
-            this.dnsInterceptor.Intercept(stoppingToken);
+            return this.dnsInterceptor.InterceptAsync(stoppingToken);
         }
     }
 }
