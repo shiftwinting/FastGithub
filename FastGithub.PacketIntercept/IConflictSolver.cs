@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Dns
+namespace FastGithub.PacketIntercept
 {
     /// <summary>
     /// Dns冲突解决者

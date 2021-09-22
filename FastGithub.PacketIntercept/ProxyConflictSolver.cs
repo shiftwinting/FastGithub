@@ -11,7 +11,7 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Dns
+namespace FastGithub.PacketIntercept
 {
     /// <summary>
     /// 代理冲突解决者

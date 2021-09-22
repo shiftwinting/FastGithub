@@ -13,7 +13,7 @@ using System.Runtime.Versioning;
 using System.Threading;
 using WinDivertSharp;
 
-namespace FastGithub.Dns
+namespace FastGithub.PacketIntercept
 {
     /// <summary>
     /// dns拦截器
@@ -165,7 +165,7 @@ namespace FastGithub.Dns
             }
            
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-            this.logger.LogInformation($"已拦截dns查询{domain}并伪造解析结果为{IPAddress.Loopback}");
+            this.logger.LogInformation($"{domain} => {IPAddress.Loopback}");
         }
 
 

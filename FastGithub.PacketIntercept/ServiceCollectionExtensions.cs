@@ -1,4 +1,4 @@
-﻿using FastGithub.Dns;
+﻿using FastGithub.PacketIntercept;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Runtime.Versioning;
@@ -20,14 +20,15 @@ namespace FastGithub
         {
             services.AddSingleton<IConflictSolver, HostsConflictSolver>();
             services.AddSingleton<IConflictSolver, ProxyConflictSolver>();
-
             services.TryAddSingleton<DnsInterceptor>();
-            services.TryAddSingleton<HttpInterceptor>();
-            services.TryAddSingleton<HttpsInterceptor>();
-
             services.AddHostedService<DnsInterceptHostedService>();
-            services.AddHostedService<HttpInterceptHostedService>();
-            return services.AddHostedService<HttpsInterceptHostedService>();
+
+            services.AddSingleton<ITcpInterceptor, SshInterceptor>();
+            services.AddSingleton<ITcpInterceptor, HttpInterceptor>();
+            services.AddSingleton<ITcpInterceptor, HttpsInterceptor>();
+            services.AddHostedService<TcpInterceptHostedService>();
+
+            return services;
         }
     }
 }

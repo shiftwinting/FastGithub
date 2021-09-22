@@ -5,17 +5,17 @@ using System.Runtime.Versioning;
 namespace FastGithub.PacketIntercept
 {
     /// <summary>
-    /// https拦截器
+    /// ssh拦截器
     /// </summary>   
     [SupportedOSPlatform("windows")]
-    sealed class HttpsInterceptor : TcpInterceptor
+    sealed class SshInterceptor : TcpInterceptor
     {
         /// <summary>
-        /// https拦截器
+        /// ssh拦截器
         /// </summary>
         /// <param name="logger"></param>
-        public HttpsInterceptor(ILogger<HttpsInterceptor> logger)
-            : base(443, ReverseProxyPort.Https, logger)
+        public SshInterceptor(ILogger<HttpInterceptor> logger)
+            : base(22, ReverseProxyPort.Ssh, logger)
         {
         }
     }

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.Dns
+namespace FastGithub.PacketIntercept
 {
     /// <summary>
     /// host文件冲解决者

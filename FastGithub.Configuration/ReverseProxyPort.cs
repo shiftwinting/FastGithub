@@ -11,6 +11,11 @@ namespace FastGithub.Configuration
     public static class ReverseProxyPort
     {
         /// <summary>
+        /// ssh端口
+        /// </summary>
+        public static int Ssh { get; } = GetAvailableTcpPort(22);
+
+        /// <summary>
         /// http端口
         /// </summary>
         public static int Http { get; } = GetAvailableTcpPort(80);
