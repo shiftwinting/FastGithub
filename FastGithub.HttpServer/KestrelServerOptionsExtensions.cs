@@ -69,11 +69,11 @@ namespace FastGithub
         /// <param name="kestrel"></param>
         public static void ListenHttpReverseProxy(this KestrelServerOptions kestrel)
         {
-            const int HTTP_PORT = 80;
-            if (CanListenTcp(HTTP_PORT) == true)
+            var httpPort = ReverseProxyPort.Http;
+            if (CanListenTcp(httpPort) == true)
             {
-                kestrel.Listen(IPAddress.Loopback, HTTP_PORT);
-                kestrel.GetLogger().LogInformation($"已监听http://{IPAddress.Loopback}:{HTTP_PORT}，http反向代理服务启动完成");
+                kestrel.Listen(IPAddress.Loopback, httpPort);
+                kestrel.GetLogger().LogInformation($"已监听http://{IPAddress.Loopback}:{httpPort}，http反向代理服务启动完成");
             }
         }
 
@@ -85,7 +85,7 @@ namespace FastGithub
         /// <returns></returns>
         public static int ListenHttpsReverseProxy(this KestrelServerOptions kestrel)
         {
-            var httpsPort = HttpsReverseProxyPort.Value;
+            var httpsPort = ReverseProxyPort.Https;
             if (CanListenTcp(httpsPort) == false)
             {
                 throw new FastGithubException($"tcp端口{httpsPort}已经被其它进程占用");

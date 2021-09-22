@@ -9,36 +9,36 @@ using WinDivertSharp;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// https拦截器
+    /// http拦截器
     /// </summary>   
     [SupportedOSPlatform("windows")]
-    sealed class HttpsInterceptor
+    sealed class HttpInterceptor
     {
-        private readonly ILogger<HttpsInterceptor> logger;
-        private readonly ushort https443Port = BinaryPrimitives.ReverseEndianness((ushort)443);
-        private readonly ushort httpsReverseProxyPort = BinaryPrimitives.ReverseEndianness((ushort)ReverseProxyPort.Https);
+        private readonly ILogger<HttpInterceptor> logger;
+        private readonly ushort http80Port = BinaryPrimitives.ReverseEndianness((ushort)80);
+        private readonly ushort httpReverseProxyPort = BinaryPrimitives.ReverseEndianness((ushort)ReverseProxyPort.Http);
 
         /// <summary>
-        /// https拦截器
+        /// http拦截器
         /// </summary>
         /// <param name="logger"></param>
-        public HttpsInterceptor(ILogger<HttpsInterceptor> logger)
+        public HttpInterceptor(ILogger<HttpInterceptor> logger)
         {
             this.logger = logger;
         }
 
         /// <summary>
-        /// 拦截443端口的数据包
+        /// 拦截80端口的数据包
         /// </summary>
         /// <param name="cancellationToken"></param>
         public void Intercept(CancellationToken cancellationToken)
         {
-            if (ReverseProxyPort.Https == 443)
+            if (ReverseProxyPort.Http == 80)
             {
                 return;
             }
 
-            var filter = $"loopback and (tcp.DstPort == 443 or tcp.SrcPort == {ReverseProxyPort.Https})";
+            var filter = $"loopback and (tcp.DstPort == 80 or tcp.SrcPort == {ReverseProxyPort.Http})";
             var handle = WinDivert.WinDivertOpen(filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.Zero)
             {
@@ -80,13 +80,13 @@ namespace FastGithub.Dns
         unsafe private void ModifyHttpsPacket(WinDivertBuffer winDivertBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
         {
             var packet = WinDivert.WinDivertHelperParsePacket(winDivertBuffer, packetLength);
-            if (packet.TcpHeader->DstPort == https443Port)
+            if (packet.TcpHeader->DstPort == http80Port)
             {
-                packet.TcpHeader->DstPort = this.httpsReverseProxyPort;
+                packet.TcpHeader->DstPort = this.httpReverseProxyPort;
             }
             else
             {
-                packet.TcpHeader->SrcPort = https443Port;
+                packet.TcpHeader->SrcPort = http80Port;
             }
             winDivertAddress.Impostor = true;
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);

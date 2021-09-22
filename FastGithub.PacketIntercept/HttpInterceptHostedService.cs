@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 namespace FastGithub.Dns
 {
     /// <summary>
-    /// https拦截后台服务
+    /// http拦截后台服务
     /// </summary>
     [SupportedOSPlatform("windows")]
-    sealed class HttpsInterceptHostedService : BackgroundService
+    sealed class HttpInterceptHostedService : BackgroundService
     {
-        private readonly HttpsInterceptor httpsInterceptor;
+        private readonly HttpInterceptor httpsInterceptor;
 
         /// <summary>
-        /// https拦截后台服务
+        /// http拦截后台服务
         /// </summary> 
-        /// <param name="httpsInterceptor"></param> 
-        public HttpsInterceptHostedService(HttpsInterceptor httpsInterceptor)
+        /// <param name="httpInterceptor"></param> 
+        public HttpInterceptHostedService(HttpInterceptor httpInterceptor)
         {
-            this.httpsInterceptor = httpsInterceptor;
+            this.httpsInterceptor = httpInterceptor;
         }
 
         /// <summary>

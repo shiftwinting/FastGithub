@@ -18,11 +18,15 @@ namespace FastGithub
         [SupportedOSPlatform("windows")]
         public static IServiceCollection AddPacketIntercept(this IServiceCollection services)
         {
-            services.TryAddSingleton<DnsInterceptor>();
-            services.TryAddSingleton<HttpsInterceptor>();
             services.AddSingleton<IConflictSolver, HostsConflictSolver>();
             services.AddSingleton<IConflictSolver, ProxyConflictSolver>();
+
+            services.TryAddSingleton<DnsInterceptor>();
+            services.TryAddSingleton<HttpInterceptor>();
+            services.TryAddSingleton<HttpsInterceptor>();
+
             services.AddHostedService<DnsInterceptHostedService>();
+            services.AddHostedService<HttpInterceptHostedService>();
             return services.AddHostedService<HttpsInterceptHostedService>();
         }
     }

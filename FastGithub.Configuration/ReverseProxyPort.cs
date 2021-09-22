@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -7,34 +6,27 @@ using System.Net.Sockets;
 namespace FastGithub.Configuration
 {
     /// <summary>
-    /// https反向代理端口
+    /// 反向代理端口
     /// </summary>
-    public static class HttpsReverseProxyPort
+    public static class ReverseProxyPort
     {
         /// <summary>
-        /// 获取端口值
+        /// http端口
         /// </summary>
-        public static int Value { get; } = GetAvailableTcpPort(AddressFamily.InterNetwork);
+        public static int Http { get; } = GetAvailableTcpPort(80);
+
+        /// <summary>
+        /// https端口
+        /// </summary>
+        public static int Https { get; } = GetAvailableTcpPort(443);
 
         /// <summary>
         /// 获取可用的随机Tcp端口
         /// </summary>
+        /// <param name="minValue"></param>
         /// <param name="addressFamily"></param>
         /// <returns></returns>
-        private static int GetAvailableTcpPort(AddressFamily addressFamily)
-        {
-            return OperatingSystem.IsWindows()
-                ? GetAvailableTcpPort(addressFamily, 443)
-                : GetAvailableTcpPort(addressFamily, 12345);
-        }
-
-        /// <summary>
-        /// 获取可用的随机Tcp端口
-        /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="min">最小值</param>
-        /// <returns></returns>
-        private static int GetAvailableTcpPort(AddressFamily addressFamily, int min)
+        private static int GetAvailableTcpPort(int minValue, AddressFamily addressFamily = AddressFamily.InterNetwork)
         {
             var hashSet = new HashSet<int>();
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
@@ -47,7 +39,7 @@ namespace FastGithub.Configuration
                 }
             }
 
-            for (var port = min; port < IPEndPoint.MaxPort; port++)
+            for (var port = minValue; port < IPEndPoint.MaxPort; port++)
             {
                 if (hashSet.Contains(port) == false)
                 {
