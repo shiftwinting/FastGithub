@@ -154,6 +154,7 @@ namespace FastGithub.Dns
             packet.UdpHeader->Length = BinaryPrimitives.ReverseEndianness((ushort)(sizeof(UdpHeader) + responsePayload.Length));
 
             // 反转方向
+            winDivertAddress.Impostor = true;
             if (winDivertAddress.Direction == WinDivertDirection.Inbound)
             {
                 winDivertAddress.Direction = WinDivertDirection.Outbound;
@@ -162,7 +163,7 @@ namespace FastGithub.Dns
             {
                 winDivertAddress.Direction = WinDivertDirection.Inbound;
             }
-
+           
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
             this.logger.LogInformation($"已拦截dns查询{domain}并伪造解析结果为{IPAddress.Loopback}");
         }

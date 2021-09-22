@@ -1,21 +1,32 @@
-﻿using FastGithub.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.Configuration
 {
     /// <summary>
     /// https反向代理端口
     /// </summary>
-    static class HttpsReverseProxyPort
+    public static class HttpsReverseProxyPort
     {
         /// <summary>
         /// 获取端口值
         /// </summary>
-        public static int Value { get; } = OperatingSystem.IsWindows() ? 443 : GetAvailableTcpPort(AddressFamily.InterNetwork);
+        public static int Value { get; } = GetAvailableTcpPort(AddressFamily.InterNetwork);
+
+        /// <summary>
+        /// 获取可用的随机Tcp端口
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <returns></returns>
+        private static int GetAvailableTcpPort(AddressFamily addressFamily)
+        {
+            return OperatingSystem.IsWindows()
+                ? GetAvailableTcpPort(addressFamily, 443)
+                : GetAvailableTcpPort(addressFamily, 12345);
+        }
 
         /// <summary>
         /// 获取可用的随机Tcp端口
@@ -23,7 +34,7 @@ namespace FastGithub.HttpServer
         /// <param name="addressFamily"></param>
         /// <param name="min">最小值</param>
         /// <returns></returns>
-        private static int GetAvailableTcpPort(AddressFamily addressFamily, int min = 12345)
+        private static int GetAvailableTcpPort(AddressFamily addressFamily, int min)
         {
             var hashSet = new HashSet<int>();
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();

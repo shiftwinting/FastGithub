@@ -40,7 +40,7 @@ namespace FastGithub
 
             if (OperatingSystem.IsWindows())
             {
-                services.AddDnsInterceptor();
+                services.AddPacketIntercept();
             }
         }
 

@@ -86,11 +86,6 @@ namespace FastGithub
         public static int ListenHttpsReverseProxy(this KestrelServerOptions kestrel)
         {
             var httpsPort = HttpsReverseProxyPort.Value;
-            if (OperatingSystem.IsWindows())
-            {
-                TcpTable.KillPortOwner(httpsPort);
-            }
-
             if (CanListenTcp(httpsPort) == false)
             {
                 throw new FastGithubException($"tcp端口{httpsPort}已经被其它进程占用");
@@ -105,7 +100,7 @@ namespace FastGithub
                     https.ServerCertificateSelector = (ctx, domain) =>
                         certService.GetOrCreateServerCert(domain)));
 
-            if (httpsPort == 443)
+            if (OperatingSystem.IsWindows())
             {
                 var logger = kestrel.GetLogger();
                 logger.LogInformation($"已监听https://{IPAddress.Loopback}:{httpsPort}，https反向代理服务启动完成");

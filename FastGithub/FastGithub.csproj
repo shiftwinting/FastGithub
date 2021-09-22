@@ -12,9 +12,9 @@
   <ItemGroup>
     <PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
-    <ProjectReference Include="..\FastGithub.Dns\FastGithub.Dns.csproj" />
     <ProjectReference Include="..\FastGithub.DomainResolve\FastGithub.DomainResolve.csproj" />
     <ProjectReference Include="..\FastGithub.HttpServer\FastGithub.HttpServer.csproj" />
+    <ProjectReference Include="..\FastGithub.PacketIntercept\FastGithub.PacketIntercept.csproj" />
   </ItemGroup>
 
   <ItemGroup>

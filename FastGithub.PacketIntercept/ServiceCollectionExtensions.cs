@@ -11,17 +11,19 @@ namespace FastGithub
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// 注册dns拦截器
+        /// 注册数据包拦截器
         /// </summary>
         /// <param name="services"></param> 
         /// <returns></returns>
         [SupportedOSPlatform("windows")]
-        public static IServiceCollection AddDnsInterceptor(this IServiceCollection services)
+        public static IServiceCollection AddPacketIntercept(this IServiceCollection services)
         {
             services.TryAddSingleton<DnsInterceptor>();
+            services.TryAddSingleton<HttpsInterceptor>();
             services.AddSingleton<IConflictSolver, HostsConflictSolver>();
             services.AddSingleton<IConflictSolver, ProxyConflictSolver>();
-            return services.AddHostedService<DnsInterceptHostedService>();
+            services.AddHostedService<DnsInterceptHostedService>();
+            return services.AddHostedService<HttpsInterceptHostedService>();
         }
     }
 }
