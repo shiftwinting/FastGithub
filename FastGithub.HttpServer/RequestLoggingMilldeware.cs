@@ -95,7 +95,7 @@ namespace FastGithub.HttpServer
             while (ex != null)
             {
                 var type = ex.GetType();
-                builder.Append(type.Namespace).Append(".").Append(type.Name).Append(": ").AppendLine(ex.Message);
+                builder.Append(type.Namespace).Append('.').Append(type.Name).Append(": ").AppendLine(ex.Message);
                 ex = ex.InnerException;
             }
             return builder.ToString();

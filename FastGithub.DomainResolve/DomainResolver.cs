@@ -82,7 +82,7 @@ namespace FastGithub.DomainResolve
             var semaphore = this.semaphoreSlims.GetOrAdd(domain, _ => new SemaphoreSlim(1, 1));
             try
             {
-                await semaphore.WaitAsync();
+                await semaphore.WaitAsync(CancellationToken.None);
                 return await this.ResolveCoreAsync(domain, cancellationToken);
             }
             finally
