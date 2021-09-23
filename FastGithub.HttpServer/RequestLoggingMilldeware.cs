@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -48,13 +47,6 @@ namespace FastGithub.HttpServer
             var request = context.Request;
             var response = context.Response;
             var message = $"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms";
-
-            var client = context.Connection.RemoteIpAddress;
-            if (IPAddress.Loopback.Equals(client) == false)
-            {
-                message = $"{client} {message}";
-            }
-
             var exception = context.GetForwarderErrorFeature()?.Exception;
             if (exception == null)
             {
