@@ -48,7 +48,7 @@ namespace FastGithub.PacketIntercept.Tcp
             await Task.Yield();
 
             var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
-            if (handle == IntPtr.Zero)
+            if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
             {
                 return;
             }

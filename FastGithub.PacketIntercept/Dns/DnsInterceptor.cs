@@ -60,7 +60,7 @@ namespace FastGithub.PacketIntercept.Dns
             await Task.Yield();
 
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
-            if (handle == IntPtr.Zero)
+            if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
             {
                 return;
             }
