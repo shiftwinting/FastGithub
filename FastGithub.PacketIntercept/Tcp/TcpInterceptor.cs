@@ -3,7 +3,6 @@ using System;
 using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace FastGithub.PacketIntercept.Tcp
     /// </summary>   
     [SupportedOSPlatform("windows")]
     abstract class TcpInterceptor : ITcpInterceptor
-    { 
+    {
         private readonly string filter;
         private readonly ushort oldServerPort;
         private readonly ushort newServerPort;
@@ -52,7 +51,7 @@ namespace FastGithub.PacketIntercept.Tcp
 
             var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
-            { 
+            {
                 const int ERROR_INVALID_HANDLE = 0x6;
                 throw new Win32Exception(ERROR_INVALID_HANDLE, "打开驱动失败");
             }
@@ -66,25 +65,22 @@ namespace FastGithub.PacketIntercept.Tcp
 
             while (cancellationToken.IsCancellationRequested == false)
             {
-                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength))
+                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength) == false)
                 {
-                    try
-                    {
-                        this.ModifyTcpPacket(winDivertBuffer, ref winDivertAddress, ref packetLength);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.LogWarning(ex.Message);
-                    }
-                    finally
-                    {
-                        WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
-                    }
+                    throw new Win32Exception();
                 }
-                else
+
+                try
                 {
-                    var errorCode = Marshal.GetLastWin32Error();
-                    throw new Win32Exception(errorCode);
+                    this.ModifyTcpPacket(winDivertBuffer, ref winDivertAddress, ref packetLength);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(ex.Message);
+                }
+                finally
+                {
+                    WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
                 }
             }
         }

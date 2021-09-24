@@ -40,31 +40,22 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 停止完成
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            this.logger.LogInformation($"{nameof(FastGithub)}已停止运行");
-            return base.StopAsync(cancellationToken);
-        }
-
-        /// <summary>
         /// 后台任务
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (OperatingSystem.IsWindows() == false)
+            if (OperatingSystem.IsWindows())
             {
-                await Task.Delay(TimeSpan.FromSeconds(1d), stoppingToken);
-                if (await this.UseFastGithubProxyAsync() == false)
-                {
-                    var httpProxyPort = this.options.Value.HttpProxyPort;
-                    this.logger.LogWarning($"请设置系统自动代理为http://{IPAddress.Loopback}:{httpProxyPort}，或手动代理http/https为{IPAddress.Loopback}:{httpProxyPort}");
-                }
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1d), stoppingToken);
+            if (await this.UseFastGithubProxyAsync() == false)
+            {
+                var httpProxyPort = this.options.Value.HttpProxyPort;
+                this.logger.LogWarning($"请设置系统自动代理为http://{IPAddress.Loopback}:{httpProxyPort}，或手动代理http/https为{IPAddress.Loopback}:{httpProxyPort}");
             }
         }
 
@@ -108,7 +99,7 @@ namespace FastGithub
 
             try
             {
-                var addresses = await System.Net.Dns.GetHostAddressesAsync(proxyServer.Host);
+                var addresses = await Dns.GetHostAddressesAsync(proxyServer.Host);
                 return addresses.Contains(IPAddress.Loopback);
             }
             catch (Exception)

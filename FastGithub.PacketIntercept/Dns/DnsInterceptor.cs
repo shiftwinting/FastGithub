@@ -81,25 +81,22 @@ namespace FastGithub.PacketIntercept.Dns
             DnsFlushResolverCache();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength))
+                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength) == false)
                 {
-                    try
-                    {
-                        this.ModifyDnsPacket(winDivertBuffer, ref winDivertAddress, ref packetLength);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.LogWarning(ex.Message);
-                    }
-                    finally
-                    {
-                        WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
-                    }
+                    throw new Win32Exception();
                 }
-                else
+
+                try
                 {
-                    var errorCode = Marshal.GetLastWin32Error();
-                    throw new Win32Exception(errorCode);
+                    this.ModifyDnsPacket(winDivertBuffer, ref winDivertAddress, ref packetLength);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(ex.Message);
+                }
+                finally
+                {
+                    WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
                 }
             }
         }
