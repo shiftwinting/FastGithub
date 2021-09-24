@@ -11,7 +11,6 @@ assignees: ''
 Bug的详细描述内容
 
 **重现步骤**
-重现步骤如下:
 1.  xxx
 2.  yyy
 3.  zzz
