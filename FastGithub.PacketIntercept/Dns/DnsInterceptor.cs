@@ -163,17 +163,7 @@ namespace FastGithub.PacketIntercept.Dns
             packet.UdpHeader->SrcPort = destPort;
             packet.UdpHeader->Length = BinaryPrimitives.ReverseEndianness((ushort)(sizeof(UdpHeader) + responsePayload.Length));
 
-            // 反转方向
             winDivertAddress.Impostor = true;
-            if (winDivertAddress.Direction == WinDivertDirection.Inbound)
-            {
-                winDivertAddress.Direction = WinDivertDirection.Outbound;
-            }
-            else
-            {
-                winDivertAddress.Direction = WinDivertDirection.Inbound;
-            }
-
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
             this.logger.LogInformation($"{domain} => {IPAddress.Loopback}");
         }
