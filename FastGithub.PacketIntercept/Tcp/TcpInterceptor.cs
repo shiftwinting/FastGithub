@@ -17,6 +17,7 @@ namespace FastGithub.PacketIntercept.Tcp
     [SupportedOSPlatform("windows")]
     abstract class TcpInterceptor : ITcpInterceptor
     {
+        private const int ERROR_INVALID_HANDLE = 0x6;
         private readonly string filter;
         private readonly ushort oldServerPort;
         private readonly ushort newServerPort;
@@ -82,8 +83,12 @@ namespace FastGithub.PacketIntercept.Tcp
                 }
                 else
                 {
-                    var exception = new Win32Exception(Marshal.GetLastWin32Error());
-                    this.logger.LogError(exception.Message);
+                    var errorCode = Marshal.GetLastWin32Error();
+                    this.logger.LogError(new Win32Exception(errorCode).Message);
+                    if (errorCode == ERROR_INVALID_HANDLE)
+                    {
+                        break;
+                    }
                 }
             }
         }

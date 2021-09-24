@@ -23,6 +23,7 @@ namespace FastGithub.PacketIntercept.Dns
     [SupportedOSPlatform("windows")]
     sealed class DnsInterceptor : IDnsInterceptor
     {
+        private const int ERROR_INVALID_HANDLE = 0x6;
         private const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
@@ -97,8 +98,12 @@ namespace FastGithub.PacketIntercept.Dns
                 }
                 else
                 {
-                    var exception = new Win32Exception(Marshal.GetLastWin32Error());
-                    this.logger.LogError(exception.Message);
+                    var errorCode = Marshal.GetLastWin32Error();
+                    this.logger.LogError(new Win32Exception(errorCode).Message);
+                    if (errorCode == ERROR_INVALID_HANDLE)
+                    {
+                        break;
+                    }
                 }
             }
         }
