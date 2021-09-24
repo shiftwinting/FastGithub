@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -23,7 +24,7 @@ namespace FastGithub.Configuration
         /// <summary>
         /// https端口
         /// </summary>
-        public static int Https { get; } = GetAvailableTcpPort(443);
+        public static int Https { get; } = OperatingSystem.IsWindows() ? GetAvailableTcpPort(443) : GetAvailableTcpPort(48457);
 
         /// <summary>
         /// 获取可用的随机Tcp端口
