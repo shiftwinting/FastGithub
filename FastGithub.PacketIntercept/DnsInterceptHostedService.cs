@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -14,18 +16,26 @@ namespace FastGithub.PacketIntercept
     {
         private readonly IDnsInterceptor dnsInterceptor;
         private readonly IEnumerable<IDnsConflictSolver> conflictSolvers;
+        private readonly ILogger<DnsInterceptHostedService> logger;
+        private readonly IHost host;
 
         /// <summary>
         /// dns拦截后台服务
-        /// </summary> 
+        /// </summary>
         /// <param name="dnsInterceptor"></param>
         /// <param name="conflictSolvers"></param>
+        /// <param name="logger"></param>
+        /// <param name="host"></param>
         public DnsInterceptHostedService(
             IDnsInterceptor dnsInterceptor,
-            IEnumerable<IDnsConflictSolver> conflictSolvers)
+            IEnumerable<IDnsConflictSolver> conflictSolvers,
+            ILogger<DnsInterceptHostedService> logger,
+            IHost host)
         {
             this.dnsInterceptor = dnsInterceptor;
             this.conflictSolvers = conflictSolvers;
+            this.logger = logger;
+            this.host = host;
         }
 
         /// <summary>
@@ -61,9 +71,18 @@ namespace FastGithub.PacketIntercept
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return this.dnsInterceptor.InterceptAsync(stoppingToken);
+            try
+            {
+                await this.dnsInterceptor.InterceptAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                this.logger.LogError(ex, "dns拦截器异常");
+                await this.host.StopAsync(stoppingToken);
+            }
         }
     }
 }

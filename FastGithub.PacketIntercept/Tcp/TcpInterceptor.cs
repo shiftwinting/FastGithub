@@ -16,8 +16,7 @@ namespace FastGithub.PacketIntercept.Tcp
     /// </summary>   
     [SupportedOSPlatform("windows")]
     abstract class TcpInterceptor : ITcpInterceptor
-    {
-        private const int ERROR_INVALID_HANDLE = 0x6;
+    { 
         private readonly string filter;
         private readonly ushort oldServerPort;
         private readonly ushort newServerPort;
@@ -41,6 +40,7 @@ namespace FastGithub.PacketIntercept.Tcp
         /// 拦截指定端口的数据包
         /// </summary>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="Win32Exception"></exception>
         public async Task InterceptAsync(CancellationToken cancellationToken)
         {
             if (this.oldServerPort == this.newServerPort)
@@ -52,9 +52,9 @@ namespace FastGithub.PacketIntercept.Tcp
 
             var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
-            {
-                this.logger.LogError($"打开驱动失败");
-                return;
+            { 
+                const int ERROR_INVALID_HANDLE = 0x6;
+                throw new Win32Exception(ERROR_INVALID_HANDLE, "打开驱动失败");
             }
 
             this.logger.LogInformation($"tcp://{IPAddress.Loopback}:{BinaryPrimitives.ReverseEndianness(this.oldServerPort)} => tcp://{IPAddress.Loopback}:{BinaryPrimitives.ReverseEndianness(this.newServerPort)}");
@@ -84,11 +84,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 else
                 {
                     var errorCode = Marshal.GetLastWin32Error();
-                    this.logger.LogError(new Win32Exception(errorCode).Message);
-                    if (errorCode == ERROR_INVALID_HANDLE)
-                    {
-                        break;
-                    }
+                    throw new Win32Exception(errorCode);
                 }
             }
         }

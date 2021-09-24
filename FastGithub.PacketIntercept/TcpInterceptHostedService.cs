@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -14,14 +16,23 @@ namespace FastGithub.PacketIntercept
     sealed class TcpInterceptHostedService : BackgroundService
     {
         private readonly IEnumerable<ITcpInterceptor> tcpInterceptors;
+        private readonly ILogger<TcpInterceptHostedService> logger;
+        private readonly IHost host;
 
         /// <summary>
         /// tcp拦截后台服务
-        /// </summary> 
-        /// <param name="tcpInterceptors"></param> 
-        public TcpInterceptHostedService(IEnumerable<ITcpInterceptor> tcpInterceptors)
+        /// </summary>
+        /// <param name="tcpInterceptors"></param>
+        /// <param name="logger"></param>
+        /// <param name="host"></param>
+        public TcpInterceptHostedService(
+            IEnumerable<ITcpInterceptor> tcpInterceptors,
+            ILogger<TcpInterceptHostedService> logger,
+            IHost host)
         {
             this.tcpInterceptors = tcpInterceptors;
+            this.logger = logger;
+            this.host = host;
         }
 
         /// <summary>
@@ -29,10 +40,19 @@ namespace FastGithub.PacketIntercept
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var tasks = this.tcpInterceptors.Select(item => item.InterceptAsync(stoppingToken));
-            return Task.WhenAll(tasks);
+            try
+            {
+                var tasks = this.tcpInterceptors.Select(item => item.InterceptAsync(stoppingToken));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                this.logger.LogError(ex, "tcp拦截器异常");
+                await this.host.StopAsync(stoppingToken);
+            }
         }
     }
 }

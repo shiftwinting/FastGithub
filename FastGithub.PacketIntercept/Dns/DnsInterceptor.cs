@@ -23,7 +23,6 @@ namespace FastGithub.PacketIntercept.Dns
     [SupportedOSPlatform("windows")]
     sealed class DnsInterceptor : IDnsInterceptor
     {
-        private const int ERROR_INVALID_HANDLE = 0x6;
         private const string DNS_FILTER = "udp.DstPort == 53";
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
@@ -56,6 +55,7 @@ namespace FastGithub.PacketIntercept.Dns
         /// DNS拦截
         /// </summary>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="Win32Exception"></exception>
         /// <returns></returns>
         public async Task InterceptAsync(CancellationToken cancellationToken)
         {
@@ -64,8 +64,8 @@ namespace FastGithub.PacketIntercept.Dns
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
             {
-                this.logger.LogError($"打开驱动失败");
-                return;
+                const int ERROR_INVALID_HANDLE = 0x6;
+                throw new Win32Exception(ERROR_INVALID_HANDLE, "打开驱动失败");
             }
 
             cancellationToken.Register(hwnd =>
@@ -99,11 +99,7 @@ namespace FastGithub.PacketIntercept.Dns
                 else
                 {
                     var errorCode = Marshal.GetLastWin32Error();
-                    this.logger.LogError(new Win32Exception(errorCode).Message);
-                    if (errorCode == ERROR_INVALID_HANDLE)
-                    {
-                        break;
-                    }
+                    throw new Win32Exception(errorCode);
                 }
             }
         }
