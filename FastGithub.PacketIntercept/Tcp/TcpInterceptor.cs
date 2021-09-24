@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,6 +52,7 @@ namespace FastGithub.PacketIntercept.Tcp
             var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
             {
+                this.logger.LogError($"打开驱动失败");
                 return;
             }
 
@@ -76,6 +79,11 @@ namespace FastGithub.PacketIntercept.Tcp
                     {
                         WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
                     }
+                }
+                else
+                {
+                    var exception = new Win32Exception(Marshal.GetLastWin32Error());
+                    this.logger.LogError(exception.Message);
                 }
             }
         }

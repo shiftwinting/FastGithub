@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -62,6 +63,7 @@ namespace FastGithub.PacketIntercept.Dns
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
             if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
             {
+                this.logger.LogError($"打开驱动失败");
                 return;
             }
 
@@ -92,6 +94,11 @@ namespace FastGithub.PacketIntercept.Dns
                     {
                         WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
                     }
+                }
+                else
+                {
+                    var exception = new Win32Exception(Marshal.GetLastWin32Error());
+                    this.logger.LogError(exception.Message);
                 }
             }
         }
