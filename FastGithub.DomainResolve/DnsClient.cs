@@ -59,7 +59,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public override string ToString()
         {
-            return this.dns.ToString();
+            return $"dns://{this.dns}";
         }
     }
 }

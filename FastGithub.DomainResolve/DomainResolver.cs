@@ -192,18 +192,18 @@ namespace FastGithub.DomainResolve
 
                 if (address == null)
                 {
-                    this.logger.LogWarning($"dns({dnsClient})解析不到{domain.Host}可用的ip解析");
+                    this.logger.LogWarning($"{dnsClient}解析不到{domain.Host}可用的ip解析");
                 }
                 else
                 {
-                    this.logger.LogInformation($"dns({dnsClient}): {domain.Host}->{address}");
+                    this.logger.LogInformation($"{dnsClient}: {domain.Host}->{address}");
                 }
                 return address;
             }
             catch (Exception ex)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                this.logger.LogWarning($"dns({dnsClient})无法解析{domain.Host}：{ex.Message}");
+                this.logger.LogWarning($"{dnsClient}无法解析{domain.Host}：{ex.Message}");
                 return default;
             }
         }
