@@ -62,10 +62,9 @@ namespace FastGithub.PacketIntercept.Dns
             await Task.Yield();
 
             var handle = WinDivert.WinDivertOpen(DNS_FILTER, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
-            if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
+            if (handle == new IntPtr(unchecked((long)ulong.MaxValue)))
             {
-                const int ERROR_INVALID_HANDLE = 0x6;
-                throw new Win32Exception(ERROR_INVALID_HANDLE, "打开驱动失败");
+                throw new Win32Exception();
             }
 
             cancellationToken.Register(hwnd =>

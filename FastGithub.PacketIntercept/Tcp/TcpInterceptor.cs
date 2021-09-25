@@ -50,10 +50,9 @@ namespace FastGithub.PacketIntercept.Tcp
             await Task.Yield();
 
             var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
-            if (handle == IntPtr.MaxValue || handle == IntPtr.Zero)
+            if (handle == new IntPtr(unchecked((long)ulong.MaxValue)))
             {
-                const int ERROR_INVALID_HANDLE = 0x6;
-                throw new Win32Exception(ERROR_INVALID_HANDLE, "打开驱动失败");
+                throw new Win32Exception();
             }
 
             this.logger.LogInformation($"tcp://{IPAddress.Loopback}:{BinaryPrimitives.ReverseEndianness(this.oldServerPort)} => tcp://{IPAddress.Loopback}:{BinaryPrimitives.ReverseEndianness(this.newServerPort)}");
