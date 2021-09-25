@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Threading;
 using static PInvoke.AdvApi32;
 
 namespace FastGithub
@@ -25,11 +26,11 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 使用应用程序文件所在目录作为ContentRoot
+        /// 使用windows服务
         /// </summary>
-        /// <param name="hostBuilder"></param>
+        /// <param name="hostBuilder"></param> 
         /// <returns></returns>
-        public static IHostBuilder UseBinaryPathContentRoot(this IHostBuilder hostBuilder)
+        public static IHostBuilder UseWindowsService(this IHostBuilder hostBuilder)
         {
             var contentRoot = Path.GetDirectoryName(Environment.GetCommandLineArgs().First());
             if (contentRoot != null)
@@ -37,14 +38,15 @@ namespace FastGithub
                 Environment.CurrentDirectory = contentRoot;
                 hostBuilder.UseContentRoot(contentRoot);
             }
-            return hostBuilder;
+            return WindowsServiceLifetimeHostBuilderExtensions.UseWindowsService(hostBuilder);
         }
 
         /// <summary>
         /// 运行主机
         /// </summary>
         /// <param name="host"></param>
-        public static void Run(this IHost host)
+        /// <param name="singleton"></param>
+        public static void Run(this IHost host, bool singleton = true)
         {
             if (OperatingSystem.IsWindows() && TryGetCommand(out var cmd))
             {
@@ -60,7 +62,11 @@ namespace FastGithub
             }
             else
             {
-                HostingAbstractionsHostExtensions.Run(host);
+                using var mutex = new Mutex(true, "Global\\FastGithub", out var firstInstance);
+                if (singleton == false || firstInstance)
+                {
+                    HostingAbstractionsHostExtensions.Run(host);
+                }
             }
         }
 

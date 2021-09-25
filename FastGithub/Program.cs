@@ -27,8 +27,7 @@ namespace FastGithub
         {
             return Host
                 .CreateDefaultBuilder(args)
-                .UseWindowsService()
-                .UseBinaryPathContentRoot()
+                .UseWindowsService() 
                 .UseDefaultServiceProvider(c =>
                 {
                     c.ValidateOnBuild = false;
