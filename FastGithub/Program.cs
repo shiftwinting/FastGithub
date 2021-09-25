@@ -15,7 +15,7 @@ namespace FastGithub
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().RunWithWindowsServiceControl();
+            CreateHostBuilder(args).Build().Run();
         }
 
         /// <summary>

@@ -5,6 +5,7 @@ using PInvoke;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using static PInvoke.AdvApi32;
 
 namespace FastGithub
@@ -40,45 +41,56 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 以支持windows服务控制的方式运行
+        /// 运行主机
         /// </summary>
         /// <param name="host"></param>
-        public static void RunWithWindowsServiceControl(this IHost host)
+        public static void Run(this IHost host)
+        {
+            if (OperatingSystem.IsWindows() && TryGetCommand(out var cmd))
+            {
+                try
+                {
+                    UseCommand(cmd);
+                }
+                catch (Exception ex)
+                {
+                    var loggerFactory = host.Services.GetRequiredService<ILoggerFactory>();
+                    loggerFactory.CreateLogger(nameof(FastGithub)).LogError(ex.Message);
+                }
+            }
+            else
+            {
+                HostingAbstractionsHostExtensions.Run(host);
+            }
+        }
+
+        /// <summary>
+        /// 获取控制指令
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <returns></returns>
+        private static bool TryGetCommand(out Command cmd)
         {
             var args = Environment.GetCommandLineArgs();
-            if (OperatingSystem.IsWindows() == false ||
-                Enum.TryParse<Command>(args.Skip(1).FirstOrDefault(), true, out var cmd) == false)
-            {
-                host.Run();
-                return;
-            }
+            return Enum.TryParse(args.Skip(1).FirstOrDefault(), true, out cmd);
+        }
 
-            try
+        /// <summary>
+        /// 应用控制指令
+        /// </summary> 
+        /// <param name="cmd"></param>
+        [SupportedOSPlatform("windows")]
+        private static void UseCommand(Command cmd)
+        {
+            var binaryPath = Environment.GetCommandLineArgs().First();
+            var serviceName = Path.GetFileNameWithoutExtension(binaryPath);
+            if (cmd == Command.Start)
             {
-                var binaryPath = args.First();
-                var serviceName = Path.GetFileNameWithoutExtension(binaryPath);
-
-                if (cmd == Command.Start)
-                {
-                    InstallAndStartService(serviceName, binaryPath);
-                }
-                else if (cmd == Command.Stop)
-                {
-                    StopAndDeleteService(serviceName);
-                }
+                InstallAndStartService(serviceName, binaryPath);
             }
-            catch (Exception ex)
+            else if (cmd == Command.Stop)
             {
-                var loggerFactory = host.Services.GetService<ILoggerFactory>();
-                if (loggerFactory != null)
-                {
-                    var logger = loggerFactory.CreateLogger(nameof(WindowServiceExtensions));
-                    logger.LogError(ex.Message);
-                }
-                else
-                {
-                    Console.WriteLine(ex.Message);
-                }
+                StopAndDeleteService(serviceName);
             }
         }
 
@@ -88,6 +100,7 @@ namespace FastGithub
         /// <param name="serviceName"></param>
         /// <param name="binaryPath"></param>
         /// <exception cref = "Win32Exception" ></ exception >
+        [SupportedOSPlatform("windows")]
         private static void InstallAndStartService(string serviceName, string binaryPath)
         {
             using var hSCManager = OpenSCManager(null, null, ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
@@ -131,6 +144,7 @@ namespace FastGithub
         /// </summary>
         /// <param name="serviceName"></param>
         /// <exception cref = "Win32Exception" ></ exception >
+        [SupportedOSPlatform("windows")]
         private static void StopAndDeleteService(string serviceName)
         {
             using var hSCManager = OpenSCManager(null, null, ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
