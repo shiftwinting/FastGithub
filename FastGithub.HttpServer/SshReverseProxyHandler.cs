@@ -1,7 +1,7 @@
-﻿using FastGithub.DomainResolve;
+﻿using FastGithub.Configuration;
+using FastGithub.DomainResolve;
 using Microsoft.AspNetCore.Connections;
 using System.IO.Pipelines;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -13,7 +13,8 @@ namespace FastGithub.HttpServer
     sealed class SshReverseProxyHandler : ConnectionHandler
     {
         private readonly IDomainResolver domainResolver;
-        private readonly DnsEndPoint githubSshEndPoint = new("ssh.github.com", 443);
+        private const string SSH_GITHUB_COM = "ssh.github.com";
+        private const int SSH_OVER_HTTPS_PORT = 443;
 
         /// <summary>
         /// github的ssh代理处理者
@@ -31,9 +32,14 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public override async Task OnConnectedAsync(ConnectionContext context)
         {
-            var address = await this.domainResolver.ResolveAsync(this.githubSshEndPoint);
-            using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            await socket.ConnectAsync(address, this.githubSshEndPoint.Port);
+            var address = await this.domainResolver.ResolveAsync(SSH_GITHUB_COM);
+            if (address == null)
+            {
+                throw new FastGithubException($"解析不到{SSH_GITHUB_COM}的IP");
+            }
+
+            using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            await socket.ConnectAsync(address, SSH_OVER_HTTPS_PORT);
             var targetStream = new NetworkStream(socket, ownsSocket: false);
 
             var task1 = targetStream.CopyToAsync(context.Transport.Output);

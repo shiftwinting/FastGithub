@@ -11,12 +11,12 @@ namespace FastGithub.DomainResolve
     public interface IDomainResolver
     {
         /// <summary>
-        /// 解析可用的ip
+        /// 解析ip
         /// </summary>
-        /// <param name="endPoint">远程节点</param>
+        /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<IPAddress> ResolveAsync(DnsEndPoint endPoint, CancellationToken cancellationToken = default);
+        Task<IPAddress?> ResolveAsync(string domain, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 解析所有ip
@@ -24,6 +24,6 @@ namespace FastGithub.DomainResolve
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        IAsyncEnumerable<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<IPAddress> ResolveAllAsync(string domain, CancellationToken cancellationToken = default);
     }
 }

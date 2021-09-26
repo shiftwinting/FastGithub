@@ -175,7 +175,7 @@ namespace FastGithub.Http
             }
             else
             {
-                await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint.Host, cancellationToken))
+                await foreach (var item in this.domainResolver.ResolveAllAsync(dnsEndPoint.Host, cancellationToken))
                 {
                     yield return new IPEndPoint(item, dnsEndPoint.Port);
                 }

@@ -152,8 +152,10 @@ namespace FastGithub.HttpServer
             }
 
             // dns优选
-            address = await this.domainResolver.ResolveAsync(new DnsEndPoint(targetHost, targetPort));
-            return new IPEndPoint(address, targetPort);
+            address = await this.domainResolver.ResolveAsync(targetHost);
+            return address == null
+                ? throw new FastGithubException($"解析不到{targetHost}的IP")
+                : new IPEndPoint(address, targetPort);
         }
 
         /// <summary>
