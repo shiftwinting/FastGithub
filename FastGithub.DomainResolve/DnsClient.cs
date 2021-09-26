@@ -46,11 +46,10 @@ namespace FastGithub.DomainResolve
         {
             var key = $"{dns}:{domain}";
             var semaphore = this.semaphoreSlims.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+            await semaphore.WaitAsync(CancellationToken.None);
 
             try
             {
-                await semaphore.WaitAsync(CancellationToken.None);
-
                 if (this.dnsCache.TryGetValue<IPAddress[]>(key, out var value) == false)
                 {
                     value = await this.LookupCoreAsync(dns, domain, cancellationToken);
