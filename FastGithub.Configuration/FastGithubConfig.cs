@@ -16,6 +16,11 @@ namespace FastGithub.Configuration
         private ConcurrentDictionary<string, DomainConfig?> domainConfigCache;
 
         /// <summary>
+        /// http代理端口
+        /// </summary>
+        public int HttpProxyPort { get; set; }
+
+        /// <summary>
         /// 回退的dns
         /// </summary>
         public IPEndPoint[] FallbackDns { get; set; }
@@ -29,6 +34,7 @@ namespace FastGithub.Configuration
         {
             var opt = options.CurrentValue;
 
+            this.HttpProxyPort = opt.HttpProxyPort;
             this.FallbackDns = ConvertToIPEndPoints(opt.FallbackDns).ToArray();
             this.domainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
@@ -42,6 +48,7 @@ namespace FastGithub.Configuration
         /// <param name="options"></param>
         private void Update(FastGithubOptions options)
         {
+            this.HttpProxyPort = options.HttpProxyPort;
             this.FallbackDns = ConvertToIPEndPoints(options.FallbackDns).ToArray();
             this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();

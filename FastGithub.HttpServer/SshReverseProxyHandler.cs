@@ -1,5 +1,4 @@
-﻿using FastGithub.Configuration;
-using FastGithub.DomainResolve;
+﻿using FastGithub.DomainResolve;
 using Microsoft.AspNetCore.Connections;
 using System.IO.Pipelines;
 using System.Net.Sockets;
@@ -33,11 +32,6 @@ namespace FastGithub.HttpServer
         public override async Task OnConnectedAsync(ConnectionContext context)
         {
             var address = await this.domainResolver.ResolveAsync(SSH_GITHUB_COM);
-            if (address == null)
-            {
-                throw new FastGithubException($"解析不到{SSH_GITHUB_COM}的IP");
-            }
-
             using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(address, SSH_OVER_HTTPS_PORT);
             var targetStream = new NetworkStream(socket, ownsSocket: false);

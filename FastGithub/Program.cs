@@ -27,7 +27,7 @@ namespace FastGithub
         {
             return Host
                 .CreateDefaultBuilder(args)
-                .UseWindowsService() 
+                .UseWindowsService()
                 .UseDefaultServiceProvider(c =>
                 {
                     c.ValidateOnBuild = false;
@@ -51,15 +51,15 @@ namespace FastGithub
                     webBuilder.UseKestrel(kestrel =>
                     {
                         kestrel.NoLimit();
+                        kestrel.ListenHttpsReverseProxy();
+                        kestrel.ListenHttpReverseProxy();
+
                         if (OperatingSystem.IsWindows())
                         {
-                            kestrel.ListenHttpsReverseProxy();
-                            kestrel.ListenHttpReverseProxy();
                             kestrel.ListenSshReverseProxy();
                         }
                         else
                         {
-                            kestrel.ListenHttpsReverseProxy();
                             kestrel.ListenHttpProxy();
                         }
                     });

@@ -38,13 +38,13 @@ namespace FastGithub.DomainResolve
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IPAddress?> ResolveAsync(string domain, CancellationToken cancellationToken = default)
+        public async Task<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken = default)
         {
             await foreach (var address in this.ResolveAllAsync(domain, cancellationToken))
             {
                 return address;
             }
-            return default;
+            throw new FastGithubException($"解析不到{domain}的IP");
         }
 
         /// <summary>

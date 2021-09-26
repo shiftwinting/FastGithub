@@ -3,7 +3,6 @@ using FastGithub.DomainResolve;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Options;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
@@ -25,8 +24,9 @@ namespace FastGithub.HttpServer
         private readonly FastGithubConfig fastGithubConfig;
         private readonly IDomainResolver domainResolver;
         private readonly IHttpForwarder httpForwarder;
-        private readonly IOptions<FastGithubOptions> options;
-        private readonly HttpMessageInvoker httpClient;
+        private readonly HttpReverseProxyMiddleware httpReverseProxy;
+
+        private readonly HttpMessageInvoker defaultHttpClient;
 
         /// <summary>
         /// http代理中间件
@@ -34,18 +34,19 @@ namespace FastGithub.HttpServer
         /// <param name="fastGithubConfig"></param>
         /// <param name="domainResolver"></param>
         /// <param name="httpForwarder"></param>
-        /// <param name="options"></param>
+        /// <param name="httpReverseProxy"></param>
         public HttpProxyMiddleware(
             FastGithubConfig fastGithubConfig,
             IDomainResolver domainResolver,
             IHttpForwarder httpForwarder,
-            IOptions<FastGithubOptions> options)
+            HttpReverseProxyMiddleware httpReverseProxy)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.domainResolver = domainResolver;
             this.httpForwarder = httpForwarder;
-            this.options = options;
-            this.httpClient = new HttpMessageInvoker(CreateHttpHandler(), disposeHandler: false);
+            this.httpReverseProxy = httpReverseProxy;
+
+            this.defaultHttpClient = new HttpMessageInvoker(CreateDefaultHttpHandler(), disposeHandler: false);
         }
 
         /// <summary>
@@ -84,11 +85,13 @@ namespace FastGithub.HttpServer
             }
             else
             {
-                var destinationPrefix = $"{context.Request.Scheme}://{context.Request.Host}";
-                await this.httpForwarder.SendAsync(context, destinationPrefix, this.httpClient);
+                await this.httpReverseProxy.InvokeAsync(context, async ctx =>
+                {
+                    var destinationPrefix = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+                    await this.httpForwarder.SendAsync(ctx, destinationPrefix, this.defaultHttpClient);
+                });
             }
         }
-
 
         /// <summary>
         /// 是否为fastgithub服务
@@ -99,7 +102,7 @@ namespace FastGithub.HttpServer
         {
             if (host.Host == LOOPBACK || host.Host == LOCALHOST)
             {
-                return host.Port == this.options.Value.HttpProxyPort;
+                return host.Port == this.fastGithubConfig.HttpProxyPort;
             }
             return false;
         }
@@ -130,6 +133,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         private async Task<EndPoint> GetTargetEndPointAsync(HostString host)
         {
+            const int HTTP_PORT = 80;
             const int HTTPS_PORT = 443;
             var targetHost = host.Host;
             var targetPort = host.Port ?? HTTPS_PORT;
@@ -145,24 +149,26 @@ namespace FastGithub.HttpServer
                 return new DnsEndPoint(targetHost, targetPort);
             }
 
-            // 目标端口为443，走https代理中间人           
-            if (targetPort == HTTPS_PORT && targetHost != "ssh.github.com")
+            if (targetPort == HTTP_PORT)
+            {
+                return new IPEndPoint(IPAddress.Loopback, ReverseProxyPort.Http);
+            }
+
+            if (targetPort == HTTPS_PORT)
             {
                 return new IPEndPoint(IPAddress.Loopback, ReverseProxyPort.Https);
             }
 
-            // dns优选
+            // 不使用系统dns
             address = await this.domainResolver.ResolveAsync(targetHost);
-            return address == null
-                ? throw new FastGithubException($"解析不到{targetHost}的IP")
-                : new IPEndPoint(address, targetPort);
+            return new IPEndPoint(address, targetPort);
         }
 
         /// <summary>
         /// 创建httpHandler
         /// </summary>
         /// <returns></returns>
-        private static SocketsHttpHandler CreateHttpHandler()
+        private static SocketsHttpHandler CreateDefaultHttpHandler()
         {
             return new()
             {
