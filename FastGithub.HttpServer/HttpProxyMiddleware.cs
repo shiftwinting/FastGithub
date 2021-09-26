@@ -78,9 +78,7 @@ namespace FastGithub.HttpServer
                 if (transport != null)
                 {
                     var targetStream = new NetworkStream(targetSocket, ownsSocket: false);
-                    var task1 = targetStream.CopyToAsync(transport.Output);
-                    var task2 = transport.Input.CopyToAsync(targetStream);
-                    await Task.WhenAny(task1, task2);
+                    await Task.WhenAny(targetStream.CopyToAsync(transport.Output), transport.Input.CopyToAsync(targetStream));
                 }
             }
             else
@@ -100,9 +98,9 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         private bool IsFastGithubServer(HostString host)
         {
-            if (host.Host == LOOPBACK || host.Host == LOCALHOST)
+            if (host.Port == this.fastGithubConfig.HttpProxyPort)
             {
-                return host.Port == this.fastGithubConfig.HttpProxyPort;
+                return host.Host == LOOPBACK || host.Host == LOCALHOST;
             }
             return false;
         }
