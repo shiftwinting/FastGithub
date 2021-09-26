@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -20,9 +21,10 @@ namespace FastGithub.DomainResolve
     {
         private readonly ILogger<DnsClient> logger;
 
-        private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         private readonly TimeSpan dnsExpiration = TimeSpan.FromMinutes(2d);
+        private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
 
         /// <summary>
         /// DNS客户端
@@ -43,24 +45,30 @@ namespace FastGithub.DomainResolve
         public async Task<IPAddress[]> LookupAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
         {
             var key = $"{dns}:{domain}";
-            if (this.dnsCache.TryGetValue<IPAddress[]>(key, out var value))
-            {
-                return value;
-            }
+            var semaphore = this.semaphoreSlims.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
 
             try
             {
-                value = await this.LookupCoreAsync(dns, domain, cancellationToken);
-                this.dnsCache.Set(key, value, this.dnsExpiration);
+                await semaphore.WaitAsync(CancellationToken.None);
 
-                var items = string.Join(", ", value.Select(item => item.ToString()));
-                this.logger.LogInformation($"{dns}：{domain}->[{items}]");
+                if (this.dnsCache.TryGetValue<IPAddress[]>(key, out var value) == false)
+                {
+                    value = await this.LookupCoreAsync(dns, domain, cancellationToken);
+                    this.dnsCache.Set(key, value, this.dnsExpiration);
+
+                    var items = string.Join(", ", value.Select(item => item.ToString()));
+                    this.logger.LogInformation($"{dns}：{domain}->[{items}]");
+                }
                 return value;
             }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"{dns}无法解析{domain}：{ex.Message}");
                 return Array.Empty<IPAddress>();
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
 
