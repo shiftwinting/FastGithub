@@ -17,7 +17,7 @@ namespace FastGithub.DomainResolve
     {
         private readonly IPEndPoint dns;
         private readonly IRequestResolver resolver;
-        private readonly TimeSpan timeout = TimeSpan.FromSeconds(5d);
+        private readonly int timeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
 
         /// <summary>
         /// DNS客户端
@@ -28,7 +28,7 @@ namespace FastGithub.DomainResolve
             this.dns = dns;
             this.resolver = dns.Port == 53
                 ? new TcpRequestResolver(dns)
-                : new UdpRequestResolver(dns, new TcpRequestResolver(dns));
+                : new UdpRequestResolver(dns, new TcpRequestResolver(dns), this.timeout);
         }
 
         /// <summary>
@@ -46,10 +46,7 @@ namespace FastGithub.DomainResolve
             };
             request.Questions.Add(new Question(new Domain(domain), RecordType.A));
             var clientRequest = new ClientRequest(this.resolver, request);
-
-            using var timeoutTokenSource = new CancellationTokenSource(this.timeout);
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-            var response = await clientRequest.Resolve(linkedTokenSource.Token);
+            var response = await clientRequest.Resolve(cancellationToken);
             return response.AnswerRecords.OfType<IPAddressResourceRecord>().Select(item => item.IPAddress).ToArray();
         }
 

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -74,12 +73,32 @@ namespace FastGithub.HttpServer
                 return false;
             }
 
-            if (exception is IOException ioException && ioException.InnerException is ConnectionAbortedException)
+            if (HasInnerException<ConnectionAbortedException>(exception))
             {
                 return false;
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 是否有内部异常异常
+        /// </summary>
+        /// <typeparam name="TInnerException"></typeparam>
+        /// <param name="exception"></param>
+        /// <returns></returns>
+        private static bool HasInnerException<TInnerException>(Exception exception) where TInnerException : Exception
+        {
+            var inner = exception.InnerException;
+            while (inner != null)
+            {
+                if (inner is TInnerException)
+                {
+                    return true;
+                }
+                inner = inner.InnerException;
+            }
+            return false;
         }
 
         /// <summary>

@@ -3,12 +3,13 @@ using FastGithub.DomainResolve;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace FastGithub.Http
         /// HttpClientHandler
         /// </summary>
         /// <param name="domainConfig"></param>
-        /// <param name="domainResolver"></param>
+        /// <param name="domainResolver"></param> 
         public HttpClientHandler(DomainConfig domainConfig, IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
@@ -41,27 +42,7 @@ namespace FastGithub.Http
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await this.ProcessRequestAsync(request, cancellationToken);
-                return await this.SendRequestAsync(request, cancellationToken);
-            }
-            catch (HttpRequestException ex)
-            {
-                this.InterceptRequestException(request, ex);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 处理请求
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task ProcessRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var uri = request.RequestUri;
             if (uri == null)
@@ -70,91 +51,22 @@ namespace FastGithub.Http
             }
 
             // 请求上下文信息
-            var context = new RequestContext
-            {
-                Domain = uri.Host,
-                IsHttps = uri.Scheme == Uri.UriSchemeHttps,
-                TlsSniValue = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom()
-            };
-            request.SetRequestContext(context);
+            var isHttps = uri.Scheme == Uri.UriSchemeHttps;
+            var tlsSniValue = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom();
+            request.SetRequestContext(new RequestContext(isHttps, tlsSniValue));
 
-            // 解析ip，替换https为http
-            var uriBuilder = new UriBuilder(uri)
-            {
-                Scheme = Uri.UriSchemeHttp
-            };
+            // 设置请求host，修改协议为http
+            request.Headers.Host = uri.Host;
+            request.RequestUri = new UriBuilder(uri) { Scheme = Uri.UriSchemeHttp }.Uri;
 
-            if (uri.HostNameType == UriHostNameType.Dns)
-            {
-                if (IPAddress.TryParse(this.domainConfig.IPAddress, out var address) == false)
-                {
-                    var endPoint = new DnsEndPoint(uri.Host, uri.Port);
-                    address = await this.domainResolver.ResolveAsync(endPoint, cancellationToken);
-                }
-                uriBuilder.Host = address.ToString();
-                request.Headers.Host = context.Domain;
-                context.TlsSniValue = context.TlsSniValue.WithIPAddress(address);
-            }
-            request.RequestUri = uriBuilder.Uri;
-        }
-
-        /// <summary>
-        /// 发送请求
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
             if (this.domainConfig.Timeout != null)
             {
                 using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout.Value);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                return await base.SendAsync(request, linkedTokenSource.Token);
-            }
-            else
-            {
-                return await base.SendAsync(request, cancellationToken);
-            }
-        }
-
-        /// <summary>
-        /// 拦截请求异常
-        /// 查找TimedOut的ip地址添加到黑名单
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="exception"></param>
-        private void InterceptRequestException(HttpRequestMessage request, HttpRequestException exception)
-        {
-            if (request.RequestUri == null || IsTimedOutSocketError(exception) == false)
-            {
-                return;
+                return base.SendAsync(request, linkedTokenSource.Token);
             }
 
-            if (IPAddress.TryParse(request.RequestUri.Host, out var address))
-            {
-                this.domainResolver.SetDisabled(address);
-            }
-
-            if (request.Headers.Host != null)
-            {
-                this.domainResolver.FlushDomain(new DnsEndPoint(request.Headers.Host, request.RequestUri.Port));
-            }
-
-
-            static bool IsTimedOutSocketError(HttpRequestException exception)
-            {
-                var inner = exception.InnerException;
-                while (inner != null)
-                {
-                    if (inner is SocketException socketException && socketException.SocketErrorCode == SocketError.TimedOut)
-                    {
-                        return true;
-                    }
-                    inner = inner.InnerException;
-                }
-                return false;
-            }
+            return base.SendAsync(request, cancellationToken);
         }
 
         /// <summary>
@@ -170,46 +82,104 @@ namespace FastGithub.Http
                 UseCookies = false,
                 AllowAutoRedirect = false,
                 AutomaticDecompression = DecompressionMethods.None,
-                ConnectCallback = async (context, cancellationToken) =>
-                {
-                    var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                    await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
-                    var stream = new NetworkStream(socket, ownsSocket: true);
-
-                    var requestContext = context.InitialRequestMessage.GetRequestContext();
-                    if (requestContext.IsHttps == false)
-                    {
-                        return stream;
-                    }
-
-                    var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
-                    await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
-                    {
-                        EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
-                        TargetHost = requestContext.TlsSniValue.Value,
-                        RemoteCertificateValidationCallback = ValidateServerCertificate
-                    }, cancellationToken);
-                    return sslStream;
-
-
-                    bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
-                    {
-                        if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
-                        {
-                            if (this.domainConfig.TlsIgnoreNameMismatch == true)
-                            {
-                                return true;
-                            }
-
-                            var domain = requestContext.Domain;
-                            var dnsNames = ReadDnsNames(cert);
-                            return dnsNames.Any(dns => IsMatch(dns, domain));
-                        }
-
-                        return errors == SslPolicyErrors.None;
-                    }
-                }
+                ConnectCallback = this.ConnectCallback
             };
+        }
+
+        /// <summary>
+        /// 连接回调
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async ValueTask<Stream> ConnectCallback(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
+        {
+            var innerExceptions = new List<Exception>();
+            var ipEndPoints = this.GetIPEndPointsAsync(context.DnsEndPoint, cancellationToken);
+
+            await foreach (var ipEndPoint in ipEndPoints)
+            {
+                try
+                {
+                    return await this.ConnectAsync(context, ipEndPoint, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    innerExceptions.Add(ex);
+                }
+            }
+
+            throw new AggregateException("没有可连接成功的IP", innerExceptions);
+        }
+
+        /// <summary>
+        /// 建立连接
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="ipEndPoint"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async ValueTask<Stream> ConnectAsync(SocketsHttpConnectionContext context, IPEndPoint ipEndPoint, CancellationToken cancellationToken)
+        {
+            var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            await socket.ConnectAsync(ipEndPoint, cancellationToken);
+            var stream = new NetworkStream(socket, ownsSocket: true);
+
+            var requestContext = context.InitialRequestMessage.GetRequestContext();
+            if (requestContext.IsHttps == false)
+            {
+                return stream;
+            }
+
+            var tlsSniValue = requestContext.TlsSniValue.WithIPAddress(ipEndPoint.Address);
+            var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
+            await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+            {
+                TargetHost = tlsSniValue.Value,
+                RemoteCertificateValidationCallback = ValidateServerCertificate
+            }, cancellationToken);
+
+            return sslStream;
+
+            // 验证证书有效性
+            bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
+            {
+                if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
+                {
+                    if (this.domainConfig.TlsIgnoreNameMismatch == true)
+                    {
+                        return true;
+                    }
+
+                    var domain = context.DnsEndPoint.Host;
+                    var dnsNames = ReadDnsNames(cert);
+                    return dnsNames.Any(dns => IsMatch(dns, domain));
+                }
+
+                return errors == SslPolicyErrors.None;
+            }
+        }
+
+        /// <summary>
+        /// 解析为IPEndPoint
+        /// </summary>
+        /// <param name="dnsEndPoint"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async IAsyncEnumerable<IPEndPoint> GetIPEndPointsAsync(DnsEndPoint dnsEndPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            if (IPAddress.TryParse(this.domainConfig.IPAddress, out var address) ||
+                IPAddress.TryParse(dnsEndPoint.Host, out address))
+            {
+                yield return new IPEndPoint(address, dnsEndPoint.Port);
+            }
+            else
+            {
+                await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint.Host, cancellationToken))
+                {
+                    yield return new IPEndPoint(item, dnsEndPoint.Port);
+                }
+            }
         }
 
         /// <summary>
