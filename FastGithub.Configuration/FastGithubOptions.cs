@@ -11,7 +11,7 @@ namespace FastGithub.Configuration
         /// <summary>
         /// http代理端口
         /// </summary>
-        public int HttpProxyPort { get; set; }
+        public int HttpProxyPort { get; set; } = 38457;
 
         /// <summary>
         /// 回退的dns
