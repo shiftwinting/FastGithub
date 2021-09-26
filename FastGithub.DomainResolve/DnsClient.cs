@@ -19,6 +19,8 @@ namespace FastGithub.DomainResolve
     /// </summary>
     sealed class DnsClient
     {
+        private const int DNS_PORT = 53;
+        private const string LOCALHOST = "localhost";
         private readonly ILogger<DnsClient> logger;
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
@@ -56,13 +58,13 @@ namespace FastGithub.DomainResolve
                     this.dnsCache.Set(key, value, this.dnsExpiration);
 
                     var items = string.Join(", ", value.Select(item => item.ToString()));
-                    this.logger.LogInformation($"{dns}：{domain}->[{items}]");
+                    this.logger.LogInformation($"dns://{dns}：{domain}->[{items}]");
                 }
                 return value;
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"{dns}无法解析{domain}：{ex.Message}");
+                this.logger.LogWarning($"dns://{dns}无法解析{domain}：{ex.Message}");
                 return Array.Empty<IPAddress>();
             }
             finally
@@ -80,12 +82,12 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private async Task<IPAddress[]> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
         {
-            if (domain == "localhost")
+            if (domain == LOCALHOST)
             {
                 return new[] { IPAddress.Loopback };
             }
 
-            var resolver = dns.Port == 53
+            var resolver = dns.Port == DNS_PORT
                 ? (IRequestResolver)new TcpRequestResolver(dns)
                 : new UdpRequestResolver(dns, new TcpRequestResolver(dns), this.resolveTimeout);
 
