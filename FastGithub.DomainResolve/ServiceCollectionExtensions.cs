@@ -15,7 +15,8 @@ namespace FastGithub
         /// <param name="services"></param> 
         /// <returns></returns>
         public static IServiceCollection AddDomainResolve(this IServiceCollection services)
-        { 
+        {
+            services.TryAddSingleton<DnsClient>();
             services.TryAddSingleton<DnscryptProxy>();
             services.TryAddSingleton<IDomainResolver, DomainResolver>();
             return services.AddHostedService<DnscryptProxyHostedService>();

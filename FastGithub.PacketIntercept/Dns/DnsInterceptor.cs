@@ -164,7 +164,6 @@ namespace FastGithub.PacketIntercept.Dns
 
             winDivertAddress.Impostor = true;
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-            this.logger.LogInformation($"{domain} => {IPAddress.Loopback}");
         }
 
 

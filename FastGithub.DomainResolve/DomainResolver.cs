@@ -1,11 +1,9 @@
 ﻿using FastGithub.Configuration;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -21,7 +19,7 @@ namespace FastGithub.DomainResolve
     {
         private readonly DnscryptProxy dnscryptProxy;
         private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<DomainResolver> logger;
+        private readonly DnsClient dnsClient;
 
         private readonly ConcurrentDictionary<IPEndPoint, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache ipEndPointAvailableCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
@@ -33,33 +31,33 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="dnscryptProxy"></param>
         /// <param name="fastGithubConfig"></param>
-        /// <param name="logger"></param>
+        /// <param name="dnsClient"></param>
         public DomainResolver(
             DnscryptProxy dnscryptProxy,
             FastGithubConfig fastGithubConfig,
-            ILogger<DomainResolver> logger)
+            DnsClient dnsClient)
         {
             this.dnscryptProxy = dnscryptProxy;
             this.fastGithubConfig = fastGithubConfig;
-            this.logger = logger;
+            this.dnsClient = dnsClient;
         }
 
         /// <summary>
-        /// 解析域名
+        /// 解析可用的ip
         /// </summary>
-        /// <param name="domain"></param>
+        /// <param name="endPoint">远程节点</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IPAddress> ResolveAsync(DnsEndPoint domain, CancellationToken cancellationToken)
+        public async Task<IPAddress> ResolveAsync(DnsEndPoint endPoint, CancellationToken cancellationToken = default)
         {
-            await foreach (var address in this.ResolveAsync(domain.Host, cancellationToken))
+            await foreach (var address in this.ResolveAsync(endPoint.Host, cancellationToken))
             {
-                if (await this.IsAvailableAsync(new IPEndPoint(address, domain.Port), cancellationToken))
+                if (await this.IsAvailableAsync(new IPEndPoint(address, endPoint.Port), cancellationToken))
                 {
                     return address;
                 }
             }
-            throw new FastGithubException($"解析不到{domain.Host}可用的IP");
+            throw new FastGithubException($"解析不到{endPoint.Host}可用的IP");
         }
 
         /// <summary>
@@ -112,30 +110,10 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            if (domain == "localhost")
-            {
-                yield return IPAddress.Loopback;
-                yield break;
-            }
-
             var hashSet = new HashSet<IPAddress>();
-            var cryptDns = this.dnscryptProxy.LocalEndPoint;
-            if (cryptDns != null)
+            foreach (var dns in this.GetDnsServers())
             {
-                var dnsClient = new DnsClient(cryptDns);
-                foreach (var address in await this.LookupAsync(dnsClient, domain, cancellationToken))
-                {
-                    if (hashSet.Add(address) == true)
-                    {
-                        yield return address;
-                    }
-                }
-            }
-
-            foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
-            {
-                var dnsClient = new DnsClient(fallbackDns);
-                foreach (var address in await this.LookupAsync(dnsClient, domain, cancellationToken))
+                foreach (var address in await this.dnsClient.LookupAsync(dns, domain, cancellationToken))
                 {
                     if (hashSet.Add(address) == true)
                     {
@@ -146,26 +124,20 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 查找ip
+        /// 获取dns服务
         /// </summary>
-        /// <param name="dnsClient"></param>
-        /// <param name="domain"></param>
-        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress[]> LookupAsync(DnsClient dnsClient, string domain, CancellationToken cancellationToken)
+        private IEnumerable<IPEndPoint> GetDnsServers()
         {
-            try
+            var cryptDns = this.dnscryptProxy.LocalEndPoint;
+            if (cryptDns != null)
             {
-                var addresses = await dnsClient.LookupAsync(domain, cancellationToken);
-                var items = string.Join(", ", addresses.Select(item => item.ToString()));
-                this.logger.LogInformation($"{dnsClient}：{domain}->[{items}]");
-                return addresses;
+                yield return cryptDns;
             }
-            catch (Exception ex)
+
+            foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                this.logger.LogWarning($"{dnsClient}无法解析{domain}：{ex.Message}");
-                return Array.Empty<IPAddress>();
+                yield return fallbackDns;
             }
         }
     }
