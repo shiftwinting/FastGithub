@@ -23,6 +23,7 @@ namespace FastGithub.Http
     {
         private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
+        private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
 
         /// <summary>
         /// HttpClientHandler
@@ -101,7 +102,14 @@ namespace FastGithub.Http
             {
                 try
                 {
-                    return await this.ConnectAsync(context, ipEndPoint, cancellationToken);
+                    using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
+                    using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, cancellationToken);
+                    return await this.ConnectAsync(context, ipEndPoint, linkedTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    innerExceptions.Add(new SocketException((int)SocketError.TimedOut));
                 }
                 catch (Exception ex)
                 {
