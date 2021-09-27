@@ -1,10 +1,10 @@
 ﻿using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
 using FastGithub.Configuration;
+using FastGithub.WinDiverts;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -13,7 +13,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using WinDivertSharp;
 
 namespace FastGithub.PacketIntercept.Dns
 {
@@ -146,21 +145,21 @@ namespace FastGithub.PacketIntercept.Dns
                 var destAddress = packet.IPv4Header->DstAddr;
                 packet.IPv4Header->DstAddr = packet.IPv4Header->SrcAddr;
                 packet.IPv4Header->SrcAddr = destAddress;
-                packet.IPv4Header->Length = BinaryPrimitives.ReverseEndianness((ushort)packetLength);
+                packet.IPv4Header->Length = (ushort)packetLength;
             }
             else
             {
                 var destAddress = packet.IPv6Header->DstAddr;
                 packet.IPv6Header->DstAddr = packet.IPv6Header->SrcAddr;
                 packet.IPv6Header->SrcAddr = destAddress;
-                packet.IPv6Header->Length = BinaryPrimitives.ReverseEndianness((ushort)packetLength);
+                packet.IPv6Header->Length = (ushort)packetLength;
             }
 
             // 修改udp包
             var destPort = packet.UdpHeader->DstPort;
             packet.UdpHeader->DstPort = packet.UdpHeader->SrcPort;
             packet.UdpHeader->SrcPort = destPort;
-            packet.UdpHeader->Length = BinaryPrimitives.ReverseEndianness((ushort)(sizeof(UdpHeader) + responsePayload.Length));
+            packet.UdpHeader->Length = (ushort)(sizeof(UdpHeader) + responsePayload.Length);
 
             winDivertAddress.Impostor = true;
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);

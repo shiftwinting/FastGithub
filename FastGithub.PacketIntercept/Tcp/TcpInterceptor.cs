@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FastGithub.WinDiverts;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Net;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using WinDivertSharp;
 
 namespace FastGithub.PacketIntercept.Tcp
 {
@@ -30,8 +29,8 @@ namespace FastGithub.PacketIntercept.Tcp
         public TcpInterceptor(int oldServerPort, int newServerPort, ILogger logger)
         {
             this.filter = $"loopback and (tcp.DstPort == {oldServerPort} or tcp.SrcPort == {newServerPort})";
-            this.oldServerPort = BinaryPrimitives.ReverseEndianness((ushort)oldServerPort);
-            this.newServerPort = BinaryPrimitives.ReverseEndianness((ushort)newServerPort);
+            this.oldServerPort = (ushort)oldServerPort;
+            this.newServerPort = (ushort)newServerPort;
             this.logger = logger;
         }
 
@@ -55,7 +54,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 throw new Win32Exception();
             }
 
-            this.logger.LogInformation($"tcp://{IPAddress.Loopback}:{BinaryPrimitives.ReverseEndianness(this.oldServerPort)} => tcp://{IPAddress.Loopback}:{BinaryPrimitives.ReverseEndianness(this.newServerPort)}");
+            this.logger.LogInformation($"tcp://{IPAddress.Loopback}:{this.oldServerPort} => tcp://{IPAddress.Loopback}:{this.newServerPort}");
             cancellationToken.Register(hwnd => WinDivert.WinDivertClose((IntPtr)hwnd!), handle);
 
             var packetLength = 0U;
