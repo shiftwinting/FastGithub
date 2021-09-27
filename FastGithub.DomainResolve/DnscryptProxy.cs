@@ -40,7 +40,9 @@ namespace FastGithub.DomainResolve
             var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
             var port = GetAvailablePort(IPAddress.Loopback.AddressFamily);
             var localEndPoint = new IPEndPoint(IPAddress.Loopback, port);
+
             await TomlUtil.SetListensAsync(tomlPath, localEndPoint, cancellationToken);
+            await TomlUtil.SetEdnsClientSubnetAsync(tomlPath, cancellationToken);
 
             foreach (var process in Process.GetProcessesByName(NAME))
             {
