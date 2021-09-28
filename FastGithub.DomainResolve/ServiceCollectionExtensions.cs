@@ -18,8 +18,10 @@ namespace FastGithub
         {
             services.TryAddSingleton<DnsClient>();
             services.TryAddSingleton<DnscryptProxy>();
+            services.TryAddSingleton<DomainSpeedTester>();
             services.TryAddSingleton<IDomainResolver, DomainResolver>();
-            return services.AddHostedService<DnscryptProxyHostedService>();
+            services.AddHostedService<DomainResolveHostedService>();
+            return services;
         }
     }
 }

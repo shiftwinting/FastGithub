@@ -12,24 +12,20 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
-        private readonly DnscryptProxy dnscryptProxy;
-        private readonly FastGithubConfig fastGithubConfig;
         private readonly DnsClient dnsClient;
+        private readonly DomainSpeedTester speedTester;
 
         /// <summary>
         /// 域名解析器
         /// </summary>
-        /// <param name="dnscryptProxy"></param>
-        /// <param name="fastGithubConfig"></param>
         /// <param name="dnsClient"></param>
+        /// <param name="speedTester"></param>
         public DomainResolver(
-            DnscryptProxy dnscryptProxy,
-            FastGithubConfig fastGithubConfig,
-            DnsClient dnsClient)
+            DnsClient dnsClient,
+            DomainSpeedTester speedTester)
         {
-            this.dnscryptProxy = dnscryptProxy;
-            this.fastGithubConfig = fastGithubConfig;
             this.dnsClient = dnsClient;
+            this.speedTester = speedTester;
         }
 
         /// <summary>
@@ -55,35 +51,21 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAllAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var hashSet = new HashSet<IPAddress>();
-            foreach (var dns in this.GetDnsServers())
+            var addresses = this.speedTester.GetIPAddresses(domain);
+            if (addresses.Length > 0)
             {
-                foreach (var address in await this.dnsClient.LookupAsync(dns, domain, cancellationToken))
+                foreach (var address in addresses)
                 {
-                    if (hashSet.Add(address) == true)
-                    {
-                        yield return address;
-                    }
+                    yield return address;
                 }
             }
-        }
-
-        /// <summary>
-        /// 获取dns服务
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerable<IPEndPoint> GetDnsServers()
-        {
-            var cryptDns = this.dnscryptProxy.LocalEndPoint;
-            if (cryptDns != null)
+            else
             {
-                yield return cryptDns;
-                yield return cryptDns;
-            }
-
-            foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
-            {
-                yield return fallbackDns;
+                this.speedTester.Add(domain);
+                await foreach (var address in this.dnsClient.ResolveAsync(domain, cancellationToken))
+                {
+                    yield return address;
+                }
             }
         }
     }

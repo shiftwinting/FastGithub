@@ -1,4 +1,5 @@
 ﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,6 +21,8 @@ namespace FastGithub.DomainResolve
         private const string PATH = "dnscrypt-proxy";
         private const string NAME = "dnscrypt-proxy";
 
+        private readonly ILogger<DnscryptProxy> logger;
+
         /// <summary>
         /// 相关进程
         /// </summary>
@@ -31,11 +34,37 @@ namespace FastGithub.DomainResolve
         public IPEndPoint? LocalEndPoint { get; private set; }
 
         /// <summary>
+        /// DnscryptProxy服务
+        /// </summary>
+        /// <param name="logger"></param>
+        public DnscryptProxy(ILogger<DnscryptProxy> logger)
+        {
+            this.logger = logger;
+        }
+
+        /// <summary>
         /// 启动dnscrypt-proxy
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await this.StartCoreAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"{NAME}启动失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 启动dnscrypt-proxy
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task StartCoreAsync(CancellationToken cancellationToken)
         {
             var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
             var port = GetAvailablePort(IPAddress.Loopback.AddressFamily);
@@ -70,7 +99,32 @@ namespace FastGithub.DomainResolve
             }
         }
 
-
+        /// <summary>
+        /// 停止服务
+        /// </summary>
+        public void Stop()
+        {
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    StartDnscryptProxy("-service stop")?.WaitForExit();
+                    StartDnscryptProxy("-service uninstall")?.WaitForExit();
+                }
+                if (this.process != null && this.process.HasExited == false)
+                {
+                    this.process.Kill();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"{NAME}停止失败：{ex.Message }");
+            }
+            finally
+            {
+                this.LocalEndPoint = null;
+            }
+        }
 
         /// <summary>
         /// 获取可用的随机端口
@@ -110,24 +164,6 @@ namespace FastGithub.DomainResolve
         /// <param name="e"></param>
         private void Process_Exited(object? sender, EventArgs e)
         {
-            this.LocalEndPoint = null;
-        }
-
-        /// <summary>
-        /// 停止dnscrypt-proxy
-        /// </summary>
-        public void Stop()
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                StartDnscryptProxy("-service stop")?.WaitForExit();
-                StartDnscryptProxy("-service uninstall")?.WaitForExit();
-            }
-
-            if (this.process != null && this.process.HasExited == false)
-            {
-                this.process.Kill();
-            }
             this.LocalEndPoint = null;
         }
 

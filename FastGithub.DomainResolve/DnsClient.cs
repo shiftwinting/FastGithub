@@ -2,13 +2,16 @@
 using DNS.Client.RequestResolver;
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
+using FastGithub.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,20 +24,70 @@ namespace FastGithub.DomainResolve
     {
         private const int DNS_PORT = 53;
         private const string LOCALHOST = "localhost";
+
+        private readonly DnscryptProxy dnscryptProxy;
+        private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsClient> logger;
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-        private readonly TimeSpan dnsExpiration = TimeSpan.FromMinutes(2d);
+        private readonly TimeSpan dnsExpiration = TimeSpan.FromMinutes(1d);
         private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
 
         /// <summary>
         /// DNS客户端
-        /// </summary> 
+        /// </summary>
+        /// <param name="dnscryptProxy"></param>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
-        public DnsClient(ILogger<DnsClient> logger)
+        public DnsClient(
+            DnscryptProxy dnscryptProxy,
+            FastGithubConfig fastGithubConfig,
+            ILogger<DnsClient> logger)
         {
+            this.dnscryptProxy = dnscryptProxy;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
+        }
+
+        /// <summary>
+        /// 解析域名
+        /// </summary>
+        /// <param name="domain">域名</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var hashSet = new HashSet<IPAddress>();
+            foreach (var dns in this.GetDnsServers())
+            {
+                foreach (var address in await this.LookupAsync(dns, domain, cancellationToken))
+                {
+                    if (hashSet.Add(address) == true)
+                    {
+                        yield return address;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获取dns服务
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerable<IPEndPoint> GetDnsServers()
+        {
+            var cryptDns = this.dnscryptProxy.LocalEndPoint;
+            if (cryptDns != null)
+            {
+                yield return cryptDns;
+                yield return cryptDns;
+            }
+
+            foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
+            {
+                yield return fallbackDns;
+            }
         }
 
         /// <summary>
@@ -44,7 +97,7 @@ namespace FastGithub.DomainResolve
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IPAddress[]> LookupAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
+        private async Task<IPAddress[]> LookupAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
         {
             var key = $"{dns}:{domain}";
             var semaphore = this.semaphoreSlims.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
@@ -96,10 +149,16 @@ namespace FastGithub.DomainResolve
                 RecursionDesired = true,
                 OperationCode = OperationCode.Query
             };
+
             request.Questions.Add(new Question(new Domain(domain), RecordType.A));
             var clientRequest = new ClientRequest(resolver, request);
             var response = await clientRequest.Resolve(cancellationToken);
-            return response.AnswerRecords.OfType<IPAddressResourceRecord>().Select(item => item.IPAddress).ToArray();
+
+            return response.AnswerRecords
+                .OfType<IPAddressResourceRecord>()
+                .Where(item => IPAddress.IsLoopback(item.IPAddress) == false)
+                .Select(item => item.IPAddress)
+                .ToArray();
         }
     }
 }
