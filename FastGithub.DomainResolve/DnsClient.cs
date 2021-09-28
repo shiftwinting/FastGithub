@@ -81,7 +81,6 @@ namespace FastGithub.DomainResolve
             if (cryptDns != null)
             {
                 yield return cryptDns;
-                yield return cryptDns;
             }
 
             foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
@@ -109,9 +108,6 @@ namespace FastGithub.DomainResolve
                 {
                     value = await this.LookupCoreAsync(dns, domain, cancellationToken);
                     this.dnsCache.Set(key, value, this.dnsExpiration);
-
-                    var items = string.Join(", ", value.Select(item => item.ToString()));
-                    this.logger.LogInformation($"dns://{dns}：{domain}->[{items}]");
                 }
                 return value;
             }

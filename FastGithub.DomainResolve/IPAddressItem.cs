@@ -1,34 +1,54 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
 namespace FastGithub.DomainResolve
 {
+    /// <summary>
+    /// IP地址项
+    /// </summary>
+    [DebuggerDisplay("Address = {Address}, PingElapsed = {PingElapsed}")]
     sealed class IPAddressItem : IEquatable<IPAddressItem>
     {
+        private readonly Ping ping = new();
+
+        /// <summary>
+        /// 地址
+        /// </summary>
         public IPAddress Address { get; }
 
-        public TimeSpan Elapsed { get; private set; } = TimeSpan.MaxValue;
+        /// <summary>
+        /// Ping耗时
+        /// </summary>
+        public TimeSpan PingElapsed { get; private set; } = TimeSpan.MaxValue;
 
+        /// <summary>
+        /// IP地址项
+        /// </summary>
+        /// <param name="address"></param>
         public IPAddressItem(IPAddress address)
         {
             this.Address = address;
         }
 
-        public async Task TestSpeedAsync()
+        /// <summary>
+        /// 发起ping请求
+        /// </summary>
+        /// <returns></returns>
+        public async Task PingAsync()
         {
             try
             {
-                using var ping = new Ping();
-                var reply = await ping.SendPingAsync(this.Address);
-                this.Elapsed = reply.Status == IPStatus.Success
+                var reply = await this.ping.SendPingAsync(this.Address);
+                this.PingElapsed = reply.Status == IPStatus.Success
                     ? TimeSpan.FromMilliseconds(reply.RoundtripTime)
                     : TimeSpan.MaxValue;
             }
             catch (Exception)
             {
-                this.Elapsed = TimeSpan.MaxValue;
+                this.PingElapsed = TimeSpan.MaxValue;
             }
         }
 
