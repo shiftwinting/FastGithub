@@ -2,9 +2,11 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,20 +108,42 @@ namespace FastGithub.DomainResolve
             File.WriteAllBytes(DOMAINS_JSON_FILE, utf8Json);
         }
 
+
         /// <summary>
-        /// 获取测试后排序的IP
+        /// 尝试获取测试后排序的IP地址
         /// </summary>
         /// <param name="domain"></param>
+        /// <param name="addresses"></param>
         /// <returns></returns>
-        public IPAddress[] GetIPAddresses(string domain)
+        public bool TryGetOrderAllIPAddresses(string domain, [MaybeNullWhen(false)] out IPAddress[] addresses)
         {
             lock (this.syncRoot)
             {
                 if (this.domainIPAddressHashSet.TryGetValue(domain, out var hashSet) && hashSet.Count > 0)
                 {
-                    return hashSet.ToArray().OrderBy(item => item.PingElapsed).Select(item => item.Address).ToArray();
+                    addresses = hashSet.ToArray().OrderBy(item => item.PingElapsed).Select(item => item.Address).ToArray();
+                    return true;
                 }
-                return Array.Empty<IPAddress>();
+            }
+
+            addresses = default;
+            return false;
+        }
+
+        /// <summary>
+        /// 获取只排序头个元素的IP地址
+        /// </summary>
+        /// <param name="domain">域名</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async IAsyncEnumerable<IPAddress> GetOrderAnyIPAddressAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await foreach (var addresses in this.dnsClient.ResolveAsync(domain, cancellationToken))
+            {
+                foreach (var address in addresses)
+                {
+                    yield return address;
+                }
             }
         }
 
@@ -140,9 +164,12 @@ namespace FastGithub.DomainResolve
             {
                 var domain = keyValue.Key;
                 var hashSet = keyValue.Value;
-                await foreach (var address in this.dnsClient.ResolveAsync(domain, cancellationToken))
+                await foreach (var addresses in this.dnsClient.ResolveAsync(domain, cancellationToken))
                 {
-                    hashSet.Add(new IPAddressItem(address));
+                    foreach (var address in addresses)
+                    {
+                        hashSet.Add(new IPAddressItem(address));
+                    }
                 }
                 await hashSet.PingAllAsync();
             }

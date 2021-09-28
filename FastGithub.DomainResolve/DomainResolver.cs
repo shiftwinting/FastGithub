@@ -12,19 +12,14 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
-        private readonly DnsClient dnsClient;
         private readonly DomainSpeedTester speedTester;
 
         /// <summary>
         /// 域名解析器
-        /// </summary>
-        /// <param name="dnsClient"></param>
+        /// </summary> 
         /// <param name="speedTester"></param>
-        public DomainResolver(
-            DnsClient dnsClient,
-            DomainSpeedTester speedTester)
+        public DomainResolver(DomainSpeedTester speedTester)
         {
-            this.dnsClient = dnsClient;
             this.speedTester = speedTester;
         }
 
@@ -51,8 +46,7 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAllAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var addresses = this.speedTester.GetIPAddresses(domain);
-            if (addresses.Length > 0)
+            if (this.speedTester.TryGetOrderAllIPAddresses(domain, out var addresses))
             {
                 foreach (var address in addresses)
                 {
@@ -62,7 +56,7 @@ namespace FastGithub.DomainResolve
             else
             {
                 this.speedTester.Add(domain);
-                await foreach (var address in this.dnsClient.ResolveAsync(domain, cancellationToken))
+                await foreach (var address in this.speedTester.GetOrderAnyIPAddressAsync(domain, cancellationToken))
                 {
                     yield return address;
                 }

@@ -56,12 +56,22 @@ namespace FastGithub.DomainResolve
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IPAddress[]> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<IPAddress>();
             foreach (var dns in this.GetDnsServers())
             {
-                foreach (var address in await this.LookupAsync(dns, domain, cancellationToken))
+                var addresses = await this.LookupAsync(dns, domain, cancellationToken);
+                var value = Filter(hashSet, addresses).ToArray();
+                if (value.Length > 0)
+                {
+                    yield return value;
+                }
+            }
+
+            static IEnumerable<IPAddress> Filter(HashSet<IPAddress> hashSet, IPAddress[] addresses)
+            {
+                foreach (var address in addresses)
                 {
                     if (hashSet.Add(address) == true)
                     {
@@ -70,6 +80,7 @@ namespace FastGithub.DomainResolve
                 }
             }
         }
+
 
         /// <summary>
         /// 获取dns服务
