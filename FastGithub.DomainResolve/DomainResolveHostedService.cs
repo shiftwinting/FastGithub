@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace FastGithub.DomainResolve
     {
         private readonly DnscryptProxy dnscryptProxy;
         private readonly DomainSpeedTester speedTester;
-        private readonly ILogger<DomainResolveHostedService> logger;
 
         private readonly TimeSpan speedTestDueTime = TimeSpan.FromSeconds(10d);
         private readonly TimeSpan speedTestPeriod = TimeSpan.FromMinutes(2d);
@@ -22,29 +20,14 @@ namespace FastGithub.DomainResolve
         /// 域名解析后台服务
         /// </summary>
         /// <param name="dnscryptProxy"></param>
-        /// <param name="speedTester"></param>
-        /// <param name="logger"></param>
+        /// <param name="speedTester"></param> 
         public DomainResolveHostedService(
             DnscryptProxy dnscryptProxy,
-            DomainSpeedTester speedTester,
-            ILogger<DomainResolveHostedService> logger)
+            DomainSpeedTester speedTester)
         {
             this.dnscryptProxy = dnscryptProxy;
             this.speedTester = speedTester;
-            this.logger = logger;
-        }
-
-        /// <summary>
-        /// 停止时
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            await this.speedTester.SaveDomainsAsync();
-            this.dnscryptProxy.Stop();
-            await base.StopAsync(cancellationToken);
-        }
+        } 
 
         /// <summary>
         /// 后台任务
@@ -53,17 +36,9 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
-            {
-                await this.dnscryptProxy.StartAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"{this.dnscryptProxy}启动失败：{ex.Message}");
-            }
-
+            await this.dnscryptProxy.StartAsync(stoppingToken);
             await Task.Delay(this.speedTestDueTime, stoppingToken);
-            await this.speedTester.LoadDomainsAsync(stoppingToken);
+
             while (stoppingToken.IsCancellationRequested == false)
             {
                 await this.speedTester.TestSpeedAsync(stoppingToken);

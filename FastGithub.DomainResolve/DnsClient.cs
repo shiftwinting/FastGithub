@@ -145,10 +145,16 @@ namespace FastGithub.DomainResolve
                 RecursionDesired = true,
                 OperationCode = OperationCode.Query
             };
+
             request.Questions.Add(new Question(new Domain(domain), RecordType.A));
             var clientRequest = new ClientRequest(resolver, request);
             var response = await clientRequest.Resolve(cancellationToken);
-            return response.AnswerRecords.OfType<IPAddressResourceRecord>().Select(item => item.IPAddress).ToArray();
+
+            return response.AnswerRecords
+                .OfType<IPAddressResourceRecord>()
+                .Where(item => IPAddress.IsLoopback(item.IPAddress) == false)
+                .Select(item => item.IPAddress)
+                .ToArray();
         }
     }
 }

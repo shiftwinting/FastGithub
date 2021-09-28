@@ -1,4 +1,5 @@
 ﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,10 +14,12 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// 域名的IP测速服务
     /// </summary>
-    sealed class DomainSpeedTester
+    sealed class DomainSpeedTester : IDisposable
     {
         private const string DOMAINS_JSON_FILE = "domains.json";
+
         private readonly DnsClient dnsClient;
+        private readonly ILogger<DomainSpeedTester> logger;
 
         private readonly object syncRoot = new();
         private readonly Dictionary<string, IPAddressItemHashSet> domainIPAddressHashSet = new();
@@ -25,9 +28,45 @@ namespace FastGithub.DomainResolve
         /// 域名的IP测速服务
         /// </summary>
         /// <param name="dnsClient"></param>
-        public DomainSpeedTester(DnsClient dnsClient)
+        /// <param name="logger"></param>
+        public DomainSpeedTester(
+            DnsClient dnsClient,
+            ILogger<DomainSpeedTester> logger)
         {
             this.dnsClient = dnsClient;
+            this.logger = logger;
+
+            try
+            {
+                this.LoadDomains();
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning($"加载域名数据失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 加载域名数据
+        /// </summary> 
+        private void LoadDomains()
+        {
+            if (File.Exists(DOMAINS_JSON_FILE) == false)
+            {
+                return;
+            }
+
+            var utf8Json = File.ReadAllBytes(DOMAINS_JSON_FILE);
+            var domains = JsonSerializer.Deserialize<string[]>(utf8Json);
+            if (domains == null)
+            {
+                return;
+            }
+
+            foreach (var domain in domains)
+            {
+                this.domainIPAddressHashSet.TryAdd(domain, new IPAddressItemHashSet());
+            }
         }
 
         /// <summary>
@@ -61,58 +100,6 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 加载域名数据
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task LoadDomainsAsync(CancellationToken cancellationToken)
-        {
-            if (File.Exists(DOMAINS_JSON_FILE) == false)
-            {
-                return;
-            }
-
-            using var fileStream = File.OpenRead(DOMAINS_JSON_FILE);
-            var domains = await JsonSerializer.DeserializeAsync<string[]>(fileStream, cancellationToken: cancellationToken);
-            if (domains == null)
-            {
-                return;
-            }
-
-            lock (this.syncRoot)
-            {
-                foreach (var domain in domains)
-                {
-                    this.domainIPAddressHashSet.TryAdd(domain, new IPAddressItemHashSet());
-                }
-            }
-        }
-
-        /// <summary>
-        /// 保存域名数据
-        /// </summary>
-        /// <returns></returns>
-        public async Task<bool> SaveDomainsAsync()
-        {
-            var domains = this.domainIPAddressHashSet.Keys
-                .Select(item => new DomainPattern(item))
-                .OrderBy(item => item)
-                .Select(item => item.ToString())
-                .ToArray();
-
-            try
-            {
-                using var fileStream = File.OpenWrite(DOMAINS_JSON_FILE);
-                await JsonSerializer.SerializeAsync(fileStream, domains, new JsonSerializerOptions { WriteIndented = true });
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// 进行一轮IP测速
         /// </summary>
         /// <param name="cancellationToken"></param>
@@ -135,6 +122,36 @@ namespace FastGithub.DomainResolve
                 }
                 await hashSet.PingAllAsync();
             }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            try
+            {
+                this.SaveDomains();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"保存域名数据失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存域名
+        /// </summary>
+        private void SaveDomains()
+        {
+            var domains = this.domainIPAddressHashSet.Keys
+               .Select(item => new DomainPattern(item))
+               .OrderBy(item => item)
+               .Select(item => item.ToString())
+               .ToArray();
+
+            var utf8Json = JsonSerializer.SerializeToUtf8Bytes(domains, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllBytes(DOMAINS_JSON_FILE, utf8Json);
         }
     }
 }

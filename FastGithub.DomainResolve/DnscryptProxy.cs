@@ -1,4 +1,5 @@
 ﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,10 +16,12 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// DnscryptProxy服务
     /// </summary>
-    sealed class DnscryptProxy
+    sealed class DnscryptProxy : IDisposable
     {
         private const string PATH = "dnscrypt-proxy";
         private const string NAME = "dnscrypt-proxy";
+
+        private readonly ILogger<DnscryptProxy> logger;
 
         /// <summary>
         /// 相关进程
@@ -31,11 +34,37 @@ namespace FastGithub.DomainResolve
         public IPEndPoint? LocalEndPoint { get; private set; }
 
         /// <summary>
+        /// DnscryptProxy服务
+        /// </summary>
+        /// <param name="logger"></param>
+        public DnscryptProxy(ILogger<DnscryptProxy> logger)
+        {
+            this.logger = logger;
+        }
+
+        /// <summary>
         /// 启动dnscrypt-proxy
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await this.StartCoreAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"{NAME}启动失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 启动dnscrypt-proxy
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task StartCoreAsync(CancellationToken cancellationToken)
         {
             var tomlPath = Path.Combine(PATH, $"{NAME}.toml");
             var port = GetAvailablePort(IPAddress.Loopback.AddressFamily);
@@ -69,8 +98,6 @@ namespace FastGithub.DomainResolve
                 this.process.Exited += Process_Exited;
             }
         }
-
-
 
         /// <summary>
         /// 获取可用的随机端口
@@ -114,35 +141,6 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 停止dnscrypt-proxy
-        /// </summary>
-        /// <returns></returns>
-        public bool Stop()
-        {
-            try
-            {
-                if (OperatingSystem.IsWindows())
-                {
-                    StartDnscryptProxy("-service stop")?.WaitForExit();
-                    StartDnscryptProxy("-service uninstall")?.WaitForExit();
-                }
-                if (this.process != null && this.process.HasExited == false)
-                {
-                    this.process.Kill();
-                }
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            finally
-            {
-                this.LocalEndPoint = null;
-            }
-        }
-
-        /// <summary>
         /// 启动DnscryptProxy进程
         /// </summary>
         /// <param name="arguments"></param> 
@@ -158,6 +156,41 @@ namespace FastGithub.DomainResolve
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             });
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            try
+            {
+                this.Stop();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"{NAME}停止失败：{ex.Message }");
+            }
+            finally
+            {
+                this.LocalEndPoint = null;
+            }
+        }
+
+        /// <summary>
+        /// 停止服务
+        /// </summary>
+        private void Stop()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                StartDnscryptProxy("-service stop")?.WaitForExit();
+                StartDnscryptProxy("-service uninstall")?.WaitForExit();
+            }
+            if (this.process != null && this.process.HasExited == false)
+            {
+                this.process.Kill();
+            }
         }
 
         /// <summary>
