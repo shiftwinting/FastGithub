@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FastGithub.Configuration;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -71,7 +72,7 @@ namespace FastGithub.DomainResolve
                 return;
             }
 
-            var fileStream = File.OpenRead(DATA_FILE);
+            using var fileStream = File.OpenRead(DATA_FILE);
             var domains = await JsonSerializer.DeserializeAsync<string[]>(fileStream, cancellationToken: cancellationToken);
             if (domains == null)
             {
@@ -91,11 +92,24 @@ namespace FastGithub.DomainResolve
         /// 保存数据
         /// </summary>
         /// <returns></returns>
-        public async Task SaveDataAsync()
+        public async Task<bool> SaveDataAsync()
         {
-            var domains = this.domainIPAddressHashSet.Keys.ToArray();
-            using var fileStream = File.OpenWrite(DATA_FILE);
-            await JsonSerializer.SerializeAsync(fileStream, domains);
+            var domains = this.domainIPAddressHashSet.Keys
+                .Select(item => new DomainPattern(item))
+                .OrderBy(item => item)
+                .Select(item => item.ToString())
+                .ToArray();
+
+            try
+            {
+                using var fileStream = File.OpenWrite(DATA_FILE);
+                await JsonSerializer.SerializeAsync(fileStream, domains, new JsonSerializerOptions { WriteIndented = true });
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>

@@ -7,7 +7,7 @@ namespace FastGithub.Configuration
     /// 表示域名表达式
     /// *表示除.之外任意0到多个字符
     /// </summary>
-    sealed class DomainPattern : IComparable<DomainPattern>
+    public class DomainPattern : IComparable<DomainPattern>
     {
         private readonly Regex regex;
         private readonly string domainPattern;

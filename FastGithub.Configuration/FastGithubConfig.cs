@@ -117,9 +117,9 @@ namespace FastGithub.Configuration
         /// 获取所有域名表达式
         /// </summary>
         /// <returns></returns>
-        public string[] GetDomainPatterns()
+        public DomainPattern[] GetDomainPatterns()
         {
-            return this.domainConfigs.Keys.Select(item => item.ToString()).ToArray();
+            return this.domainConfigs.Keys.ToArray();
         }
     }
 }
