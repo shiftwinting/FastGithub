@@ -31,7 +31,7 @@ namespace FastGithub.DomainResolve
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-        private readonly TimeSpan dnsExpiration = TimeSpan.FromMinutes(2d);
+        private readonly TimeSpan dnsExpiration = TimeSpan.FromMinutes(1d);
         private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
 
         /// <summary>
@@ -108,6 +108,9 @@ namespace FastGithub.DomainResolve
                 {
                     value = await this.LookupCoreAsync(dns, domain, cancellationToken);
                     this.dnsCache.Set(key, value, this.dnsExpiration);
+
+                    var items = string.Join(", ", value.Select(item => item.ToString()));
+                    this.logger.LogInformation($"dns://{dns}：{domain}->[{items}]");
                 }
                 return value;
             }
