@@ -16,7 +16,7 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// DnscryptProxy服务
     /// </summary>
-    sealed class DnscryptProxy : IDisposable
+    sealed class DnscryptProxy
     {
         private const string PATH = "dnscrypt-proxy";
         private const string NAME = "dnscrypt-proxy";
@@ -100,6 +100,33 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
+        /// 停止服务
+        /// </summary>
+        public void Stop()
+        {
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    StartDnscryptProxy("-service stop")?.WaitForExit();
+                    StartDnscryptProxy("-service uninstall")?.WaitForExit();
+                }
+                if (this.process != null && this.process.HasExited == false)
+                {
+                    this.process.Kill();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"{NAME}停止失败：{ex.Message }");
+            }
+            finally
+            {
+                this.LocalEndPoint = null;
+            }
+        }
+
+        /// <summary>
         /// 获取可用的随机端口
         /// </summary>
         /// <param name="addressFamily"></param>
@@ -156,41 +183,6 @@ namespace FastGithub.DomainResolve
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             });
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            try
-            {
-                this.Stop();
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"{NAME}停止失败：{ex.Message }");
-            }
-            finally
-            {
-                this.LocalEndPoint = null;
-            }
-        }
-
-        /// <summary>
-        /// 停止服务
-        /// </summary>
-        private void Stop()
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                StartDnscryptProxy("-service stop")?.WaitForExit();
-                StartDnscryptProxy("-service uninstall")?.WaitForExit();
-            }
-            if (this.process != null && this.process.HasExited == false)
-            {
-                this.process.Kill();
-            }
         }
 
         /// <summary>

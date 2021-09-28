@@ -14,7 +14,7 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// 域名的IP测速服务
     /// </summary>
-    sealed class DomainSpeedTester : IDisposable
+    sealed class DomainSpeedTester
     {
         private const string DOMAINS_JSON_FILE = "domains.json";
 
@@ -73,13 +73,37 @@ namespace FastGithub.DomainResolve
         /// 添加要测速的域名
         /// </summary>
         /// <param name="domain"></param>
-        /// <returns></returns>
-        public bool Add(string domain)
+        public void Add(string domain)
         {
             lock (this.syncRoot)
             {
-                return this.domainIPAddressHashSet.TryAdd(domain, new IPAddressItemHashSet());
+                if (this.domainIPAddressHashSet.TryAdd(domain, new IPAddressItemHashSet()))
+                {
+                    try
+                    {
+                        this.SaveDomains();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning($"保存域名数据失败：{ex.Message}");
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// 保存域名
+        /// </summary>
+        private void SaveDomains()
+        {
+            var domains = this.domainIPAddressHashSet.Keys
+                .Select(item => new DomainPattern(item))
+                .OrderBy(item => item)
+                .Select(item => item.ToString())
+                .ToArray();
+
+            var utf8Json = JsonSerializer.SerializeToUtf8Bytes(domains, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllBytes(DOMAINS_JSON_FILE, utf8Json);
         }
 
         /// <summary>
@@ -122,36 +146,6 @@ namespace FastGithub.DomainResolve
                 }
                 await hashSet.PingAllAsync();
             }
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            try
-            {
-                this.SaveDomains();
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning($"保存域名数据失败：{ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 保存域名
-        /// </summary>
-        private void SaveDomains()
-        {
-            var domains = this.domainIPAddressHashSet.Keys
-               .Select(item => new DomainPattern(item))
-               .OrderBy(item => item)
-               .Select(item => item.ToString())
-               .ToArray();
-
-            var utf8Json = JsonSerializer.SerializeToUtf8Bytes(domains, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllBytes(DOMAINS_JSON_FILE, utf8Json);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace FastGithub.DomainResolve
         {
             this.dnscryptProxy = dnscryptProxy;
             this.speedTester = speedTester;
-        } 
+        }
 
         /// <summary>
         /// 后台任务
@@ -44,6 +44,17 @@ namespace FastGithub.DomainResolve
                 await this.speedTester.TestSpeedAsync(stoppingToken);
                 await Task.Delay(this.speedTestPeriod, stoppingToken);
             }
+        }
+
+        /// <summary>
+        /// 停止服务
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            this.dnscryptProxy.Stop();
+            return base.StopAsync(cancellationToken);
         }
     }
 }
