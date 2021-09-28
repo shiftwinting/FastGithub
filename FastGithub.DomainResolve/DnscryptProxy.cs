@@ -116,19 +116,30 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 停止dnscrypt-proxy
         /// </summary>
-        public void Stop()
+        /// <returns></returns>
+        public bool Stop()
         {
-            if (OperatingSystem.IsWindows())
+            try
             {
-                StartDnscryptProxy("-service stop")?.WaitForExit();
-                StartDnscryptProxy("-service uninstall")?.WaitForExit();
+                if (OperatingSystem.IsWindows())
+                {
+                    StartDnscryptProxy("-service stop")?.WaitForExit();
+                    StartDnscryptProxy("-service uninstall")?.WaitForExit();
+                }
+                if (this.process != null && this.process.HasExited == false)
+                {
+                    this.process.Kill();
+                }
+                return true;
             }
-
-            if (this.process != null && this.process.HasExited == false)
+            catch (Exception)
             {
-                this.process.Kill();
+                return false;
             }
-            this.LocalEndPoint = null;
+            finally
+            {
+                this.LocalEndPoint = null;
+            }
         }
 
         /// <summary>

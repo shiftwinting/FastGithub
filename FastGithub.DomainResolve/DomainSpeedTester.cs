@@ -13,9 +13,9 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// 域名的IP测速服务
     /// </summary>
-    sealed class DomainSpeedTestService
+    sealed class DomainSpeedTester
     {
-        private const string DATA_FILE = "domains.json";
+        private const string DOMAINS_JSON_FILE = "domains.json";
         private readonly DnsClient dnsClient;
 
         private readonly object syncRoot = new();
@@ -25,7 +25,7 @@ namespace FastGithub.DomainResolve
         /// 域名的IP测速服务
         /// </summary>
         /// <param name="dnsClient"></param>
-        public DomainSpeedTestService(DnsClient dnsClient)
+        public DomainSpeedTester(DnsClient dnsClient)
         {
             this.dnsClient = dnsClient;
         }
@@ -61,18 +61,18 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 加载数据
+        /// 加载域名数据
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task LoadDataAsync(CancellationToken cancellationToken)
+        public async Task LoadDomainsAsync(CancellationToken cancellationToken)
         {
-            if (File.Exists(DATA_FILE) == false)
+            if (File.Exists(DOMAINS_JSON_FILE) == false)
             {
                 return;
             }
 
-            using var fileStream = File.OpenRead(DATA_FILE);
+            using var fileStream = File.OpenRead(DOMAINS_JSON_FILE);
             var domains = await JsonSerializer.DeserializeAsync<string[]>(fileStream, cancellationToken: cancellationToken);
             if (domains == null)
             {
@@ -89,10 +89,10 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 保存数据
+        /// 保存域名数据
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> SaveDataAsync()
+        public async Task<bool> SaveDomainsAsync()
         {
             var domains = this.domainIPAddressHashSet.Keys
                 .Select(item => new DomainPattern(item))
@@ -102,7 +102,7 @@ namespace FastGithub.DomainResolve
 
             try
             {
-                using var fileStream = File.OpenWrite(DATA_FILE);
+                using var fileStream = File.OpenWrite(DOMAINS_JSON_FILE);
                 await JsonSerializer.SerializeAsync(fileStream, domains, new JsonSerializerOptions { WriteIndented = true });
                 return true;
             }
