@@ -15,7 +15,7 @@ namespace FastGithub.Http
         /// <summary>
         /// httpHandler的生命周期
         /// </summary>
-        private readonly TimeSpan lifeTime = TimeSpan.FromMinutes(2d);
+        private readonly TimeSpan lifeTime = TimeSpan.FromMinutes(1d);
 
         /// <summary>
         /// HttpHandler清理器

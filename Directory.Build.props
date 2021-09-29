@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<Version>2.0.2</Version>
+		<Version>2.0.3-Smooth_Switching_IPAddress</Version>
 		<Nullable>enable</Nullable>
 		<Description>github加速神器</Description>
 		<Copyright>https://github.com/dotnetcore/FastGithub</Copyright>
