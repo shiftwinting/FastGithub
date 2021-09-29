@@ -1,7 +1,6 @@
 ﻿using FastGithub.Configuration;
 using System.Collections.Generic;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,15 +11,15 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
-        private readonly DomainSpeedTester speedTester;
+        private readonly DnsClient dnsClient;
 
         /// <summary>
         /// 域名解析器
         /// </summary> 
-        /// <param name="speedTester"></param>
-        public DomainResolver(DomainSpeedTester speedTester)
+        /// <param name="dnsClient"></param>
+        public DomainResolver(DnsClient dnsClient)
         {
-            this.speedTester = speedTester;
+            this.dnsClient = dnsClient;
         }
 
         /// <summary>
@@ -29,7 +28,7 @@ namespace FastGithub.DomainResolve
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IPAddress> ResolveAsync(string domain, CancellationToken cancellationToken = default)
+        public async Task<IPAddress> ResolveAnyAsync(string domain, CancellationToken cancellationToken = default)
         {
             await foreach (var address in this.ResolveAllAsync(domain, cancellationToken))
             {
@@ -44,23 +43,9 @@ namespace FastGithub.DomainResolve
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<IPAddress> ResolveAllAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public IAsyncEnumerable<IPAddress> ResolveAllAsync(string domain, CancellationToken cancellationToken)
         {
-            if (this.speedTester.TryGetOrderAllIPAddresses(domain, out var addresses))
-            {
-                foreach (var address in addresses)
-                {
-                    yield return address;
-                }
-            }
-            else
-            {
-                this.speedTester.Add(domain);
-                await foreach (var address in this.speedTester.GetOrderAnyIPAddressAsync(domain, cancellationToken))
-                {
-                    yield return address;
-                }
-            }
+            return this.dnsClient.ResolveAsync(domain, cancellationToken);
         }
     }
 }

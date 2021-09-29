@@ -43,7 +43,7 @@ namespace FastGithub.Http
         /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var uri = request.RequestUri;
             if (uri == null)
@@ -56,18 +56,24 @@ namespace FastGithub.Http
             var tlsSniValue = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom();
             request.SetRequestContext(new RequestContext(isHttps, tlsSniValue));
 
-            // 设置请求host，修改协议为http
+            // 设置请求头host，修改协议为http，使用ip取代域名
+            var address = await this.domainResolver.ResolveAnyAsync(uri.Host, cancellationToken);
+            var uriBuilder = new UriBuilder(uri)
+            {
+                Scheme = Uri.UriSchemeHttp,
+                Host = address.ToString()
+            };
+
             request.Headers.Host = uri.Host;
-            request.RequestUri = new UriBuilder(uri) { Scheme = Uri.UriSchemeHttp }.Uri;
+            request.RequestUri = uriBuilder.Uri;
 
             if (this.domainConfig.Timeout != null)
             {
                 using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout.Value);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                return base.SendAsync(request, linkedTokenSource.Token);
+                return await base.SendAsync(request, linkedTokenSource.Token);
             }
-
-            return base.SendAsync(request, cancellationToken);
+            return await base.SendAsync(request, cancellationToken);
         }
 
         /// <summary>
@@ -96,7 +102,8 @@ namespace FastGithub.Http
         private async ValueTask<Stream> ConnectCallback(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
         {
             var innerExceptions = new List<Exception>();
-            var ipEndPoints = this.GetIPEndPointsAsync(context.DnsEndPoint, cancellationToken);
+            var dnsEndPoint = new DnsEndPoint(context.InitialRequestMessage.Headers.Host!, context.DnsEndPoint.Port);
+            var ipEndPoints = this.GetIPEndPointsAsync(dnsEndPoint, cancellationToken);
 
             await foreach (var ipEndPoint in ipEndPoints)
             {
@@ -159,7 +166,7 @@ namespace FastGithub.Http
                         return true;
                     }
 
-                    var domain = context.DnsEndPoint.Host;
+                    var domain = context.InitialRequestMessage.Headers.Host!;
                     var dnsNames = ReadDnsNames(cert);
                     return dnsNames.Any(dns => IsMatch(dns, domain));
                 }

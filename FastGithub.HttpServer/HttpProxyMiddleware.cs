@@ -158,7 +158,7 @@ namespace FastGithub.HttpServer
             }
 
             // 不使用系统dns
-            address = await this.domainResolver.ResolveAsync(targetHost);
+            address = await this.domainResolver.ResolveAnyAsync(targetHost);
             return new IPEndPoint(address, targetPort);
         }
 

@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,8 +32,10 @@ namespace FastGithub.DomainResolve
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-        private readonly TimeSpan dnsExpiration = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan defaultEmptyTtl = TimeSpan.FromSeconds(30d);
         private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
+
+        private record LookupResult(IPAddress[] Addresses, TimeSpan TimeToLive);
 
         /// <summary>
         /// DNS客户端
@@ -56,21 +59,12 @@ namespace FastGithub.DomainResolve
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<IPAddress[]> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<IPAddress>();
             foreach (var dns in this.GetDnsServers())
             {
                 var addresses = await this.LookupAsync(dns, domain, cancellationToken);
-                var value = Filter(hashSet, addresses).ToArray();
-                if (value.Length > 0)
-                {
-                    yield return value;
-                }
-            }
-
-            static IEnumerable<IPAddress> Filter(HashSet<IPAddress> hashSet, IPAddress[] addresses)
-            {
                 foreach (var address in addresses)
                 {
                     if (hashSet.Add(address) == true)
@@ -116,15 +110,18 @@ namespace FastGithub.DomainResolve
 
             try
             {
-                if (this.dnsCache.TryGetValue<IPAddress[]>(key, out var value) == false)
+                if (this.dnsCache.TryGetValue<IPAddress[]>(key, out var value))
                 {
-                    value = await this.LookupCoreAsync(dns, domain, cancellationToken);
-                    this.dnsCache.Set(key, value, this.dnsExpiration);
-
-                    var items = string.Join(", ", value.Select(item => item.ToString()));
-                    this.logger.LogInformation($"dns://{dns}：{domain}->[{items}]");
+                    return value;
                 }
-                return value;
+
+                var result = await this.LookupCoreAsync(dns, domain, cancellationToken);
+                this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
+
+                var items = string.Join(", ", result.Addresses.Select(item => item.ToString()));
+                this.logger.LogInformation($"dns://{dns}：{domain}->[{items}]");
+
+                return result.Addresses;
             }
             catch (Exception ex)
             {
@@ -144,11 +141,11 @@ namespace FastGithub.DomainResolve
         /// <param name="domain"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress[]> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
+        private async Task<LookupResult> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
         {
             if (domain == LOCALHOST)
             {
-                return new[] { IPAddress.Loopback };
+                return new LookupResult(new[] { IPAddress.Loopback }, TimeSpan.MaxValue);
             }
 
             var resolver = dns.Port == DNS_PORT
@@ -165,11 +162,70 @@ namespace FastGithub.DomainResolve
             var clientRequest = new ClientRequest(resolver, request);
             var response = await clientRequest.Resolve(cancellationToken);
 
-            return response.AnswerRecords
+            var addresses = response.AnswerRecords
                 .OfType<IPAddressResourceRecord>()
                 .Where(item => IPAddress.IsLoopback(item.IPAddress) == false)
                 .Select(item => item.IPAddress)
                 .ToArray();
+
+            if (addresses.Length == 0)
+            {
+                return new LookupResult(addresses, this.defaultEmptyTtl);
+            }
+
+            if (addresses.Length > 1)
+            {
+                addresses = await OrderByPingAnyAsync(addresses);
+            }
+
+            var timeToLive = response.AnswerRecords.First().TimeToLive;
+            if (timeToLive <= TimeSpan.Zero)
+            {
+                timeToLive = this.defaultEmptyTtl;
+            }
+
+            this.logger.LogWarning($"{domain} [{timeToLive}]");
+            return new LookupResult(addresses, timeToLive);
+        }
+
+        /// <summary>
+        /// ping排序
+        /// </summary>
+        /// <param name="addresses"></param>
+        /// <returns></returns>
+        private static async Task<IPAddress[]> OrderByPingAnyAsync(IPAddress[] addresses)
+        {
+            var fastedAddress = await await Task.WhenAny(addresses.Select(address => PingAsync(address)));
+            if (fastedAddress == null)
+            {
+                return addresses;
+            }
+
+            var hashSet = new HashSet<IPAddress> { fastedAddress };
+            foreach (var address in addresses)
+            {
+                hashSet.Add(address);
+            }
+            return hashSet.ToArray();
+        }
+
+        /// <summary>
+        /// ping请求
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private static async Task<IPAddress?> PingAsync(IPAddress address)
+        {
+            try
+            {
+                using var ping = new Ping();
+                var reply = await ping.SendPingAsync(address);
+                return reply.Status == IPStatus.Success ? address : default;
+            }
+            catch (Exception)
+            {
+                return default;
+            }
         }
     }
 }
