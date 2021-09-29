@@ -32,7 +32,7 @@ namespace FastGithub.Http
         /// </summary> 
         /// <param name="handler"></param>
         /// <param name="disposeHandler"></param>
-        internal HttpClient(HttpClientHandler handler, bool disposeHandler)
+        public HttpClient(HttpMessageHandler handler, bool disposeHandler)
             : base(handler, disposeHandler)
         {
         }

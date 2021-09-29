@@ -1,6 +1,6 @@
 ﻿using FastGithub.Configuration;
 using FastGithub.DomainResolve;
-using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Concurrent;
 
 namespace FastGithub.Http
@@ -11,19 +11,29 @@ namespace FastGithub.Http
     sealed class HttpClientFactory : IHttpClientFactory
     {
         private readonly IDomainResolver domainResolver;
-        private ConcurrentDictionary<DomainConfig, HttpClientHandler> domainHandlers = new();
+
+        /// <summary>
+        /// httpHandler的生命周期
+        /// </summary>
+        private readonly TimeSpan lifeTime = TimeSpan.FromMinutes(2d);
+
+        /// <summary>
+        /// HttpHandler清理器
+        /// </summary>
+        private readonly LifetimeHttpHandlerCleaner httpHandlerCleaner = new();
+
+        /// <summary>
+        /// LazyOf(LifetimeHttpHandler)缓存
+        /// </summary>
+        private readonly ConcurrentDictionary<DomainConfig, Lazy<LifetimeHttpHandler>> httpHandlerLazyCache = new();
 
         /// <summary>
         /// HttpClient工厂
         /// </summary>
         /// <param name="domainResolver"></param>
-        /// <param name="options"></param>
-        public HttpClientFactory(
-            IDomainResolver domainResolver,
-            IOptionsMonitor<FastGithubOptions> options)
+        public HttpClientFactory(IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
-            options.OnChange(opt => this.domainHandlers = new());
         }
 
         /// <summary>
@@ -33,8 +43,41 @@ namespace FastGithub.Http
         /// <returns></returns>
         public HttpClient CreateHttpClient(DomainConfig domainConfig)
         {
-            var httpClientHandler = this.domainHandlers.GetOrAdd(domainConfig, config => new HttpClientHandler(config, this.domainResolver));
-            return new HttpClient(httpClientHandler, disposeHandler: false);
+            var lifetimeHttpHandlerLazy = this.httpHandlerLazyCache.GetOrAdd(domainConfig, this.CreateLifetimeHttpHandlerLazy);
+            var lifetimeHttpHandler = lifetimeHttpHandlerLazy.Value;
+            return new HttpClient(lifetimeHttpHandler, disposeHandler: false);
+        }
+
+        /// <summary>
+        /// 创建LazyOf(LifetimeHttpHandler)
+        /// </summary>
+        /// <param name="domainConfig"></param>
+        /// <returns></returns>
+        private Lazy<LifetimeHttpHandler> CreateLifetimeHttpHandlerLazy(DomainConfig domainConfig)
+        {
+            return new Lazy<LifetimeHttpHandler>(() => this.CreateLifetimeHttpHandler(domainConfig), true);
+        }
+
+        /// <summary>
+        /// 创建LifetimeHttpHandler
+        /// </summary>
+        /// <returns></returns>
+        private LifetimeHttpHandler CreateLifetimeHttpHandler(DomainConfig domainConfig)
+        {
+            var httpClientHandler = new HttpClientHandler(domainConfig, this.domainResolver);
+            return new LifetimeHttpHandler(httpClientHandler, this.lifeTime, this.OnLifetimeHttpHandlerDeactivate);
+        }
+
+        /// <summary>
+        /// 当有httpHandler失效时
+        /// </summary>
+        /// <param name="lifetimeHttpHandler">httpHandler</param>
+        private void OnLifetimeHttpHandlerDeactivate(LifetimeHttpHandler lifetimeHttpHandler)
+        {
+            // 切换激活状态的记录的实例
+            var domainConfig = ((HttpClientHandler)lifetimeHttpHandler.InnerHandler!).DomainConfig;
+            this.httpHandlerLazyCache[domainConfig] = this.CreateLifetimeHttpHandlerLazy(domainConfig);
+            this.httpHandlerCleaner.Add(lifetimeHttpHandler);
         }
     }
 }

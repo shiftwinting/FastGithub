@@ -21,9 +21,13 @@ namespace FastGithub.Http
     /// </summary> 
     class HttpClientHandler : DelegatingHandler
     {
-        private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
+
+        /// <summary>
+        /// 获取域名配置
+        /// </summary>
+        public DomainConfig DomainConfig { get; }
 
         /// <summary>
         /// HttpClientHandler
@@ -33,7 +37,7 @@ namespace FastGithub.Http
         public HttpClientHandler(DomainConfig domainConfig, IDomainResolver domainResolver)
         {
             this.domainResolver = domainResolver;
-            this.domainConfig = domainConfig;
+            this.DomainConfig = domainConfig;
             this.InnerHandler = this.CreateSocketsHttpHandler();
         }
 
@@ -53,23 +57,16 @@ namespace FastGithub.Http
 
             // 请求上下文信息
             var isHttps = uri.Scheme == Uri.UriSchemeHttps;
-            var tlsSniValue = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom();
+            var tlsSniValue = this.DomainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom();
             request.SetRequestContext(new RequestContext(isHttps, tlsSniValue));
 
-            // 设置请求头host，修改协议为http，使用ip取代域名
-            var address = await this.domainResolver.ResolveAnyAsync(uri.Host, cancellationToken);
-            var uriBuilder = new UriBuilder(uri)
-            {
-                Scheme = Uri.UriSchemeHttp,
-                Host = address.ToString()
-            };
-
+            // 设置请求头host，修改协议为http
             request.Headers.Host = uri.Host;
-            request.RequestUri = uriBuilder.Uri;
+            request.RequestUri = new UriBuilder(uri) { Scheme = Uri.UriSchemeHttp }.Uri;
 
-            if (this.domainConfig.Timeout != null)
+            if (this.DomainConfig.Timeout != null)
             {
-                using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout.Value);
+                using var timeoutTokenSource = new CancellationTokenSource(this.DomainConfig.Timeout.Value);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
                 return await base.SendAsync(request, linkedTokenSource.Token);
             }
@@ -102,8 +99,7 @@ namespace FastGithub.Http
         private async ValueTask<Stream> ConnectCallback(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
         {
             var innerExceptions = new List<Exception>();
-            var dnsEndPoint = new DnsEndPoint(context.InitialRequestMessage.Headers.Host!, context.DnsEndPoint.Port);
-            var ipEndPoints = this.GetIPEndPointsAsync(dnsEndPoint, cancellationToken);
+            var ipEndPoints = this.GetIPEndPointsAsync(context.DnsEndPoint, cancellationToken);
 
             await foreach (var ipEndPoint in ipEndPoints)
             {
@@ -161,12 +157,12 @@ namespace FastGithub.Http
             {
                 if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
                 {
-                    if (this.domainConfig.TlsIgnoreNameMismatch == true)
+                    if (this.DomainConfig.TlsIgnoreNameMismatch == true)
                     {
                         return true;
                     }
 
-                    var domain = context.InitialRequestMessage.Headers.Host!;
+                    var domain = context.DnsEndPoint.Host;
                     var dnsNames = ReadDnsNames(cert);
                     return dnsNames.Any(dns => IsMatch(dns, domain));
                 }
@@ -183,7 +179,7 @@ namespace FastGithub.Http
         /// <returns></returns>
         private async IAsyncEnumerable<IPEndPoint> GetIPEndPointsAsync(DnsEndPoint dnsEndPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            if (IPAddress.TryParse(this.domainConfig.IPAddress, out var address) ||
+            if (IPAddress.TryParse(this.DomainConfig.IPAddress, out var address) ||
                 IPAddress.TryParse(dnsEndPoint.Host, out address))
             {
                 yield return new IPEndPoint(address, dnsEndPoint.Port);
