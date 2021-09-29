@@ -12,7 +12,7 @@ namespace FastGithub.DomainResolve
     {
         private readonly DnscryptProxy dnscryptProxy;
         private readonly DnsClient dnsClient;
-        private readonly TimeSpan pingPeriodTimeSpan = TimeSpan.FromSeconds(30d);
+        private readonly TimeSpan pingPeriodTimeSpan = TimeSpan.FromSeconds(10d);
 
         /// <summary>
         /// 域名解析后台服务
