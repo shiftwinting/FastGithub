@@ -188,6 +188,11 @@ namespace FastGithub.DomainResolve
 
                 return result.Addresses;
             }
+            catch (OperationCanceledException)
+            {
+                this.logger.LogInformation($"dns://{dns}无法解析{domain}：请求超时"); 
+                return Array.Empty<IPAddress>();
+            }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"dns://{dns}无法解析{domain}：{ex.Message}");
