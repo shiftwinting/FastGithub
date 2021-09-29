@@ -51,19 +51,12 @@ namespace FastGithub.DomainResolve
         /// Ping所有IP
         /// </summary>
         /// <returns></returns>
-        public Task PingAllAsync()
+        public async Task PingAllAsync()
         {
-            var items = this.ToItemArray();
-            if (items.Length == 0)
+            foreach (var item in this.ToItemArray())
             {
-                return Task.CompletedTask;
+                await item.PingAsync();
             }
-            if (items.Length == 1)
-            {
-                return items[0].PingAsync();
-            }
-            var tasks = items.Select(item => item.PingAsync());
-            return Task.WhenAll(tasks);
         }
 
         /// <summary>
