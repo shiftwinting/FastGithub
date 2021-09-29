@@ -82,6 +82,11 @@ namespace FastGithub.DomainResolve
         private class IPAddressItem : IEquatable<IPAddressItem>
         {
             /// <summary>
+            /// Ping的时间点
+            /// </summary>
+            private int? pingTicks;
+
+            /// <summary>
             /// 地址
             /// </summary>
             public IPAddress Address { get; }
@@ -99,13 +104,17 @@ namespace FastGithub.DomainResolve
             {
                 this.Address = address;
             }
-
             /// <summary>
             /// 发起ping请求
             /// </summary>
             /// <returns></returns>
             public async Task PingAsync()
             {
+                if (this.NeedToPing() == false)
+                {
+                    return;
+                }
+
                 try
                 {
                     using var ping = new Ping();
@@ -118,6 +127,27 @@ namespace FastGithub.DomainResolve
                 {
                     this.PingElapsed = TimeSpan.MaxValue;
                 }
+                finally
+                {
+                    this.pingTicks = Environment.TickCount;
+                }
+            }
+
+            /// <summary>
+            /// 是否需要ping
+            /// 5分钟内只ping一次
+            /// </summary>
+            /// <returns></returns>
+            private bool NeedToPing()
+            {
+                var ticks = this.pingTicks;
+                if (ticks == null)
+                {
+                    return true;
+                }
+
+                var pingTimeSpan = TimeSpan.FromMilliseconds(Environment.TickCount - ticks.Value);
+                return pingTimeSpan > TimeSpan.FromMinutes(5d);
             }
 
             public bool Equals(IPAddressItem? other)

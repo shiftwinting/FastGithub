@@ -12,7 +12,7 @@ namespace FastGithub.DomainResolve
     {
         private readonly DnscryptProxy dnscryptProxy;
         private readonly DnsClient dnsClient;
-        private readonly TimeSpan speedTestTimeSpan = TimeSpan.FromMinutes(2d);
+        private readonly TimeSpan pingPeriodTimeSpan = TimeSpan.FromSeconds(30d);
 
         /// <summary>
         /// 域名解析后台服务
@@ -38,7 +38,7 @@ namespace FastGithub.DomainResolve
             while (stoppingToken.IsCancellationRequested == false)
             {
                 await this.dnsClient.PingAllDomainsAsync(stoppingToken);
-                await Task.Delay(this.speedTestTimeSpan, stoppingToken);
+                await Task.Delay(this.pingPeriodTimeSpan, stoppingToken);
             }
         }
 
