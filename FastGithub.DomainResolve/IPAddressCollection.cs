@@ -41,7 +41,10 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public IPAddress[] ToArray()
         {
-            return this.ToItemArray().OrderBy(item => item.PingElapsed).Select(item => item.Address).ToArray();
+            lock (this.syncRoot)
+            {
+                return this.hashSet.OrderBy(item => item.PingElapsed).Select(item => item.Address).ToArray();
+            }
         }
 
         /// <summary>

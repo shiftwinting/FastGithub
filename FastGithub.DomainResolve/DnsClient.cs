@@ -265,12 +265,15 @@ namespace FastGithub.DomainResolve
                 return addresses;
             }
 
-            var hashSet = new HashSet<IPAddress> { fastedAddress };
+            var list = new List<IPAddress> { fastedAddress };
             foreach (var address in addresses)
             {
-                hashSet.Add(address);
+                if (address.Equals(fastedAddress) == false)
+                {
+                    list.Add(address);
+                }
             }
-            return hashSet.ToArray();
+            return list.ToArray();
         }
 
         /// <summary>
