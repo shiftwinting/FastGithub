@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -32,7 +31,6 @@ namespace FastGithub.DomainResolve
         private readonly ILogger<DnsClient> logger;
 
         private readonly ConcurrentDictionary<string, IPAddressCollection> domainIPAddressCollection = new();
-
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         private readonly TimeSpan defaultEmptyTtl = TimeSpan.FromSeconds(30d);
@@ -64,9 +62,9 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            if (this.TryGetPingedIPAddresses(domain, out var addresses))
+            if (this.domainIPAddressCollection.TryGetValue(domain, out var collection) && collection.Count > 0)
             {
-                foreach (var address in addresses)
+                foreach (var address in collection.ToArray())
                 {
                     yield return address;
                 }
@@ -99,24 +97,6 @@ namespace FastGithub.DomainResolve
                 }
                 await collection.PingAllAsync();
             }
-        }
-
-        /// <summary>
-        /// 尝试获取域名下已经过ping排序的IP地址
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="addresses"></param>
-        /// <returns></returns>
-        private bool TryGetPingedIPAddresses(string domain, [MaybeNullWhen(false)] out IPAddress[] addresses)
-        {
-            if (this.domainIPAddressCollection.TryGetValue(domain, out var collection) && collection.Count > 0)
-            {
-                addresses = collection.ToArray();
-                return true;
-            }
-
-            addresses = default;
-            return false;
         }
 
         /// <summary>
@@ -190,7 +170,7 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogInformation($"dns://{dns}无法解析{domain}：请求超时"); 
+                this.logger.LogInformation($"dns://{dns}无法解析{domain}：请求超时");
                 return Array.Empty<IPAddress>();
             }
             catch (Exception ex)
