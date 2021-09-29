@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -29,6 +30,8 @@ namespace FastGithub.DomainResolve
         private readonly DnscryptProxy dnscryptProxy;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsClient> logger;
+
+        private readonly ConcurrentDictionary<string, IPAddressCollection> domainIPAddressCollection = new();
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
@@ -61,6 +64,69 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            if (this.TryGetPingedIPAddresses(domain, out var addresses))
+            {
+                foreach (var address in addresses)
+                {
+                    yield return address;
+                }
+            }
+            else
+            {
+                this.domainIPAddressCollection.TryAdd(domain, new IPAddressCollection());
+                await foreach (var adddress in this.ResolveCoreAsync(domain, cancellationToken))
+                {
+                    yield return adddress;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 对所有域名所有IP进行ping测试
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task PingAllDomainsAsync(CancellationToken cancellationToken)
+        {
+            foreach (var keyValue in this.domainIPAddressCollection)
+            {
+                var domain = keyValue.Key;
+                var collection = keyValue.Value;
+
+                await foreach (var address in this.ResolveCoreAsync(domain, cancellationToken))
+                {
+                    collection.Add(address);
+                }
+                await collection.PingAllAsync();
+            }
+        }
+
+        /// <summary>
+        /// 尝试获取域名下已经过ping排序的IP地址
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="addresses"></param>
+        /// <returns></returns>
+        private bool TryGetPingedIPAddresses(string domain, [MaybeNullWhen(false)] out IPAddress[] addresses)
+        {
+            if (this.domainIPAddressCollection.TryGetValue(domain, out var collection) && collection.Count > 0)
+            {
+                addresses = collection.ToArray();
+                return true;
+            }
+
+            addresses = default;
+            return false;
+        }
+
+        /// <summary>
+        /// 解析域名
+        /// </summary>
+        /// <param name="domain">域名</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async IAsyncEnumerable<IPAddress> ResolveCoreAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
             var hashSet = new HashSet<IPAddress>();
             foreach (var dns in this.GetDnsServers())
             {
@@ -74,7 +140,6 @@ namespace FastGithub.DomainResolve
                 }
             }
         }
-
 
         /// <summary>
         /// 获取dns服务
@@ -184,7 +249,6 @@ namespace FastGithub.DomainResolve
                 timeToLive = this.defaultEmptyTtl;
             }
 
-            this.logger.LogWarning($"{domain} [{timeToLive}]");
             return new LookupResult(addresses, timeToLive);
         }
 
