@@ -11,20 +11,20 @@ namespace FastGithub.DomainResolve
     sealed class DomainResolveHostedService : BackgroundService
     {
         private readonly DnscryptProxy dnscryptProxy;
-        private readonly DnsClient dnsClient;
-        private readonly TimeSpan pingPeriodTimeSpan = TimeSpan.FromSeconds(10d);
+        private readonly IDomainResolver domainResolver;
+        private readonly TimeSpan testPeriodTimeSpan = TimeSpan.FromSeconds (1d);
 
         /// <summary>
         /// 域名解析后台服务
         /// </summary>
         /// <param name="dnscryptProxy"></param>
-        /// <param name="dnsClient"></param>
+        /// <param name="domainResolver"></param>
         public DomainResolveHostedService(
             DnscryptProxy dnscryptProxy,
-            DnsClient dnsClient)
+            IDomainResolver domainResolver)
         {
             this.dnscryptProxy = dnscryptProxy;
-            this.dnsClient = dnsClient;
+            this.domainResolver = domainResolver;
         }
 
         /// <summary>
@@ -37,8 +37,8 @@ namespace FastGithub.DomainResolve
             await this.dnscryptProxy.StartAsync(stoppingToken);
             while (stoppingToken.IsCancellationRequested == false)
             {
-                await this.dnsClient.PingAllDomainsAsync(stoppingToken);
-                await Task.Delay(this.pingPeriodTimeSpan, stoppingToken);
+                await this.domainResolver.TestAllEndPointsAsync(stoppingToken);
+                await Task.Delay(this.testPeriodTimeSpan, stoppingToken);
             }
         }
 

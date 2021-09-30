@@ -30,7 +30,6 @@ namespace FastGithub.DomainResolve
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsClient> logger;
 
-        private readonly ConcurrentDictionary<string, IPAddressCollection> domainIPAddressCollection = new();
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         private readonly TimeSpan defaultEmptyTtl = TimeSpan.FromSeconds(30d);
@@ -55,66 +54,12 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 预加载
-        /// </summary>
-        /// <param name="domain">域名</param>
-        public void Prefetch(string domain)
-        {
-            this.domainIPAddressCollection.TryAdd(domain, new IPAddressCollection());
-        }
-
-        /// <summary>
         /// 解析域名
         /// </summary>
         /// <param name="domain">域名</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            if (this.domainIPAddressCollection.TryGetValue(domain, out var collection) && collection.Count > 0)
-            {
-                foreach (var address in collection.ToArray())
-                {
-                    yield return address;
-                }
-            }
-            else
-            {
-                this.domainIPAddressCollection.TryAdd(domain, new IPAddressCollection());
-                await foreach (var adddress in this.ResolveCoreAsync(domain, cancellationToken))
-                {
-                    yield return adddress;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 对所有域名所有IP进行ping测试
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task PingAllDomainsAsync(CancellationToken cancellationToken)
-        {
-            foreach (var keyValue in this.domainIPAddressCollection)
-            {
-                var domain = keyValue.Key;
-                var collection = keyValue.Value;
-
-                await foreach (var address in this.ResolveCoreAsync(domain, cancellationToken))
-                {
-                    collection.Add(address);
-                }
-                await collection.PingAllAsync();
-            }
-        }
-
-        /// <summary>
-        /// 解析域名
-        /// </summary>
-        /// <param name="domain">域名</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async IAsyncEnumerable<IPAddress> ResolveCoreAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<IPAddress>();
             foreach (var dns in this.GetDnsServers())
