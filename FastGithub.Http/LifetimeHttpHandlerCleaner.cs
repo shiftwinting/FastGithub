@@ -48,6 +48,7 @@ namespace FastGithub.Http
         /// </summary>
         private async void StartCleanup()
         {
+            await Task.Yield();
             while (this.Cleanup() == false)
             {
                 await Task.Delay(this.CleanupInterval);

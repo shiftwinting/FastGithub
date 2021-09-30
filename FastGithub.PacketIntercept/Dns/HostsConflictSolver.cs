@@ -1,4 +1,5 @@
 ﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Runtime.Versioning;
@@ -15,14 +16,19 @@ namespace FastGithub.PacketIntercept.Dns
     sealed class HostsConflictSolver : IDnsConflictSolver
     {
         private readonly FastGithubConfig fastGithubConfig;
+        private readonly ILogger<HostsConflictSolver> logger;
 
         /// <summary>
         /// host文件冲解决者
         /// </summary>
         /// <param name="fastGithubConfig"></param>
-        public HostsConflictSolver(FastGithubConfig fastGithubConfig)
+        /// <param name="logger"></param>
+        public HostsConflictSolver(
+            FastGithubConfig fastGithubConfig,
+            ILogger<HostsConflictSolver> logger)
         {
             this.fastGithubConfig = fastGithubConfig;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -56,8 +62,15 @@ namespace FastGithub.PacketIntercept.Dns
 
             if (hasConflicting == true)
             {
-                File.SetAttributes(hostsPath, FileAttributes.Normal);
-                await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), cancellationToken);
+                try
+                {
+                    File.Move(hostsPath, Path.ChangeExtension(hostsPath, ".bak"), overwrite: true);
+                    await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning($"无法解决hosts文件冲突：{ex.Message}");
+                }
             }
         }
 
