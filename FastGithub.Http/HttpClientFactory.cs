@@ -75,7 +75,7 @@ namespace FastGithub.Http
         private void OnLifetimeHttpHandlerDeactivate(LifetimeHttpHandler lifetimeHttpHandler)
         {
             // 切换激活状态的记录的实例
-            var domainConfig = ((HttpClientHandler)lifetimeHttpHandler.InnerHandler!).DomainConfig;
+            var domainConfig = lifetimeHttpHandler.DomainConfig;
             this.httpHandlerLazyCache[domainConfig] = this.CreateLifetimeHttpHandlerLazy(domainConfig);
             this.httpHandlerCleaner.Add(lifetimeHttpHandler);
         }

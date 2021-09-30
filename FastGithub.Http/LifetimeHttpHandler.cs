@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FastGithub.Configuration;
+using System;
 using System.Net.Http;
 using System.Threading;
 
@@ -12,14 +13,20 @@ namespace FastGithub.Http
         private readonly Timer timer;
 
         /// <summary>
+        /// 获取域名配置
+        /// </summary>
+        public DomainConfig DomainConfig { get; }
+
+        /// <summary>
         /// 具有生命周期的HttpHandler
         /// </summary>
         /// <param name="handler">HttpHandler</param>
         /// <param name="lifeTime">拦截器的生命周期</param>
         /// <param name="deactivateAction">失效回调</param>
-        public LifetimeHttpHandler(HttpMessageHandler handler, TimeSpan lifeTime, Action<LifetimeHttpHandler> deactivateAction)
+        public LifetimeHttpHandler(HttpClientHandler handler, TimeSpan lifeTime, Action<LifetimeHttpHandler> deactivateAction)
             : base(handler)
         {
+            this.DomainConfig = handler.DomainConfig;
             this.timer = new Timer(this.OnTimerCallback, deactivateAction, lifeTime, Timeout.InfiniteTimeSpan);
         }
 
