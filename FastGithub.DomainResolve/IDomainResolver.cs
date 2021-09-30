@@ -11,6 +11,12 @@ namespace FastGithub.DomainResolve
     public interface IDomainResolver
     {
         /// <summary>
+        /// 载加载
+        /// </summary>
+        /// <param name="domain">域名</param>
+        void Prefetch(string domain);
+
+        /// <summary>
         /// 解析ip
         /// </summary>
         /// <param name="domain">域名</param>

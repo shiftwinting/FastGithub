@@ -55,6 +55,15 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
+        /// 预加载
+        /// </summary>
+        /// <param name="domain">域名</param>
+        public void Prefetch(string domain)
+        {
+            this.domainIPAddressCollection.TryAdd(domain, new IPAddressCollection());
+        }
+
+        /// <summary>
         /// 解析域名
         /// </summary>
         /// <param name="domain">域名</param>

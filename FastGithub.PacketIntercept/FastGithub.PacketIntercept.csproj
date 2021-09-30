@@ -14,5 +14,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
+		<ProjectReference Include="..\FastGithub.DomainResolve\FastGithub.DomainResolve.csproj" />
 	</ItemGroup>
 </Project>

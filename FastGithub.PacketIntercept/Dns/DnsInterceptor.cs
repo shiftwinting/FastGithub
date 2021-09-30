@@ -1,6 +1,7 @@
 ﻿using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
 using FastGithub.Configuration;
+using FastGithub.DomainResolve;
 using FastGithub.WinDiverts;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,8 +24,11 @@ namespace FastGithub.PacketIntercept.Dns
     sealed class DnsInterceptor : IDnsInterceptor
     {
         private const string DNS_FILTER = "udp.DstPort == 53";
+
         private readonly FastGithubConfig fastGithubConfig;
+        private readonly IDomainResolver domainResolver;
         private readonly ILogger<DnsInterceptor> logger;
+
         private readonly TimeSpan ttl = TimeSpan.FromMinutes(10d);
 
         /// <summary>
@@ -37,16 +41,18 @@ namespace FastGithub.PacketIntercept.Dns
         /// dns拦截器
         /// </summary>
         /// <param name="fastGithubConfig"></param>
+        /// <param name="domainResolver"></param>
         /// <param name="logger"></param>
         /// <param name="options"></param>
         public DnsInterceptor(
             FastGithubConfig fastGithubConfig,
+            IDomainResolver domainResolver,
             ILogger<DnsInterceptor> logger,
             IOptionsMonitor<FastGithubOptions> options)
         {
             this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
-
+            this.domainResolver = domainResolver;
             options.OnChange(_ => DnsFlushResolverCache());
         }
 
@@ -128,6 +134,9 @@ namespace FastGithub.PacketIntercept.Dns
             {
                 return;
             }
+
+            // dns预加载
+            this.domainResolver.Prefetch(domain.ToString());
 
             // dns响应数据
             var response = Response.FromRequest(request);

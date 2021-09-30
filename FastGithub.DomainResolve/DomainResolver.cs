@@ -23,6 +23,15 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
+        /// 载加载
+        /// </summary>
+        /// <param name="domain">域名</param>
+        public void Prefetch(string domain)
+        {
+            this.dnsClient.Prefetch(domain);
+        }
+
+        /// <summary>
         /// 解析ip
         /// </summary>
         /// <param name="domain">域名</param>

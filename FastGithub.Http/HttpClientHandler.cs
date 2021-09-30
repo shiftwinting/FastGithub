@@ -120,7 +120,7 @@ namespace FastGithub.Http
                 }
             }
 
-            throw new AggregateException("没有可连接成功的IP", innerExceptions);
+            throw new AggregateException("找不到任何可成功连接的IP", innerExceptions);
         }
 
         /// <summary>
