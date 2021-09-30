@@ -17,13 +17,6 @@ namespace FastGithub.DomainResolve
         void Prefetch(string domain);
 
         /// <summary>
-        /// 对所有节点进行测速
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task TestAllEndPointsAsync(CancellationToken cancellationToken);
-
-        /// <summary>
         /// 解析ip
         /// </summary>
         /// <param name="endPoint">节点</param>
@@ -38,5 +31,12 @@ namespace FastGithub.DomainResolve
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         IAsyncEnumerable<IPAddress> ResolveAllAsync(DnsEndPoint endPoint, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 对所有节点进行测速
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task TestAllEndPointsAsync(CancellationToken cancellationToken = default);
     }
 }
