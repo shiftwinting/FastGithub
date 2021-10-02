@@ -13,7 +13,7 @@ namespace FastGithub.DomainResolve
     [DebuggerDisplay("Adddress={Adddress} Elapsed={Elapsed}")]
     struct IPAddressElapsed
     {
-        private static readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
+        private static readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
 
         /// <summary>
         /// 获取IP地址

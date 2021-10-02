@@ -13,12 +13,17 @@ namespace FastGithub.Http
         private readonly IDomainResolver domainResolver;
 
         /// <summary>
-        /// httpHandler的生命周期
+        /// 首次生命周期
         /// </summary>
-        private readonly TimeSpan lifeTime = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan firstLiftTime = TimeSpan.FromSeconds(10d);
 
         /// <summary>
-        /// HttpHandler清理器
+        /// 非首次生命周期
+        /// </summary>
+        private readonly TimeSpan nextLifeTime = TimeSpan.FromMinutes(1d);
+
+        /// <summary>
+        /// LifetimeHttpHandler清理器
         /// </summary>
         private readonly LifetimeHttpHandlerCleaner httpHandlerCleaner = new();
 
@@ -26,6 +31,7 @@ namespace FastGithub.Http
         /// LazyOf(LifetimeHttpHandler)缓存
         /// </summary>
         private readonly ConcurrentDictionary<DomainConfig, Lazy<LifetimeHttpHandler>> httpHandlerLazyCache = new();
+
 
         /// <summary>
         /// HttpClient工厂
@@ -43,30 +49,16 @@ namespace FastGithub.Http
         /// <returns></returns>
         public HttpClient CreateHttpClient(DomainConfig domainConfig)
         {
-            var lifetimeHttpHandlerLazy = this.httpHandlerLazyCache.GetOrAdd(domainConfig, this.CreateLifetimeHttpHandlerLazy);
+            var lifetimeHttpHandlerLazy = this.httpHandlerLazyCache.GetOrAdd(domainConfig, CreateLifetimeHttpHandlerLazy);
             var lifetimeHttpHandler = lifetimeHttpHandlerLazy.Value;
             return new HttpClient(lifetimeHttpHandler, disposeHandler: false);
+
+            Lazy<LifetimeHttpHandler> CreateLifetimeHttpHandlerLazy(DomainConfig domainConfig)
+            {
+                return new Lazy<LifetimeHttpHandler>(() => this.CreateLifetimeHttpHandler(domainConfig, this.firstLiftTime), true);
+            }
         }
 
-        /// <summary>
-        /// 创建LazyOf(LifetimeHttpHandler)
-        /// </summary>
-        /// <param name="domainConfig"></param>
-        /// <returns></returns>
-        private Lazy<LifetimeHttpHandler> CreateLifetimeHttpHandlerLazy(DomainConfig domainConfig)
-        {
-            return new Lazy<LifetimeHttpHandler>(() => this.CreateLifetimeHttpHandler(domainConfig), true);
-        }
-
-        /// <summary>
-        /// 创建LifetimeHttpHandler
-        /// </summary>
-        /// <returns></returns>
-        private LifetimeHttpHandler CreateLifetimeHttpHandler(DomainConfig domainConfig)
-        {
-            var httpClientHandler = new HttpClientHandler(domainConfig, this.domainResolver);
-            return new LifetimeHttpHandler(httpClientHandler, this.lifeTime, this.OnLifetimeHttpHandlerDeactivate);
-        }
 
         /// <summary>
         /// 当有httpHandler失效时
@@ -74,10 +66,26 @@ namespace FastGithub.Http
         /// <param name="lifetimeHttpHandler">httpHandler</param>
         private void OnLifetimeHttpHandlerDeactivate(LifetimeHttpHandler lifetimeHttpHandler)
         {
-            // 切换激活状态的记录的实例
             var domainConfig = lifetimeHttpHandler.DomainConfig;
-            this.httpHandlerLazyCache[domainConfig] = this.CreateLifetimeHttpHandlerLazy(domainConfig);
+            this.httpHandlerLazyCache[domainConfig] = CreateLifetimeHttpHandlerLazy(domainConfig);
             this.httpHandlerCleaner.Add(lifetimeHttpHandler);
+
+            Lazy<LifetimeHttpHandler> CreateLifetimeHttpHandlerLazy(DomainConfig domainConfig)
+            {
+                return new Lazy<LifetimeHttpHandler>(() => this.CreateLifetimeHttpHandler(domainConfig, this.nextLifeTime), true);
+            }
+        }
+
+        /// <summary>
+        /// 创建LifetimeHttpHandler
+        /// </summary>
+        /// <param name="domainConfig"></param>
+        /// <param name="lifeTime"></param>
+        /// <returns></returns>
+        private LifetimeHttpHandler CreateLifetimeHttpHandler(DomainConfig domainConfig, TimeSpan lifeTime)
+        {
+            var httpClientHandler = new HttpClientHandler(domainConfig, this.domainResolver);
+            return new LifetimeHttpHandler(httpClientHandler, lifeTime, this.OnLifetimeHttpHandlerDeactivate);
         }
     }
 }
