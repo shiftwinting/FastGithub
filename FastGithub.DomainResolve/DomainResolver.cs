@@ -25,18 +25,7 @@ namespace FastGithub.DomainResolve
         public DomainResolver(DnsClient dnsClient)
         {
             this.dnsClient = dnsClient;
-        }
-
-        /// <summary>
-        /// 预加载
-        /// </summary>
-        /// <param name="domain">域名</param>
-        public void Prefetch(string domain)
-        {
-            const int HTTPS_PORT = 443;
-            var dnsEndPoint = new DnsEndPoint(domain, HTTPS_PORT);
-            this.dnsEndPointAddressElapseds.TryAdd(dnsEndPoint, IPAddressElapsedCollection.Empty);
-        }
+        } 
 
         /// <summary>
         /// 解析ip
