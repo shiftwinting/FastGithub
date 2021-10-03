@@ -47,7 +47,7 @@ namespace FastGithub.HttpServer
             {
                 var scheme = context.Request.Scheme;
                 var destinationPrefix = GetDestinationPrefix(scheme, host, domainConfig.Destination);
-                var httpClient = this.httpClientFactory.CreateHttpClient(domainConfig);
+                var httpClient = this.httpClientFactory.CreateHttpClient(host.Host, domainConfig);
                 var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
                 await HandleErrorAsync(context, error);
             }

@@ -10,8 +10,9 @@ namespace FastGithub.Http
         /// <summary>
         /// 创建httpClient
         /// </summary>
+        /// <param name="domain"></param>
         /// <param name="domainConfig"></param>
         /// <returns></returns>
-        HttpClient CreateHttpClient(DomainConfig domainConfig);
+        HttpClient CreateHttpClient(string domain, DomainConfig domainConfig);
     }
 }

@@ -21,13 +21,9 @@ namespace FastGithub.Http
     /// </summary> 
     class HttpClientHandler : DelegatingHandler
     {
+        private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
-
-        /// <summary>
-        /// 获取域名配置
-        /// </summary>
-        public DomainConfig DomainConfig { get; }
 
         /// <summary>
         /// HttpClientHandler
@@ -36,8 +32,8 @@ namespace FastGithub.Http
         /// <param name="domainResolver"></param> 
         public HttpClientHandler(DomainConfig domainConfig, IDomainResolver domainResolver)
         {
+            this.domainConfig = domainConfig;
             this.domainResolver = domainResolver;
-            this.DomainConfig = domainConfig;
             this.InnerHandler = this.CreateSocketsHttpHandler();
         }
 
@@ -57,16 +53,16 @@ namespace FastGithub.Http
 
             // 请求上下文信息
             var isHttps = uri.Scheme == Uri.UriSchemeHttps;
-            var tlsSniValue = this.DomainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom();
+            var tlsSniValue = this.domainConfig.GetTlsSniPattern().WithDomain(uri.Host).WithRandom();
             request.SetRequestContext(new RequestContext(isHttps, tlsSniValue));
 
             // 设置请求头host，修改协议为http
             request.Headers.Host = uri.Host;
             request.RequestUri = new UriBuilder(uri) { Scheme = Uri.UriSchemeHttp }.Uri;
 
-            if (this.DomainConfig.Timeout != null)
+            if (this.domainConfig.Timeout != null)
             {
-                using var timeoutTokenSource = new CancellationTokenSource(this.DomainConfig.Timeout.Value);
+                using var timeoutTokenSource = new CancellationTokenSource(this.domainConfig.Timeout.Value);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
                 return await base.SendAsync(request, linkedTokenSource.Token);
             }
@@ -157,7 +153,7 @@ namespace FastGithub.Http
             {
                 if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
                 {
-                    if (this.DomainConfig.TlsIgnoreNameMismatch == true)
+                    if (this.domainConfig.TlsIgnoreNameMismatch == true)
                     {
                         return true;
                     }
@@ -179,7 +175,7 @@ namespace FastGithub.Http
         /// <returns></returns>
         private async IAsyncEnumerable<IPEndPoint> GetIPEndPointsAsync(DnsEndPoint dnsEndPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            if (IPAddress.TryParse(this.DomainConfig.IPAddress, out var address) ||
+            if (IPAddress.TryParse(this.domainConfig.IPAddress, out var address) ||
                 IPAddress.TryParse(dnsEndPoint.Host, out address))
             {
                 yield return new IPEndPoint(address, dnsEndPoint.Port);
