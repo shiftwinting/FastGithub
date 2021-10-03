@@ -11,7 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +34,7 @@ namespace FastGithub.DomainResolve
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         private readonly TimeSpan defaultEmptyTtl = TimeSpan.FromSeconds(30d);
         private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
+        private static readonly TimeSpan maxConnectTimeout = TimeSpan.FromSeconds(2d);
 
         private record LookupResult(IPAddress[] Addresses, TimeSpan TimeToLive);
 
@@ -56,15 +57,15 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 解析域名
         /// </summary>
-        /// <param name="domain">域名</param>
+        /// <param name="endPoint">远程结节</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<IPAddress> ResolveAsync(string domain, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IPAddress> ResolveAsync(DnsEndPoint endPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<IPAddress>();
             foreach (var dns in this.GetDnsServers())
             {
-                var addresses = await this.LookupAsync(dns, domain, cancellationToken);
+                var addresses = await this.LookupAsync(dns, endPoint, cancellationToken);
                 foreach (var address in addresses)
                 {
                     if (hashSet.Add(address) == true)
@@ -98,12 +99,12 @@ namespace FastGithub.DomainResolve
         /// 解析域名
         /// </summary>
         /// <param name="dns"></param>
-        /// <param name="domain"></param>
+        /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress[]> LookupAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
+        private async Task<IPAddress[]> LookupAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken = default)
         {
-            var key = $"{dns}:{domain}";
+            var key = $"{dns}/{endPoint}";
             var semaphore = this.semaphoreSlims.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
             await semaphore.WaitAsync(CancellationToken.None);
 
@@ -114,22 +115,22 @@ namespace FastGithub.DomainResolve
                     return value;
                 }
 
-                var result = await this.LookupCoreAsync(dns, domain, cancellationToken);
+                var result = await this.LookupCoreAsync(dns, endPoint, cancellationToken);
                 this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
 
                 var items = string.Join(", ", result.Addresses.Select(item => item.ToString()));
-                this.logger.LogInformation($"dns://{dns}：{domain}->[{items}]");
+                this.logger.LogInformation($"dns://{dns}：{endPoint}->[{items}]");
 
                 return result.Addresses;
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogInformation($"dns://{dns}无法解析{domain}：请求超时");
+                this.logger.LogInformation($"dns://{dns}无法解析{endPoint}：请求超时");
                 return Array.Empty<IPAddress>();
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"dns://{dns}无法解析{domain}：{ex.Message}");
+                this.logger.LogWarning($"dns://{dns}无法解析{endPoint}：{ex.Message}");
                 return Array.Empty<IPAddress>();
             }
             finally
@@ -142,12 +143,12 @@ namespace FastGithub.DomainResolve
         /// 解析域名
         /// </summary>
         /// <param name="dns"></param>
-        /// <param name="domain"></param>
+        /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<LookupResult> LookupCoreAsync(IPEndPoint dns, string domain, CancellationToken cancellationToken = default)
+        private async Task<LookupResult> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken = default)
         {
-            if (domain == LOCALHOST)
+            if (endPoint.Host == LOCALHOST)
             {
                 return new LookupResult(new[] { IPAddress.Loopback }, TimeSpan.MaxValue);
             }
@@ -162,7 +163,7 @@ namespace FastGithub.DomainResolve
                 OperationCode = OperationCode.Query
             };
 
-            request.Questions.Add(new Question(new Domain(domain), RecordType.A));
+            request.Questions.Add(new Question(new Domain(endPoint.Host), RecordType.A));
             var clientRequest = new ClientRequest(resolver, request);
             var response = await clientRequest.Resolve(cancellationToken);
 
@@ -179,7 +180,7 @@ namespace FastGithub.DomainResolve
 
             if (addresses.Length > 1)
             {
-                addresses = await OrderByPingAnyAsync(addresses);
+                addresses = await OrderByConnectAnyAsync(addresses, endPoint.Port, cancellationToken);
             }
 
             var timeToLive = response.AnswerRecords.First().TimeToLive;
@@ -190,15 +191,17 @@ namespace FastGithub.DomainResolve
 
             return new LookupResult(addresses, timeToLive);
         }
-
         /// <summary>
-        /// ping排序
+        /// 连接速度排序
         /// </summary>
         /// <param name="addresses"></param>
+        /// <param name="port"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private static async Task<IPAddress[]> OrderByPingAnyAsync(IPAddress[] addresses)
+        private static async Task<IPAddress[]> OrderByConnectAnyAsync(IPAddress[] addresses, int port, CancellationToken cancellationToken)
         {
-            var fastedAddress = await await Task.WhenAny(addresses.Select(address => PingAsync(address)));
+            var tasks = addresses.Select(address => ConnectAsync(address, port, cancellationToken));
+            var fastedAddress = await await Task.WhenAny(tasks);
             if (fastedAddress == null)
             {
                 return addresses;
@@ -216,17 +219,21 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// ping请求
+        /// 连接指定ip和端口
         /// </summary>
         /// <param name="address"></param>
+        /// <param name="port"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private static async Task<IPAddress?> PingAsync(IPAddress address)
+        private static async Task<IPAddress?> ConnectAsync(IPAddress address, int port, CancellationToken cancellationToken)
         {
             try
             {
-                using var ping = new Ping();
-                var reply = await ping.SendPingAsync(address);
-                return reply.Status == IPStatus.Success ? address : default;
+                using var timeoutTokenSource = new CancellationTokenSource(maxConnectTimeout);
+                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                await socket.ConnectAsync(address, port, linkedTokenSource.Token);
+                return address;
             }
             catch (Exception)
             {

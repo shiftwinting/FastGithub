@@ -71,7 +71,7 @@ namespace FastGithub.DomainResolve
             else
             {
                 this.dnsEndPointAddressElapseds.TryAdd(endPoint, IPAddressElapsedCollection.Empty);
-                await foreach (var adddress in this.dnsClient.ResolveAsync(endPoint.Host, cancellationToken))
+                await foreach (var adddress in this.dnsClient.ResolveAsync(endPoint, cancellationToken))
                 {
                     yield return adddress;
                 }
@@ -91,7 +91,7 @@ namespace FastGithub.DomainResolve
                 {
                     var dnsEndPoint = keyValue.Key;
                     var addresses = new List<IPAddress>();
-                    await foreach (var adddress in this.dnsClient.ResolveAsync(dnsEndPoint.Host, cancellationToken))
+                    await foreach (var adddress in this.dnsClient.ResolveAsync(dnsEndPoint, cancellationToken))
                     {
                         addresses.Add(adddress);
                     }

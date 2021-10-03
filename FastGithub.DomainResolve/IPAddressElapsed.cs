@@ -13,7 +13,7 @@ namespace FastGithub.DomainResolve
     [DebuggerDisplay("Adddress={Adddress} Elapsed={Elapsed}")]
     struct IPAddressElapsed
     {
-        private static readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
+        private static readonly TimeSpan maxConnectTimeout = TimeSpan.FromSeconds(5d);
 
         /// <summary>
         /// 获取IP地址
@@ -48,7 +48,7 @@ namespace FastGithub.DomainResolve
             var stopWatch = Stopwatch.StartNew();
             try
             {
-                using var timeoutTokenSource = new CancellationTokenSource(connectTimeout);
+                using var timeoutTokenSource = new CancellationTokenSource(maxConnectTimeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
                 using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 await socket.ConnectAsync(address, port, linkedTokenSource.Token);
