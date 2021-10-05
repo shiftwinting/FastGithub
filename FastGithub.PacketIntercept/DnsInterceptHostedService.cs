@@ -1,5 +1,4 @@
-﻿using FastGithub.WinDiverts;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -45,11 +44,7 @@ namespace FastGithub.PacketIntercept
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            // 首次加载驱动往往有异常，所以要提前加载
-            var handle = WinDivert.WinDivertOpen("true", WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
-            WinDivert.WinDivertClose(handle);
-
+        {          
             foreach (var solver in this.conflictSolvers)
             {
                 await solver.SolveAsync(cancellationToken);

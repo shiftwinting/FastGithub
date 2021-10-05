@@ -22,18 +22,27 @@ namespace FastGithub.PacketIntercept.Dns
     [SupportedOSPlatform("windows")]
     sealed class DnsInterceptor : IDnsInterceptor
     {
-        private const string DNS_FILTER = "udp.DstPort == 53";
+        private const string DNS_FILTER = "ip and udp.DstPort == 53";
 
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
 
-        private readonly TimeSpan ttl = TimeSpan.FromMinutes(10d);
+        private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
 
         /// <summary>
         /// 刷新DNS缓存
         /// </summary>    
         [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache", SetLastError = true)]
         private static extern void DnsFlushResolverCache();
+
+        /// <summary>
+        /// 首次加载驱动往往有异常，所以要提前加载
+        /// </summary>
+        static DnsInterceptor()
+        {
+            var handle = WinDivert.WinDivertOpen("false", WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
+            WinDivert.WinDivertClose(handle);
+        }
 
         /// <summary>
         /// dns拦截器
@@ -142,20 +151,10 @@ namespace FastGithub.PacketIntercept.Dns
             packetLength = (uint)((int)packetLength + responsePayload.Length - requestPayload.Length);
 
             // 修改ip包
-            if (packet.IPv4Header != null)
-            {
-                var destAddress = packet.IPv4Header->DstAddr;
-                packet.IPv4Header->DstAddr = packet.IPv4Header->SrcAddr;
-                packet.IPv4Header->SrcAddr = destAddress;
-                packet.IPv4Header->Length = (ushort)packetLength;
-            }
-            else
-            {
-                var destAddress = packet.IPv6Header->DstAddr;
-                packet.IPv6Header->DstAddr = packet.IPv6Header->SrcAddr;
-                packet.IPv6Header->SrcAddr = destAddress;
-                packet.IPv6Header->Length = (ushort)packetLength;
-            }
+            var destAddress = packet.IPv4Header->DstAddr;
+            packet.IPv4Header->DstAddr = packet.IPv4Header->SrcAddr;
+            packet.IPv4Header->SrcAddr = destAddress;
+            packet.IPv4Header->Length = (ushort)packetLength;
 
             // 修改udp包
             var destPort = packet.UdpHeader->DstPort;
@@ -164,7 +163,12 @@ namespace FastGithub.PacketIntercept.Dns
             packet.UdpHeader->Length = (ushort)(sizeof(UdpHeader) + responsePayload.Length);
 
             winDivertAddress.Impostor = true;
+            winDivertAddress.Direction = winDivertAddress.Loopback
+                ? WinDivertDirection.Outbound
+                : WinDivertDirection.Inbound;
+
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
+            this.logger.LogInformation($"已拦截向dns://{destAddress}:{destPort}查询{domain}");
         }
 
 
