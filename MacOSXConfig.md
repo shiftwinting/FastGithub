@@ -5,7 +5,7 @@
 sudo xattr -d com.apple.quarantine XXX
 
 ### 2 安装证书
-打开FastGithub后，目录内会生成cacert目录，双击打开fastgithub.cer，系统弹出Keychain Access窗口，列表中双击FastGitHub，弹出证书详细窗口，展开Trust并选在Always Trust。
+打开FastGithub后，目录内会生成cacert目录，双击打开fastgithub.cer，系统弹出Keychain Access窗口，列表中双击FastGitHub，弹出证书详情窗口，展开Trust并选择Always Trust。
 
 <img src="https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/KeychainAccess.png?raw=true"/>
 
