@@ -7,5 +7,13 @@ sudo xattr -d com.apple.quarantine XXX
 ### 2 安装证书
 打开FastGithub后，目录内会生成cacert目录，双击打开fastgithub.cer，系统弹出Keychain Access窗口，列表中双击FastGitHub，弹出证书详细窗口，展开Trust并选在Always Trust。
 
+https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/KeychainAccess.png?raw=true
+
+https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/trust.png?raw=true
+
 ### 3 配置代理
 打开mac设置，网络，点击高级，选择代理，勾选网页代理(HTTP)及安全网页代理(HTTPS),填写FastGithub窗口提示的地址
+
+https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/proxy.png?raw=true
+
+https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/cmdwin.png?raw=true
