@@ -12,6 +12,14 @@ sudo xattr -d com.apple.quarantine XXX
 <img src="https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/trust.png?raw=true"/>
 
 ### 3 配置代理
+#### 3.1 自动代理
+打开mac设置，网络，点击高级，选择代理，勾选网自动代理配置，填写FastGithub窗口提示的地址
+
+<img src="https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/autoproxy.png?raw=true"/>
+
+<img src="https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/cmdwin.png?raw=true"/>
+
+#### 3.2 手动代理
 打开mac设置，网络，点击高级，选择代理，勾选网页代理(HTTP)及安全网页代理(HTTPS),填写FastGithub窗口提示的地址
 
 <img src="https://github.com/jingliancui/FastGithub/blob/master/Resources/MacOSXConfig/proxy.png?raw=true"/>
