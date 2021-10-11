@@ -19,7 +19,7 @@ namespace FastGithub.HttpServer
         private const int HTTP_PORT = 80;
         private const int HTTPS_PORT = 443;
 
-        private static readonly DomainConfig sniDomainConfig = new() { TlsSni = true };
+        private static readonly DomainConfig defaultDomainConfig = new() { TlsSni = true };
 
         private readonly IHttpForwarder httpForwarder;
         private readonly IHttpClientFactory httpClientFactory;
@@ -95,7 +95,8 @@ namespace FastGithub.HttpServer
             }
 
             // 未配置的域名，但dns污染解析为127.0.0.1的域名
-            domainConfig = sniDomainConfig;
+            this.logger.LogWarning($"检测到{host.Host}可能遭遇了dns污染");
+            domainConfig = defaultDomainConfig;
             return true;
         }
 

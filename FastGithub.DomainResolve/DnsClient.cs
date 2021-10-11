@@ -119,18 +119,18 @@ namespace FastGithub.DomainResolve
                 this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
 
                 var items = string.Join(", ", result.Addresses.Select(item => item.ToString()));
-                this.logger.LogInformation($"dns://{dns}：{endPoint}->[{items}]");
+                this.logger.LogInformation($"dns://{dns}：{endPoint.Host}->[{items}]");
 
                 return result.Addresses;
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogInformation($"dns://{dns}无法解析{endPoint}：请求超时");
+                this.logger.LogInformation($"dns://{dns}无法解析{endPoint.Host}：请求超时");
                 return Array.Empty<IPAddress>();
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"dns://{dns}无法解析{endPoint}：{ex.Message}");
+                this.logger.LogInformation($"dns://{dns}无法解析{endPoint.Host}：{ex.Message}");
                 return Array.Empty<IPAddress>();
             }
             finally
