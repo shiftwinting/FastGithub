@@ -22,6 +22,8 @@ namespace FastGithub.HttpServer
     {
         private const string LOOPBACK = "127.0.0.1";
         private const string LOCALHOST = "localhost";
+        private const int HTTP_PORT = 80;
+        private const int HTTPS_PORT = 443;
 
         private readonly FastGithubConfig fastGithubConfig;
         private readonly IDomainResolver domainResolver;
@@ -114,11 +116,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         private bool IsFastGithubServer(HostString host)
         {
-            if (host.Port == this.fastGithubConfig.HttpProxyPort)
-            {
-                return host.Host == LOOPBACK || host.Host == LOCALHOST;
-            }
-            return false;
+            return host.Port == this.fastGithubConfig.HttpProxyPort && (host.Host == LOOPBACK || host.Host == LOCALHOST);
         }
 
         /// <summary>
@@ -146,9 +144,7 @@ namespace FastGithub.HttpServer
         /// <param name="host"></param>
         /// <returns></returns>
         private async Task<EndPoint> GetTargetEndPointAsync(HostString host)
-        {
-            const int HTTP_PORT = 80;
-            const int HTTPS_PORT = 443;
+        { 
             var targetHost = host.Host;
             var targetPort = host.Port ?? HTTPS_PORT;
 

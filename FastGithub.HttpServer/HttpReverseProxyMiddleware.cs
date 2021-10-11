@@ -3,6 +3,7 @@ using FastGithub.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
@@ -13,10 +14,18 @@ namespace FastGithub.HttpServer
     /// </summary>
     sealed class HttpReverseProxyMiddleware
     {
+        private const string LOOPBACK = "127.0.0.1";
+        private const string LOCALHOST = "localhost";
+        private const int HTTP_PORT = 80;
+        private const int HTTPS_PORT = 443;
+
+        private static readonly DomainConfig sniDomainConfig = new() { TlsSni = true };
+
         private readonly IHttpForwarder httpForwarder;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<HttpReverseProxyMiddleware> logger;
+
 
         public HttpReverseProxyMiddleware(
             IHttpForwarder httpForwarder,
@@ -39,7 +48,7 @@ namespace FastGithub.HttpServer
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var host = context.Request.Host;
-            if (this.fastGithubConfig.TryGetDomainConfig(host.Host, out var domainConfig) == false)
+            if (this.TryGetDomainConfig(host, out var domainConfig) == false)
             {
                 await next(context);
             }
@@ -60,6 +69,34 @@ namespace FastGithub.HttpServer
                     await context.Response.WriteAsync(domainConfig.Response.ContentValue);
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取域名的DomainConfig
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="domainConfig"></param>
+        /// <returns></returns>
+        private bool TryGetDomainConfig(HostString host, [MaybeNullWhen(false)] out DomainConfig domainConfig)
+        {
+            if (this.fastGithubConfig.TryGetDomainConfig(host.Host, out domainConfig) == true)
+            {
+                return true;
+            }
+
+            // http(s)://127.0.0.1
+            // http(s)://localhost
+            if (host.Host == LOOPBACK || host.Host == LOCALHOST)
+            {
+                if (host.Port == null || host.Port == HTTPS_PORT || host.Port == HTTP_PORT)
+                {
+                    return false;
+                }
+            }
+
+            // 未配置的域名，但dns污染解析为127.0.0.1的域名
+            domainConfig = sniDomainConfig;
+            return true;
         }
 
         /// <summary>

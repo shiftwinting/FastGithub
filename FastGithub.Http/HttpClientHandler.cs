@@ -203,6 +203,10 @@ namespace FastGithub.Http
             var parser = new Org.BouncyCastle.X509.X509CertificateParser();
             var x509Cert = parser.ReadCertificate(cert.GetRawCertData());
             var subjects = x509Cert.GetSubjectAlternativeNames();
+            if (subjects == null)
+            {
+                yield break;
+            }
 
             foreach (var subject in subjects)
             {
