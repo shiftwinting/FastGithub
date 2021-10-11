@@ -3,10 +3,12 @@ using FastGithub.DomainResolve;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
@@ -27,6 +29,20 @@ namespace FastGithub.HttpServer
         private readonly HttpReverseProxyMiddleware httpReverseProxy;
 
         private readonly HttpMessageInvoker defaultHttpClient;
+
+        static HttpProxyMiddleware()
+        {
+            // https://github.com/dotnet/aspnetcore/issues/37421
+            var authority = typeof(HttpParser<>).Assembly
+                .GetType("Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.HttpCharacters")?
+                .GetField("_authority", BindingFlags.NonPublic | BindingFlags.Static)?
+                .GetValue(null);
+
+            if (authority is bool[] authorityArray)
+            {
+                authorityArray['-'] = true;
+            }
+        }
 
         /// <summary>
         /// http代理中间件
