@@ -2,7 +2,7 @@
 
 ### 1 解决 "XXX" cannot be opened because the developer cannot be verified
 打开终端进入FastGithub执行文件所在路径执行命令：
-sudo xattr -d com.apple.quarantine *.*
+`sudo xattr -d com.apple.quarantine *.*`
 
 ### 2 安装证书
 打开FastGithub后，目录内会生成cacert目录，双击打开fastgithub.cer，系统弹出Keychain Access窗口，列表中双击FastGitHub，弹出证书详情窗口，展开Trust并选择Always Trust。
