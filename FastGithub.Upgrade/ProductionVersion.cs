@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace FastGithub
+namespace FastGithub.Upgrade
 {
     /// <summary>
     /// 表示产品版本

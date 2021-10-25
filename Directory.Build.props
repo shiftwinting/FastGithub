@@ -4,8 +4,7 @@
 		<Nullable>enable</Nullable>
 		<Description>github加速神器</Description>
 		<Copyright>https://github.com/dotnetcore/FastGithub</Copyright>
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-		<TargetFramework>net6.0</TargetFramework>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>		
 		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 	</PropertyGroup>

@@ -27,7 +27,11 @@ namespace FastGithub
         {
             return Host
                 .CreateDefaultBuilder(args)
+#if WINDOWS
                 .UseWindowsService()
+                .UseWinForm<Windows.Forms.MainForm>()
+                .UseWinFormHostLifetime()
+#endif
                 .UseDefaultServiceProvider(c =>
                 {
                     c.ValidateOnBuild = false;

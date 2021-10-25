@@ -1,6 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>net6.0;net6.0-windows</TargetFrameworks>
     <AssemblyName>fastgithub</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -9,12 +10,26 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0-windows'">
+    <ProjectReference Include="..\FastGithub.Windows\FastGithub.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
     <ProjectReference Include="..\FastGithub.DomainResolve\FastGithub.DomainResolve.csproj" />
     <ProjectReference Include="..\FastGithub.HttpServer\FastGithub.HttpServer.csproj" />
     <ProjectReference Include="..\FastGithub.PacketIntercept\FastGithub.PacketIntercept.csproj" />
+    <ProjectReference Include="..\FastGithub.Upgrade\FastGithub.Upgrade.csproj" />
   </ItemGroup>
 
   <ItemGroup>
