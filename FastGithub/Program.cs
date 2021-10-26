@@ -26,12 +26,8 @@ namespace FastGithub
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host
-                .CreateDefaultBuilder(args)
-#if WINDOWS
-                .UseWindowsService()
-                .UseWinForm<Windows.Forms.MainForm>()
-                .UseWinFormHostLifetime()
-#endif
+                .CreateDefaultBuilder(args) 
+                .UseWindowsService()       
                 .UseDefaultServiceProvider(c =>
                 {
                     c.ValidateOnBuild = false;
