@@ -1,16 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+  <PropertyGroup> 
     <Nullable>enable</Nullable>
     <AssemblyName>fastgithub</AssemblyName>
     <OutputType>Exe</OutputType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <IsWebConfigTransformDisabled>true</IsWebConfigTransformDisabled>
-    <ApplicationIcon>app.ico</ApplicationIcon>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>   
+    <ApplicationManifest>app.manifest</ApplicationManifest>  
   </PropertyGroup>  
 
   <ItemGroup>
