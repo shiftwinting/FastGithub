@@ -61,7 +61,8 @@ namespace FastGithub
                 appBuilder.UseRequestLogging();
                 appBuilder.UseHttpReverseProxy();
 
-                appBuilder.UseRouting();
+                app.UseStaticFiles();
+                appBuilder.UseRouting();                
                 appBuilder.UseEndpoints(endpoint => endpoint.MapFallback(context =>
                 {
                     context.Response.Redirect("https://github.com/dotnetcore/fastgithub");
