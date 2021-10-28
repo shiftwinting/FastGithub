@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.PacketIntercept"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastGithub.UI", "FastGithub.UI\FastGithub.UI.csproj", "{5082061F-38D5-4F50-945E-791C85B9BDB5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastGithub.FlowAnalyze", "FastGithub.FlowAnalyze\FastGithub.FlowAnalyze.csproj", "{93478EAF-739C-47DA-B8FE-AEBA78A75E11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{5082061F-38D5-4F50-945E-791C85B9BDB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5082061F-38D5-4F50-945E-791C85B9BDB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5082061F-38D5-4F50-945E-791C85B9BDB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93478EAF-739C-47DA-B8FE-AEBA78A75E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93478EAF-739C-47DA-B8FE-AEBA78A75E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93478EAF-739C-47DA-B8FE-AEBA78A75E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93478EAF-739C-47DA-B8FE-AEBA78A75E11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

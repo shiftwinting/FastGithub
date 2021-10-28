@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="libs/echarts.js"></script>
+    <script src="libs/jquery.min.js"></script>
+    <title>流量监控</title>
+
+    <style type="text/css">
+        html, body, #chart {
+            height: 100%;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chart"></div>
+
+    <script type="text/javascript">
+        var timeCategory = [];
+        var readCategory = [];
+        var wirteCategory = [];
+
+        var option = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['上行速率(KB/s)', '下行速率(KB/s)']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: timeCategory
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    name: '上行速率(KB/s)',
+                    type: 'line',
+                    stack: 'Total',
+                    smooth: true,
+                    data: readCategory
+                },
+                {
+                    name: '下行速率(KB/s)',
+                    type: 'line',
+                    stack: 'Total',
+                    smooth: true,
+                    data: wirteCategory
+                }
+            ]
+        };
+
+        var flowChart = echarts.init(document.getElementById('chart'));
+        flowChart.setOption(option);
+        window.onresize = function () {
+            flowChart.resize();
+        }
+
+        setInterval(function () {
+            $.getJSON('/flowRates?r=' + Math.random(), function (data) {
+                var time = new Date().toLocaleTimeString().replace(/^\D*/, '');
+                timeCategory.push(time);
+                readCategory.push((data.readRate / 1024).toFixed(2));
+                wirteCategory.push((data.writeRate / 1024).toFixed(2));
+
+                if (timeCategory.length > 60) {
+                    timeCategory.shift();
+                    readCategory.shift();
+                    wirteCategory.shift();
+                }
+
+                flowChart.setOption(option);
+            });
+        }, 1000);
+    </script>
+</body>
+
+</html>

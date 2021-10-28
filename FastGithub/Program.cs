@@ -2,10 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using Serilog.Sinks.Network;
 using System;
 using System.IO;
-using System.Net;
 
 namespace FastGithub
 {
@@ -72,7 +70,6 @@ namespace FastGithub
                             .ReadFrom.Configuration(hosting.Configuration)
                             .Enrich.FromLogContext()
                             .WriteTo.Console(outputTemplate: template)
-                            .WriteTo.UDPSink(IPAddress.Loopback, 38457)
                             .WriteTo.File(Path.Combine("logs", @"log.txt"), rollingInterval: RollingInterval.Day, outputTemplate: template);
                     });
                 });
