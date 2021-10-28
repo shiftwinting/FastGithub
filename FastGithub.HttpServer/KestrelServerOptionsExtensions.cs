@@ -93,7 +93,10 @@ namespace FastGithub
             var httpsPort = ReverseProxyPort.Https;
             kestrel.Listen(IPAddress.Loopback, httpsPort, listen =>
             {
-                listen.UseFlowAnalyze();
+                if (OperatingSystem.IsWindows())
+                {
+                    listen.UseFlowAnalyze();
+                }
                 listen.UseHttps(https =>
                 {
                     https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);

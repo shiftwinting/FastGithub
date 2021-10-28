@@ -45,12 +45,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\flow.html">
+    <Content Update="wwwroot\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\cert.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </Content> 
   </ItemGroup>
 
 </Project>

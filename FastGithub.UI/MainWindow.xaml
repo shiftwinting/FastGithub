@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FastGithub.UI"
         mc:Ignorable="d"
-        Title="FastGithub" Height="640" Width="960" WindowStartupLocation="CenterScreen">
+        Title="FastGithub" Height="480" Width="640" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -92,7 +92,8 @@
                                         <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
                                         <Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
                                     </MultiDataTrigger.Conditions>
-
+                                    
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                                     <Setter Property="Foreground" TargetName="txt" Value="#37aefe"/>
                                 </MultiDataTrigger>
                                 <MultiDataTrigger>
@@ -129,6 +130,7 @@
                                         <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="true"/>
                                         <Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
                                     </MultiDataTrigger.Conditions>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                                     <Setter Property="Panel.ZIndex" Value="1"/>
                                     <Setter Property="Foreground" TargetName="txt" Value="#37aefe"/>
                                     <Setter Property="BorderThickness" TargetName="_underline" Value="0 0 0 2"/>

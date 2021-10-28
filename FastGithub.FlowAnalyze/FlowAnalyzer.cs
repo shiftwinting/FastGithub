@@ -31,6 +31,17 @@ namespace FastGithub.FlowAnalyze
 
         private static void Add(ConcurrentQueue<QueueItem> quques, int length)
         {
+            var ticks = Flush(quques);
+            quques.Enqueue(new QueueItem(ticks, length));
+        }
+
+        /// <summary>
+        /// 刷新队列
+        /// </summary>
+        /// <param name="quques"></param>
+        /// <returns></returns>
+        private static long Flush(ConcurrentQueue<QueueItem> quques)
+        {
             var ticks = Environment.TickCount64;
             while (quques.TryPeek(out var item))
             {
@@ -43,8 +54,10 @@ namespace FastGithub.FlowAnalyze
                     quques.TryDequeue(out _);
                 }
             }
-            quques.Enqueue(new QueueItem(ticks, length));
+            return ticks;
         }
+
+
 
         /// <summary>
         /// 获取速率
@@ -52,8 +65,12 @@ namespace FastGithub.FlowAnalyze
         /// <returns></returns>
         public FlowRate GetFlowRate()
         {
+            Flush(this.readQueue);
             var readRate = (double)this.readQueue.Sum(item => item.Length) / INTERVAL_SECONDS;
+
+            Flush(this.writeQueue);
             var writeRate = (double)this.writeQueue.Sum(item => item.Length) / INTERVAL_SECONDS;
+
             return new FlowRate { ReadRate = readRate, WriteRate = writeRate };
         }
     }
