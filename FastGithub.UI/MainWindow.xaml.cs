@@ -23,7 +23,7 @@ namespace FastGithub.UI
             InitializeComponent();
 
             var about = new MenuItem("关于(&A)");
-            about.Click += (s, e) => Process.Start(new ProcessStartInfo { FileName = PROJECT_URI, UseShellExecute = true });
+            about.Click += (s, e) => Process.Start(PROJECT_URI);
 
             var exit = new MenuItem("退出(&C)");
             exit.Click += (s, e) => this.Close();
@@ -52,31 +52,30 @@ namespace FastGithub.UI
                 var version = FileVersionInfo.GetVersionInfo(fileName);
                 this.Title = $"{FAST_GITHUB} v{version.ProductVersion}";
             }
-             
-            this.InitWebBrowsers();
+
+            this.InitFlowChart();
         }
-         
-        private async void InitWebBrowsers()
+
+        private async void InitFlowChart()
         {
             var httpClient = new HttpClient();
-            for (var i = 0; i < 5; i++)
+            while (true)
             {
                 try
                 {
                     var response = await httpClient.GetAsync("http://127.0.0.1/flowRates");
-                    response.EnsureSuccessStatusCode();
-
-                    this.webBrowserFlow.Source = new Uri("http://127.0.0.1/flow");
-                    this.webBrowserCert.Source = new Uri("http://127.0.0.1/cert");
-                    this.webBrowserReward.Source = new Uri("http://127.0.0.1/reward");
-                    break;
+                    var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+                    var flowRate = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowRate>(json);
+                    this.flowChart.Add(flowRate);
                 }
                 catch (Exception)
+                {
+                }
+                finally
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1d));
                 }
             }
-            httpClient.Dispose();
         }
 
         protected override void OnSourceInitialized(EventArgs e)

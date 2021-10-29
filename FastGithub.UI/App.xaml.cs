@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows;
@@ -23,9 +22,7 @@ namespace FastGithub.UI
                 return;
             }
 
-            this.fastGithub = StartFastGithub();
-            SetInternetExplorer();
-
+            this.fastGithub = StartFastGithub();  
             base.OnStartup(e);
         }
 
@@ -54,14 +51,6 @@ namespace FastGithub.UI
                 CreateNoWindow = true
             };
             return Process.Start(startInfo);
-        }
-
-        private static void SetInternetExplorer(int version = 9000)
-        {
-            var emulation = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", true);
-            var key = $"{Process.GetCurrentProcess().ProcessName}.exe";
-            emulation.SetValue(key, version, RegistryValueKind.DWord);
-        }
-
+        } 
     }
 }
