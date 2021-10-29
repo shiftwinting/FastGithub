@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
-using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -40,6 +39,7 @@ namespace FastGithub
             services.AddHttpClient();
             services.AddReverseProxy();
             services.AddFlowAnalyze();
+            services.AddRazorPages();
             services.AddHostedService<AppHostedService>();
 
             if (OperatingSystem.IsWindows())
@@ -69,20 +69,16 @@ namespace FastGithub
                 appBuilder.UseRouting();
                 appBuilder.UseEndpoints(endpoint =>
                 {
+                    endpoint.MapRazorPages();
                     endpoint.MapGet("/flowRates", context =>
                     {
-                        var feature = context.Features.Get<IRequestLoggingFeature>();
-                        if (feature != null)
+                        var loggingFeature = context.Features.Get<IRequestLoggingFeature>();
+                        if (loggingFeature != null)
                         {
-                            feature.Enable = false;
+                            loggingFeature.Enable = false;
                         }
                         var flowRate = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowRate();
                         return context.Response.WriteAsJsonAsync(flowRate);
-                    });
-                    endpoint.MapFallback(context =>
-                    {
-                        context.Response.Redirect("https://github.com/dotnetcore/fastgithub");
-                        return Task.CompletedTask;
                     });
                 });
             });
