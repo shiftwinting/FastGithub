@@ -1,26 +1,25 @@
+﻿@page
+@model FastGithub.Pages.FlowModel
+
 <!DOCTYPE html>
 
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <script src="libs/echarts.js"></script>
-    <script src="libs/jquery.min.js"></script>
+    <script src="echarts.min.js"></script>
+    <script src="jquery.min.js"></script>
     <title>流量监控</title>
 
     <style type="text/css">
         html, body, #chart {
-            height: 100%;
-        }
-
-        body {
             overflow: hidden;
-            background-color: #ddd;
-        }
+            height: 100%;
+        } 
     </style>
 </head>
 
-<body>
+<body onContextMenu="return false">
     <div id="chart"></div>
 
     <script type="text/javascript">

@@ -92,7 +92,7 @@
                                         <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="true"/>
                                         <Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type TabControl}}}" Value="Top"/>
                                     </MultiDataTrigger.Conditions>
-                                    
+
                                     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                                     <Setter Property="Foreground" TargetName="txt" Value="#37aefe"/>
                                 </MultiDataTrigger>
@@ -145,26 +145,20 @@
     <Grid Background="#00ffffff">
         <TabControl Style="{StaticResource TabControlWithUnderLineStyle}" Foreground="Black" Background="Transparent" BorderBrush="Transparent" BorderThickness="0">
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Cursor="Hand" Header="流量监控" Height="40" Width="100" Margin="5 0" FontSize="18">
-                <Grid Background="#ddd">
-                    <WebBrowser Source="http://127.0.0.1/flow.html" />
+                <Grid>
+                    <WebBrowser Name="webBrowserFlow"/>
                 </Grid>
             </TabItem>
 
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Cursor="Hand" Header="证书验证" Height="40" Width="100" Margin="5 0" FontSize="18">
-                <Grid Background="#ddd">
-                    <WebBrowser Source="http://127.0.0.1/cert.html" />
-                </Grid>
-            </TabItem>
-
-            <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Cursor="Hand" Header="问题反馈" Height="40" Width="100" Margin="5 0" FontSize="18">
-                <Grid Background="#ddd">
-                   
+                <Grid>
+                    <WebBrowser Name="webBrowserCert"/>
                 </Grid>
             </TabItem>
 
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Cursor="Hand" Header="一支华子" Height="40" Width="100" Margin="5 0" FontSize="18">
-                <Grid Background="#ddd">
-                    
+                <Grid>
+                    <WebBrowser Name="webBrowserReward"/>
                 </Grid>
             </TabItem>
         </TabControl>
