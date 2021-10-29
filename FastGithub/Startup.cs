@@ -1,5 +1,6 @@
 using FastGithub.Configuration;
 using FastGithub.FlowAnalyze;
+using FastGithub.HttpServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -70,6 +71,11 @@ namespace FastGithub
                 {
                     endpoint.MapGet("/flowRates", context =>
                     {
+                        var feature = context.Features.Get<IRequestLoggingFeature>();
+                        if (feature != null)
+                        {
+                            feature.Enable = false;
+                        }
                         var flowRate = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowRate();
                         return context.Response.WriteAsJsonAsync(flowRate);
                     });

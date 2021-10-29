@@ -146,7 +146,7 @@
         <TabControl Style="{StaticResource TabControlWithUnderLineStyle}" Foreground="Black" Background="Transparent" BorderBrush="Transparent" BorderThickness="0">
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Cursor="Hand" Header="流量监控" Height="40" Width="100" Margin="5 0" FontSize="18">
                 <Grid Background="#ddd">
-                    <WebBrowser Source="http://127.0.0.1/flow.html" />
+                    <WebBrowser Source="http://127.0.0.1/flow.html"/>
                 </Grid>
             </TabItem>
 
