@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
+using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace FastGithub.UI
@@ -14,7 +12,7 @@ namespace FastGithub.UI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private NotifyIcon notifyIcon;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
         private const string FAST_GITHUB = "FastGithub";
         private const string PROJECT_URI = "https://github.com/dotnetcore/FastGithub";
 
@@ -22,23 +20,23 @@ namespace FastGithub.UI
         {
             InitializeComponent();
 
-            var about = new MenuItem("关于(&A)");
+            var about = new System.Windows.Forms.MenuItem("关于(&A)");
             about.Click += (s, e) => Process.Start(PROJECT_URI);
 
-            var exit = new MenuItem("退出(&C)");
+            var exit = new System.Windows.Forms.MenuItem("退出(&C)");
             exit.Click += (s, e) => this.Close();
 
-            this.notifyIcon = new NotifyIcon
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon
             {
                 Visible = true,
                 Text = FAST_GITHUB,
-                ContextMenu = new ContextMenu(new[] { about, exit }),
+                ContextMenu = new System.Windows.Forms.ContextMenu(new[] { about, exit }),
                 Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath)
             };
 
             this.notifyIcon.MouseClick += (s, e) =>
             {
-                if (e.Button == MouseButtons.Left)
+                if (e.Button == System.Windows.Forms.MouseButtons.Left)
                 {
                     this.Show();
                     this.Activate();
@@ -51,7 +49,22 @@ namespace FastGithub.UI
             {
                 var version = FileVersionInfo.GetVersionInfo(fileName);
                 this.Title = $"{FAST_GITHUB} v{version.ProductVersion}";
-            } 
+            }
+
+       
+            this.webCert.AddHandler(KeyDownEvent, new RoutedEventHandler(WebBrowser_KeyDown), true);
+            var resource = Application.GetResourceStream(new Uri("Resource/cert.html", UriKind.Relative));
+            this.webCert.NavigateToStream(resource.Stream);
+        }
+
+        private void WebBrowser_KeyDown(object sender, RoutedEventArgs e)
+        { 
+            var @event = (KeyEventArgs)e;
+            if (@event.Key == Key.F5)
+            {
+                var resource = Application.GetResourceStream(new Uri("Resource/cert.html", UriKind.Relative));
+                this.webCert.NavigateToStream(resource.Stream);
+            }
         } 
 
         protected override void OnSourceInitialized(EventArgs e)

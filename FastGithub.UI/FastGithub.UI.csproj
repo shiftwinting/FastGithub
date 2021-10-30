@@ -126,7 +126,10 @@
     <Resource Include="app.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\reward.png" />
+    <Resource Include="Resource\reward.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\cert.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
