@@ -2,6 +2,8 @@
 using LiveCharts.Wpf;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace FastGithub.UI
@@ -14,7 +16,7 @@ namespace FastGithub.UI
         private readonly LineSeries readSeries = new LineSeries
         {
             Title = "上行速率",
-            PointGeometry = null, 
+            PointGeometry = null,
             Values = new ChartValues<double>()
         };
 
@@ -39,10 +41,35 @@ namespace FastGithub.UI
             this.Series.Add(this.writeSeries);
 
             DataContext = this;
+            this.InitFlowChart();
         }
 
-        public void Add(FlowRate flowRate)
+
+        private async void InitFlowChart()
         {
+            var httpClient = new HttpClient();
+            while (true)
+            {
+                try
+                {
+                    await this.GetFlowRateAsync(httpClient);
+                }
+                catch (Exception)
+                {
+                }
+                finally
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1d));
+                }
+            }
+        }
+
+        private async Task GetFlowRateAsync(HttpClient httpClient)
+        {
+            var response = await httpClient.GetAsync("http://127.0.0.1/flowRates");
+            var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
+            var flowRate = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowRate>(json);
+
             this.readSeries.Values.Add(flowRate.ReadRate / 1024);
             this.writeSeries.Values.Add(flowRate.WriteRate / 1024);
             this.Labels.Add(DateTime.Now.ToString("HH:mm:ss"));
@@ -54,6 +81,5 @@ namespace FastGithub.UI
                 this.Labels.RemoveAt(0);
             }
         }
-
     }
 }

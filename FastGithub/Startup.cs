@@ -39,7 +39,6 @@ namespace FastGithub
             services.AddHttpClient();
             services.AddReverseProxy();
             services.AddFlowAnalyze();
-            services.AddRazorPages();
             services.AddHostedService<AppHostedService>();
 
             if (OperatingSystem.IsWindows())
@@ -69,7 +68,6 @@ namespace FastGithub
                 appBuilder.UseRouting();
                 appBuilder.UseEndpoints(endpoint =>
                 {
-                    endpoint.MapRazorPages();
                     endpoint.MapGet("/flowRates", context =>
                     {
                         var loggingFeature = context.Features.Get<IRequestLoggingFeature>();

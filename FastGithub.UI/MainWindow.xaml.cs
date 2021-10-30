@@ -51,32 +51,8 @@ namespace FastGithub.UI
             {
                 var version = FileVersionInfo.GetVersionInfo(fileName);
                 this.Title = $"{FAST_GITHUB} v{version.ProductVersion}";
-            }
-
-            this.InitFlowChart();
-        }
-
-        private async void InitFlowChart()
-        {
-            var httpClient = new HttpClient();
-            while (true)
-            {
-                try
-                {
-                    var response = await httpClient.GetAsync("http://127.0.0.1/flowRates");
-                    var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
-                    var flowRate = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowRate>(json);
-                    this.flowChart.Add(flowRate);
-                }
-                catch (Exception)
-                {
-                }
-                finally
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1d));
-                }
-            }
-        }
+            } 
+        } 
 
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -97,7 +73,6 @@ namespace FastGithub.UI
                         handled = true;
                     }
                 }
-
                 return IntPtr.Zero;
             }
         }
