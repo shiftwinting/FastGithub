@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 
 namespace FastGithub.FlowAnalyze
 {
     sealed class FlowAnalyzer : IFlowAnalyzer
     {
         private const int INTERVAL_SECONDS = 5;
+        private long totalRead = 0;
+        private long totalWrite = 0;
         private readonly ConcurrentQueue<QueueItem> readQueue = new();
         private readonly ConcurrentQueue<QueueItem> writeQueue = new();
 
@@ -21,10 +24,12 @@ namespace FastGithub.FlowAnalyze
         {
             if (flowType == FlowType.Read)
             {
+                Interlocked.Add(ref this.totalRead, length);
                 Add(this.readQueue, length);
             }
             else
             {
+                Interlocked.Add(ref this.totalWrite, length);
                 Add(this.writeQueue, length);
             }
         }
@@ -71,7 +76,13 @@ namespace FastGithub.FlowAnalyze
             Flush(this.writeQueue);
             var writeRate = (double)this.writeQueue.Sum(item => item.Length) / INTERVAL_SECONDS;
 
-            return new FlowRate { ReadRate = readRate, WriteRate = writeRate };
+            return new FlowRate
+            {
+                TotalRead = this.totalRead,
+                TotalWrite = this.totalWrite,
+                ReadRate = readRate,
+                WriteRate = writeRate
+            };
         }
     }
 }

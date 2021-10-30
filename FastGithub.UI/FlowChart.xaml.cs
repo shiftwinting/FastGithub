@@ -69,6 +69,9 @@ namespace FastGithub.UI
             var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
             var flowRate = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowRate>(json);
 
+            this.textBlockRead.Text = flowRate.ToTotalReadString();
+            this.textBlockWrite.Text = flowRate.ToTotalWriteString();
+
             this.readSeries.Values.Add(flowRate.ReadRate / 1024);
             this.writeSeries.Values.Add(flowRate.WriteRate / 1024);
             this.Labels.Add(DateTime.Now.ToString("HH:mm:ss"));
