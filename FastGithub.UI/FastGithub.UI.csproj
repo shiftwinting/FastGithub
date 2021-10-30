@@ -129,7 +129,12 @@
     <Resource Include="Resource\reward.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resource\cert.html" />
+    <Resource Include="Resource\issue.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\LiveCharts.dll" />
+    <Resource Include="Resource\LiveCharts.Wpf.dll" />
+    <Resource Include="Resource\Newtonsoft.Json.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

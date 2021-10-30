@@ -51,22 +51,30 @@ namespace FastGithub.UI
                 this.Title = $"{FAST_GITHUB} v{version.ProductVersion}";
             }
 
-       
-            this.webCert.AddHandler(KeyDownEvent, new RoutedEventHandler(WebBrowser_KeyDown), true);
-            var resource = Application.GetResourceStream(new Uri("Resource/cert.html", UriKind.Relative));
-            this.webCert.NavigateToStream(resource.Stream);
+            this.webBrowserIssue.AddHandler(KeyDownEvent, new RoutedEventHandler(WebBrowser_KeyDown), true);
+            var resource = Application.GetResourceStream(new Uri("Resource/issue.html", UriKind.Relative));
+            this.webBrowserIssue.NavigateToStream(resource.Stream);
         }
 
+        /// <summary>
+        /// 拦截F5
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void WebBrowser_KeyDown(object sender, RoutedEventArgs e)
-        { 
+        {
             var @event = (KeyEventArgs)e;
             if (@event.Key == Key.F5)
             {
-                var resource = Application.GetResourceStream(new Uri("Resource/cert.html", UriKind.Relative));
-                this.webCert.NavigateToStream(resource.Stream);
+                var resource = Application.GetResourceStream(new Uri("Resource/issue.html", UriKind.Relative));
+                this.webBrowserIssue.NavigateToStream(resource.Stream);
             }
-        } 
+        }
 
+        /// <summary>
+        /// 拦截最小化事件
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -78,18 +86,19 @@ namespace FastGithub.UI
                 const int WM_SYSCOMMAND = 0x112;
                 const int SC_MINIMIZE = 0xf020;
 
-                if (msg == WM_SYSCOMMAND)
+                if (msg == WM_SYSCOMMAND && wParam.ToInt32() == SC_MINIMIZE)
                 {
-                    if (wParam.ToInt32() == SC_MINIMIZE)
-                    {
-                        this.Hide();
-                        handled = true;
-                    }
+                    this.Hide();
+                    handled = true;
                 }
                 return IntPtr.Zero;
             }
         }
 
+        /// <summary>
+        /// 关闭时
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnClosed(EventArgs e)
         {
             this.notifyIcon.Icon = null;

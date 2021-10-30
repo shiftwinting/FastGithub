@@ -44,7 +44,6 @@ namespace FastGithub.UI
             this.InitFlowChart();
         }
 
-
         private async void InitFlowChart()
         {
             var httpClient = new HttpClient();
