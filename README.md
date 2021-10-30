@@ -2,8 +2,10 @@
 github加速神器，解决github打不开、用户头像无法加载、releases无法上传下载、git-clone、git-pull、git-push失败等问题。
 
 ### 1 程序下载
-如果不能下载[releases](https://github.com/dotnetcore/fastgithub/releases)里发布的程序，可以到Q群[307306673](https://qm.qq.com/cgi-bin/qm/qr?k=cx_MgEIvoo1EMkrKg5tXz8vMdtPap3Rw&jump_from=webapi)里面的群文件下载。
-
+* [github-release](https://github.com/dotnetcore/fastgithub/releases)
+* Q群1 [307306673](https://qm.qq.com/cgi-bin/qm/qr?k=cx_MgEIvoo1EMkrKg5tXz8vMdtPap3Rw&jump_from=webapi)
+* Q群2 [742376932](https://qm.qq.com/cgi-bin/qm/qr?k=6BBJ1nrJwe1o1E4-NJfwSOP-C4sMGc4q&jump_from=webapi)
+  
 ### 2 部署方式
 #### 2.1 windows-x64
 * 双击运行fastgithub.exe程序
