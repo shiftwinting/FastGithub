@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup> 
+	<PropertyGroup>
+		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
@@ -11,6 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\FastGithub.FlowAnalyze\FastGithub.FlowAnalyze.csproj" />
 		<ProjectReference Include="..\FastGithub.Http\FastGithub.Http.csproj" />
 	</ItemGroup>
 

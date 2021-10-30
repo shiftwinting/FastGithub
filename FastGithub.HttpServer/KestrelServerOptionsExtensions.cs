@@ -91,10 +91,17 @@ namespace FastGithub
             certService.InstallAndTrustCaCert();
 
             var httpsPort = ReverseProxyPort.Https;
-            kestrel.Listen(IPAddress.Loopback, httpsPort,
-                listen => listen.UseHttps(https =>
-                    https.ServerCertificateSelector = (ctx, domain) =>
-                        certService.GetOrCreateServerCert(domain)));
+            kestrel.Listen(IPAddress.Loopback, httpsPort, listen =>
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    listen.UseFlowAnalyze();
+                }
+                listen.UseHttps(https =>
+                {
+                    https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);
+                });
+            });
 
             if (OperatingSystem.IsWindows())
             {
