@@ -31,7 +31,7 @@ namespace FastGithub.UI
 
         public List<string> Labels { get; } = new List<string>();
 
-        public Func<double, string> YFormatter { get; } = value => $"{value:0.00}";
+        public Func<double, string> YFormatter { get; } = value => $"{value:0.00}KB/s";
 
         public FlowChart()
         {
