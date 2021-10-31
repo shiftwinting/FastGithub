@@ -31,7 +31,7 @@ namespace FastGithub.UI
 
         public List<string> Labels { get; } = new List<string>();
 
-        public Func<double, string> YFormatter { get; } = value => $"{value:0.00}KB/s";
+        public Func<double, string> YFormatter { get; } = value => $"{FlowRate.ToNetworkSizeString((long)value)}/s";
 
         public FlowChart()
         {
@@ -69,11 +69,11 @@ namespace FastGithub.UI
             var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
             var flowRate = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowRate>(json);
 
-            this.textBlockRead.Text = flowRate.ToTotalReadString();
-            this.textBlockWrite.Text = flowRate.ToTotalWriteString();
+            this.textBlockRead.Text = FlowRate.ToNetworkSizeString(flowRate.TotalRead);
+            this.textBlockWrite.Text = FlowRate.ToNetworkSizeString(flowRate.TotalWrite);
 
-            this.readSeries.Values.Add(flowRate.ReadRate / 1024);
-            this.writeSeries.Values.Add(flowRate.WriteRate / 1024);
+            this.readSeries.Values.Add(flowRate.ReadRate);
+            this.writeSeries.Values.Add(flowRate.WriteRate);
             this.Labels.Add(DateTime.Now.ToString("HH:mm:ss"));
 
             if (this.Labels.Count > 60)

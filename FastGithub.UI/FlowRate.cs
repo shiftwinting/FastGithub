@@ -14,19 +14,10 @@
 
         public double ReadRate { get; set; }
 
-        public double WriteRate { get; set; }
-  
+        public double WriteRate { get; set; } 
+         
 
-        public string ToTotalReadString()
-        {
-            return ToNetworkString(this.TotalRead);
-        }
-
-        public string ToTotalWriteString()
-        {
-            return ToNetworkString(this.TotalWrite);
-        }
-        private static string ToNetworkString(long value)
+        public static string ToNetworkSizeString(long value)
         {
             if (value < 1024)
             {
