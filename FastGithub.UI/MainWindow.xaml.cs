@@ -85,11 +85,15 @@ namespace FastGithub.UI
             {
                 const int WM_SYSCOMMAND = 0x112;
                 const int SC_MINIMIZE = 0xf020;
+                const int SC_CLOSE = 0xf060;
 
-                if (msg == WM_SYSCOMMAND && wParam.ToInt32() == SC_MINIMIZE)
+                if (msg == WM_SYSCOMMAND)
                 {
-                    this.Hide();
-                    handled = true;
+                    if (wParam.ToInt32() == SC_MINIMIZE || wParam.ToInt32() == SC_CLOSE)
+                    {
+                        this.Hide();
+                        handled = true;
+                    }
                 }
                 return IntPtr.Zero;
             }
