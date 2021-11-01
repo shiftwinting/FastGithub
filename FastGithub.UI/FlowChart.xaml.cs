@@ -31,7 +31,7 @@ namespace FastGithub.UI
 
         public List<string> Labels { get; } = new List<string>();
 
-        public Func<double, string> YFormatter { get; } = value => $"{FlowRate.ToNetworkSizeString((long)value)}/s";
+        public Func<double, string> YFormatter { get; } = value => $"{FlowStatistics.ToNetworkSizeString((long)value)}/s";
 
         public FlowChart()
         {
@@ -51,7 +51,7 @@ namespace FastGithub.UI
             {
                 try
                 {
-                    await this.GetFlowRateAsync(httpClient);
+                    await this.GetFlowStatisticsAsync(httpClient);
                 }
                 catch (Exception)
                 {
@@ -63,17 +63,17 @@ namespace FastGithub.UI
             }
         }
 
-        private async Task GetFlowRateAsync(HttpClient httpClient)
+        private async Task GetFlowStatisticsAsync(HttpClient httpClient)
         {
-            var response = await httpClient.GetAsync("http://127.0.0.1/flowRates");
+            var response = await httpClient.GetAsync("http://127.0.0.1/flowStatistics");
             var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
-            var flowRate = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowRate>(json);
+            var flowStatistics = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowStatistics>(json);
 
-            this.textBlockRead.Text = FlowRate.ToNetworkSizeString(flowRate.TotalRead);
-            this.textBlockWrite.Text = FlowRate.ToNetworkSizeString(flowRate.TotalWrite);
+            this.textBlockRead.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalRead);
+            this.textBlockWrite.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalWrite);
 
-            this.readSeries.Values.Add(flowRate.ReadRate);
-            this.writeSeries.Values.Add(flowRate.WriteRate);
+            this.readSeries.Values.Add(flowStatistics.ReadRate);
+            this.writeSeries.Values.Add(flowStatistics.WriteRate);
             this.Labels.Add(DateTime.Now.ToString("HH:mm:ss"));
 
             if (this.Labels.Count > 60)

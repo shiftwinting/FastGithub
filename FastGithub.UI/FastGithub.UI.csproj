@@ -88,7 +88,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="FlowRate.cs" />
+    <Compile Include="FlowStatistics.cs" />
     <Compile Include="FlowChart.xaml.cs">
       <DependentUpon>FlowChart.xaml</DependentUpon>
     </Compile>

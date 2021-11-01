@@ -16,6 +16,6 @@
         /// 获取速率
         /// </summary>
         /// <returns></returns>
-        FlowRate GetFlowRate();
+        FlowStatistics GetFlowStatistics();
     }
 }

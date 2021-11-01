@@ -65,10 +65,10 @@ namespace FastGithub.FlowAnalyze
 
 
         /// <summary>
-        /// 获取速率
+        /// 获取流量分析
         /// </summary>
         /// <returns></returns>
-        public FlowRate GetFlowRate()
+        public FlowStatistics GetFlowStatistics()
         {
             Flush(this.readQueue);
             var readRate = (double)this.readQueue.Sum(item => item.Length) / INTERVAL_SECONDS;
@@ -76,7 +76,7 @@ namespace FastGithub.FlowAnalyze
             Flush(this.writeQueue);
             var writeRate = (double)this.writeQueue.Sum(item => item.Length) / INTERVAL_SECONDS;
 
-            return new FlowRate
+            return new FlowStatistics
             {
                 TotalRead = this.totalRead,
                 TotalWrite = this.totalWrite,

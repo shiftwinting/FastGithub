@@ -68,15 +68,15 @@ namespace FastGithub
                 appBuilder.UseRouting();
                 appBuilder.UseEndpoints(endpoint =>
                 {
-                    endpoint.MapGet("/flowRates", context =>
+                    endpoint.MapGet("/flowStatistics", context =>
                     {
                         var loggingFeature = context.Features.Get<IRequestLoggingFeature>();
                         if (loggingFeature != null)
                         {
                             loggingFeature.Enable = false;
                         }
-                        var flowRate = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowRate();
-                        return context.Response.WriteAsJsonAsync(flowRate);
+                        var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
+                        return context.Response.WriteAsJsonAsync(flowStatistics);
                     });
                 });
             });

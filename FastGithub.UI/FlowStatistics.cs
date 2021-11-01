@@ -1,6 +1,9 @@
 ﻿namespace FastGithub.UI
 {
-    public class FlowRate
+    /// <summary>
+    /// 流量统计
+    /// </summary>
+    public class FlowStatistics
     {
         /// <summary>
         /// 获取总读上行
@@ -12,10 +15,16 @@
         /// </summary>
         public long TotalWrite { get; set; }
 
+        /// <summary>
+        /// 获取上行速率
+        /// </summary>
         public double ReadRate { get; set; }
 
-        public double WriteRate { get; set; } 
-         
+        /// <summary>
+        /// 获取下行速率
+        /// </summary>
+        public double WriteRate { get; set; }
+
 
         public static string ToNetworkSizeString(long value)
         {
