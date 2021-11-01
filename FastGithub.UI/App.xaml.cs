@@ -30,7 +30,7 @@ namespace FastGithub.UI
             {
                 AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
                 SetWebBrowserVersion(9000);
-                this.fastGithub = StartFastGithub();
+                StartFastGithub();
             }
 
             base.OnStartup(e);
@@ -101,10 +101,6 @@ namespace FastGithub.UI
         protected override void OnExit(ExitEventArgs e)
         {
             this.globalMutex.Dispose();
-            if (this.fastGithub != null && this.fastGithub.HasExited == false)
-            {
-                this.fastGithub.Kill();
-            }
             base.OnExit(e);
         }
     }
