@@ -142,11 +142,14 @@ namespace FastGithub
             try
             {
                 Process.GetProcessById(parentId).WaitForExit();
-                await this.host.StopAsync(cancellationToken);
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, $"获取进程{parentId}异常");
+            }
+            finally
+            {
+                await this.host.StopAsync(cancellationToken);
             }
         }
 
