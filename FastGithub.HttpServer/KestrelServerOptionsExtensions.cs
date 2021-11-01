@@ -56,7 +56,11 @@ namespace FastGithub
         public static void ListenSshReverseProxy(this KestrelServerOptions kestrel)
         {
             var sshPort = ReverseProxyPort.Ssh;
-            kestrel.Listen(IPAddress.Loopback, sshPort, listen => listen.UseConnectionHandler<SshReverseProxyHandler>());
+            kestrel.Listen(IPAddress.Loopback, sshPort, listen =>
+            {
+                listen.UseFlowAnalyze();
+                listen.UseConnectionHandler<SshReverseProxyHandler>();
+            });
 
             if (OperatingSystem.IsWindows())
             {
