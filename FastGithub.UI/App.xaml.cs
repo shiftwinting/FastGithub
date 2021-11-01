@@ -14,7 +14,6 @@ namespace FastGithub.UI
     public partial class App : Application
     {
         private Mutex globalMutex;
-        private Process fastGithub;
 
         /// <summary>
         /// 程序启动
@@ -77,21 +76,22 @@ namespace FastGithub.UI
         /// 启动fastgithub
         /// </summary>
         /// <returns></returns>
-        private static Process StartFastGithub()
+        private static void StartFastGithub()
         {
             const string fileName = "fastgithub.exe";
             if (File.Exists(fileName) == false)
             {
-                return default;
+                return;
             }
 
             var startInfo = new ProcessStartInfo
             {
                 FileName = fileName,
+                Arguments = $"ParentProcessId {Process.GetCurrentProcess().Id}",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            return Process.Start(startInfo);
+            Process.Start(startInfo);
         }
 
         /// <summary>
