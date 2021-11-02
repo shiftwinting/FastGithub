@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
+    <PackageReference Include="Serilog.Sinks.Network" Version="2.0.2.68" />
     <ProjectReference Include="..\FastGithub.DomainResolve\FastGithub.DomainResolve.csproj" />
     <ProjectReference Include="..\FastGithub.HttpServer\FastGithub.HttpServer.csproj" />
     <ProjectReference Include="..\FastGithub.PacketIntercept\FastGithub.PacketIntercept.csproj" />
@@ -19,7 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" /> 
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.2.0" />
   </ItemGroup>
 
@@ -42,6 +43,10 @@
     <None Update="appsettings/appsettings.*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

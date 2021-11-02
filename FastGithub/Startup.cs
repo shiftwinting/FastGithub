@@ -64,8 +64,7 @@ namespace FastGithub
             {
                 appBuilder.UseRequestLogging();
                 appBuilder.UseHttpReverseProxy();
-
-                app.UseStaticFiles();
+                 
                 appBuilder.UseRouting();
                 appBuilder.UseEndpoints(endpoint =>
                 {
