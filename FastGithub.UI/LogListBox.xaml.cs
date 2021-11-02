@@ -41,5 +41,18 @@ namespace FastGithub.UI
             this.Dispatcher.Invoke(() => this.LogList.Add(log));
             this.BeginReceiveFrom();
         }
+
+        private void MenuItem_Copy_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (this.listBox.SelectedValue is UdpLog udpLog)
+            {
+                udpLog.SetToClipboard();
+            }
+        }
+
+        private void MenuItem_Clear_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            this.LogList.Clear();
+        }
     }
 }

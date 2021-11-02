@@ -8,6 +8,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <ListBox 
+            x:Name="listBox"
             ItemsSource="{Binding LogList}"
             VirtualizingPanel.IsVirtualizing="True"
             ScrollViewer.CanContentScroll="True"
@@ -16,7 +17,13 @@
             Background="#f7f7f7">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Margin="0 5" >
+                    <StackPanel Margin="0 5">
+                        <StackPanel.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="复制本项" Click="MenuItem_Copy_Click" />
+                                <MenuItem Header="清除所有" Click="MenuItem_Clear_Click" />
+                            </ContextMenu>
+                        </StackPanel.ContextMenu>
                         <TextBlock TextWrapping="Wrap" Text="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff}}"/>
                         <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0 5" Text="{Binding SourceContext}"/>
                         <TextBlock TextWrapping="Wrap" FontSize="14" FontWeight="Light" Text="{Binding Message}">
