@@ -87,7 +87,7 @@ namespace FastGithub.UI
             var startInfo = new ProcessStartInfo
             {
                 FileName = fileName,
-                Arguments = $"ParentProcessId={Process.GetCurrentProcess().Id}",
+                Arguments = $"ParentProcessId={Process.GetCurrentProcess().Id} UdpLoggerPort={UdpLoggerPort.Value}",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
