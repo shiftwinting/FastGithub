@@ -152,7 +152,7 @@
 
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Header="日志记录" Height="40" Width="100" Margin="5 0" FontSize="18">
                 <Grid Background="#f7f7f7">
-                    <local:LogListBox Margin="16"></local:LogListBox>
+                    <local:UdpLogListBox/>
                 </Grid>
             </TabItem>
 
