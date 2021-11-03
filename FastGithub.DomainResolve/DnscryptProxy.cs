@@ -71,6 +71,7 @@ namespace FastGithub.DomainResolve
             var localEndPoint = new IPEndPoint(IPAddress.Loopback, port);
 
             await TomlUtil.SetListensAsync(tomlPath, localEndPoint, cancellationToken);
+            await TomlUtil.SetlogLevelAsync(tomlPath, 6, cancellationToken);
             await TomlUtil.SetEdnsClientSubnetAsync(tomlPath, cancellationToken);
 
             foreach (var process in Process.GetProcessesByName(NAME))
