@@ -19,8 +19,11 @@ namespace FastGithub
         {
             return app.Use(next => async context =>
             {
+                if (context.Response.HasStarted == false)
+                {
+                    context.Response.Headers.Server = serverHeader;
+                }
                 await next(context);
-                context.Response.Headers.Server = serverHeader;
             });
         }
 
