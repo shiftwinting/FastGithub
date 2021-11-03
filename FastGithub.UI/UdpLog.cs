@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Media;
 
 namespace FastGithub.UI
 {
@@ -8,17 +7,18 @@ namespace FastGithub.UI
     {
         public DateTime Timestamp { get; set; }
 
-        public string Level { get; set; }
+        public LogLevel Level { get; set; }
 
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
-        public string SourceContext { get; set; }
+        public string SourceContext { get; set; } = string.Empty;
 
-        public string Color => this.Level == "Information" ? "#333" : "IndianRed";
+        public string Color => this.Level <= LogLevel.Information ? "#333" : "IndianRed";
 
         public void SetToClipboard()
         {
             Clipboard.SetText($"{this.Timestamp:yyyy-MM-dd HH:mm:ss.fff}\r\n{this.Message}");
         }
     }
+
 }

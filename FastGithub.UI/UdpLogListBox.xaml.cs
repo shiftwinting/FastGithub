@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
@@ -21,22 +22,25 @@ namespace FastGithub.UI
         public UdpLogListBox()
         {
             InitializeComponent();
-            DataContext = this;
 
+            this.DataContext = this;
             this.InitUdpLoggerAsync();
         }
 
         private async void InitUdpLoggerAsync()
-        {            
+        {
             this.socket.Bind(new IPEndPoint(IPAddress.Loopback, UdpLoggerPort.Value));
-            while (true)
+            while (this.Dispatcher.HasShutdownStarted == false)
             {
                 var log = await this.GetUdpLogAsync();
-                this.LogList.Add(log);
+                if (log != null)
+                {
+                    this.LogList.Add(log);
+                }
             }
         }
 
-        private async Task<UdpLog> GetUdpLogAsync()
+        private async Task<UdpLog?> GetUdpLogAsync()
         {
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
             var taskCompletionSource = new TaskCompletionSource<int>();
@@ -44,9 +48,8 @@ namespace FastGithub.UI
             var length = await taskCompletionSource.Task;
 
             var json = Encoding.UTF8.GetString(buffer, 0, length);
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<UdpLog>(json);
+            return JsonConvert.DeserializeObject<UdpLog>(json);
         }
-
 
         private void EndReceiveFrom(IAsyncResult ar)
         {

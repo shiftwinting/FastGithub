@@ -12,7 +12,7 @@ namespace FastGithub.UI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private System.Windows.Forms.NotifyIcon notifyIcon;
+        private readonly System.Windows.Forms.NotifyIcon notifyIcon;
         private const string FAST_GITHUB = "FastGithub";
         private const string PROJECT_URI = "https://github.com/dotnetcore/FastGithub";
 
@@ -78,7 +78,7 @@ namespace FastGithub.UI
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            var hwndSource = (HwndSource)PresentationSource.FromVisual(this);
             hwndSource.AddHook(WndProc);
 
             IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

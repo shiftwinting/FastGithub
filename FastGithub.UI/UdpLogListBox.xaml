@@ -34,8 +34,8 @@
                                 <MenuItem Header="清除所有" Click="MenuItem_Clear_Click" />
                             </ContextMenu>
                         </StackPanel.ContextMenu>
-                        <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0 3" Text="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff}}"/>
-                        <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0 3" FontWeight="Light" Text="{Binding Message}">
+                        <TextBlock TextWrapping="Wrap" FontSize="13" Margin="0 2" Text="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff}}"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="14" Margin="0 2" FontWeight="Light" Text="{Binding Message}">
                             <TextBlock.Foreground>
                                 <SolidColorBrush Color="{Binding Color}"/>
                             </TextBlock.Foreground>

@@ -1,5 +1,6 @@
 ﻿using LiveCharts;
 using LiveCharts.Wpf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -40,18 +41,18 @@ namespace FastGithub.UI
             this.Series.Add(this.readSeries);
             this.Series.Add(this.writeSeries);
 
-            DataContext = this;
+            this.DataContext = this;
             this.InitFlowChart();
         }
 
         private async void InitFlowChart()
         {
-            var httpClient = new HttpClient();
-            while (true)
+            using var httpClient = new HttpClient();
+            while (this.Dispatcher.HasShutdownStarted == false)
             {
                 try
                 {
-                    await this.GetFlowStatisticsAsync(httpClient);
+                    await this.FlushFlowStatisticsAsync(httpClient);
                 }
                 catch (Exception)
                 {
@@ -63,11 +64,15 @@ namespace FastGithub.UI
             }
         }
 
-        private async Task GetFlowStatisticsAsync(HttpClient httpClient)
+        private async Task FlushFlowStatisticsAsync(HttpClient httpClient)
         {
             var response = await httpClient.GetAsync("http://127.0.0.1/flowStatistics");
             var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
-            var flowStatistics = Newtonsoft.Json.JsonConvert.DeserializeObject<FlowStatistics>(json);
+            var flowStatistics = JsonConvert.DeserializeObject<FlowStatistics>(json);
+            if (flowStatistics == null)
+            {
+                return;
+            }
 
             this.textBlockRead.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalRead);
             this.textBlockWrite.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalWrite);
