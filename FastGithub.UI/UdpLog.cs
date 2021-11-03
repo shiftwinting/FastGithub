@@ -18,7 +18,7 @@ namespace FastGithub.UI
 
         public void SetToClipboard()
         {
-            Clipboard.SetText($"{this.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")}\r\n{this.SourceContext}\r\n{this.Message}");
+            Clipboard.SetText($"{this.Timestamp:yyyy-MM-dd HH:mm:ss.fff}\r\n{this.Message}");
         }
     }
 }
