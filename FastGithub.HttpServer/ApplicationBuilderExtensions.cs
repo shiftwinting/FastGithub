@@ -10,6 +10,21 @@ namespace FastGithub
     public static class ApplicationBuilderExtensions
     {
         /// <summary>
+        /// 使用服务头
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="serverHeader"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseServerHeader(this IApplicationBuilder app, string serverHeader = nameof(FastGithub))
+        {
+            return app.Use(next => async context =>
+            {
+                await next(context);
+                context.Response.Headers.Server = serverHeader;
+            });
+        }
+
+        /// <summary>
         /// 使用http代理中间件
         /// </summary>
         /// <param name="app"></param> 
