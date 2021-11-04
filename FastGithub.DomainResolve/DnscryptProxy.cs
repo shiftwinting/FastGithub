@@ -80,7 +80,7 @@ namespace FastGithub.DomainResolve
                 process.WaitForExit();
             }
 
-            if (OperatingSystem.IsWindows())
+            if (OperatingSystem.IsWindows() && Process.GetCurrentProcess().SessionId == 0)
             {
                 StartDnscryptProxy("-service uninstall")?.WaitForExit();
                 StartDnscryptProxy("-service install")?.WaitForExit();
@@ -96,7 +96,7 @@ namespace FastGithub.DomainResolve
             {
                 this.LocalEndPoint = localEndPoint;
                 this.process.EnableRaisingEvents = true;
-                this.process.Exited += Process_Exited;
+                this.process.Exited += (s, e) => this.LocalEndPoint = null;
             }
         }
 
@@ -107,7 +107,7 @@ namespace FastGithub.DomainResolve
         {
             try
             {
-                if (OperatingSystem.IsWindows())
+                if (OperatingSystem.IsWindows() && Process.GetCurrentProcess().SessionId == 0)
                 {
                     StartDnscryptProxy("-service stop")?.WaitForExit();
                     StartDnscryptProxy("-service uninstall")?.WaitForExit();
@@ -156,16 +156,6 @@ namespace FastGithub.DomainResolve
             }
 
             throw new FastGithubException("当前无可用的端口");
-        }
-
-        /// <summary>
-        /// 进程退出时
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Process_Exited(object? sender, EventArgs e)
-        {
-            this.LocalEndPoint = null;
         }
 
         /// <summary>
