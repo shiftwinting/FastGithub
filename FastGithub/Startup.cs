@@ -1,6 +1,5 @@
 using FastGithub.Configuration;
 using FastGithub.FlowAnalyze;
-using FastGithub.HttpServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -68,15 +67,11 @@ namespace FastGithub
                 appBuilder.UseHttpReverseProxy();
 
                 appBuilder.UseRouting();
+                appBuilder.DisableRequestLogging();
                 appBuilder.UseEndpoints(endpoint =>
                 {
                     endpoint.MapGet("/flowStatistics", context =>
                     {
-                        var loggingFeature = context.Features.Get<IRequestLoggingFeature>();
-                        if (loggingFeature != null)
-                        {
-                            loggingFeature.Enable = false;
-                        }
                         var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
                         return context.Response.WriteAsJsonAsync(flowStatistics);
                     });
