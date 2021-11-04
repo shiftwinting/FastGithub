@@ -34,8 +34,14 @@ namespace FastGithub.UI
 
         private void NavigateIssueHtml()
         {
-            var resource = Application.GetResourceStream(new Uri("Resource/issue.html", UriKind.Relative));
-            this.webBrowser.NavigateToStream(resource.Stream);
+            try
+            {
+                var resource = Application.GetResourceStream(new Uri("Resource/issue.html", UriKind.Relative));
+                this.webBrowser.NavigateToStream(resource.Stream);
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }
