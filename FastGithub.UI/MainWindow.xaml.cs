@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace FastGithub.UI
@@ -49,27 +48,9 @@ namespace FastGithub.UI
             {
                 var version = FileVersionInfo.GetVersionInfo(fileName);
                 this.Title = $"{FAST_GITHUB} v{version.ProductVersion}";
-            }
-
-            this.webBrowserIssue.AddHandler(KeyDownEvent, new RoutedEventHandler(WebBrowser_KeyDown), true);
-            var resource = Application.GetResourceStream(new Uri("Resource/issue.html", UriKind.Relative));
-            this.webBrowserIssue.NavigateToStream(resource.Stream);
-        }
-
-        /// <summary>
-        /// 拦截F5
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void WebBrowser_KeyDown(object sender, RoutedEventArgs e)
-        {
-            var @event = (KeyEventArgs)e;
-            if (@event.Key == Key.F5)
-            {
-                var resource = Application.GetResourceStream(new Uri("Resource/issue.html", UriKind.Relative));
-                this.webBrowserIssue.NavigateToStream(resource.Stream);
-            }
-        }
+            } 
+        } 
+        
 
         /// <summary>
         /// 拦截最小化事件

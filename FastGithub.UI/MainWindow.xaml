@@ -158,7 +158,7 @@
 
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Header="问题解答" Height="40" Width="100" Margin="5 0" FontSize="18">
                 <Grid Background="#f7f7f7">
-                    <WebBrowser Name="webBrowserIssue"  />
+                    <local:IssuesWebbrowser/>
                 </Grid>
             </TabItem>
 
