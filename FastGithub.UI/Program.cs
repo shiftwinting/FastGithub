@@ -10,11 +10,15 @@ namespace FastGithub.UI
 {
     class Program
     {
+        private const string MUTEX_NAME = "Global\\FastGithub.UI";
+        private const string MAIN_WINDOWS = "MainWindow.xaml";
+        private const string FASTGITHUB_PATH = "fastgithub.exe";
+
         [STAThread]
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-            using var mutex = new Mutex(true, "Global\\FastGithub.UI", out var isFirstInstance);
+            using var mutex = new Mutex(true, MUTEX_NAME, out var isFirstInstance);
             if (isFirstInstance == false)
             {
                 return;
@@ -24,7 +28,7 @@ namespace FastGithub.UI
             SetWebBrowserVersion();
 
             var app = new Application();
-            app.StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
+            app.StartupUri = new Uri(MAIN_WINDOWS, UriKind.Relative);
             app.Run();
         }
 
@@ -71,7 +75,7 @@ namespace FastGithub.UI
         /// <returns></returns>
         private static void StartFastGithub()
         {
-            const string fileName = "fastgithub.exe";
+            const string fileName = FASTGITHUB_PATH;
             if (File.Exists(fileName) == false)
             {
                 return;
