@@ -8,18 +8,24 @@ using System.Windows;
 
 namespace FastGithub.UI
 {
-    /// <summary>
-    /// App.xaml 的交互逻辑
-    /// </summary>
-    public partial class App : Application
+    class Program
     {
-        private readonly Mutex globalMutex;
-        private readonly bool isFirstInstance;
-
-        public App()
+        [STAThread]
+        static void Main(string[] args)
         {
-            this.globalMutex = new Mutex(true, "Global\\FastGithub.UI", out this.isFirstInstance);
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+            using var mutex = new Mutex(true, "Global\\FastGithub.UI", out var isFirstInstance);
+            if (isFirstInstance == false)
+            {
+                return;
+            }
+
+            StartFastGithub();
+            SetWebBrowserVersion(9000);
+
+            var app = new Application();
+            app.StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
+            app.Run();
         }
 
         /// <summary>
@@ -36,32 +42,11 @@ namespace FastGithub.UI
                 return default;
             }
 
-            var stream = GetResourceStream(new Uri($"Resource/{name}.dll", UriKind.Relative)).Stream;
+            var stream = Application.GetResourceStream(new Uri($"Resource/{name}.dll", UriKind.Relative)).Stream;
             var buffer = new byte[stream.Length];
             stream.Read(buffer, 0, buffer.Length);
             return Assembly.Load(buffer);
         }
-
-
-        /// <summary>
-        /// 程序启动
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnStartup(StartupEventArgs e)
-        {
-            if (this.isFirstInstance == false)
-            {
-                this.Shutdown();
-            }
-            else
-            {               
-                StartFastGithub(); 
-                SetWebBrowserVersion(9000);
-            }
-
-            base.OnStartup(e);
-        }
-
 
         /// <summary>
         /// 设置浏览器版本
@@ -94,16 +79,6 @@ namespace FastGithub.UI
                 CreateNoWindow = true
             };
             Process.Start(startInfo);
-        }
-
-        /// <summary>
-        /// 程序退出
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnExit(ExitEventArgs e)
-        {
-            this.globalMutex.Dispose();
-            base.OnExit(e);
         }
     }
 }

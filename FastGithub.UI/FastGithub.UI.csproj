@@ -11,11 +11,20 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+		<StartupObject></StartupObject>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Remove="Resource\*.*" />
 		<Resource Include="Resource\*.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="App.xaml.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Remove="App.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
