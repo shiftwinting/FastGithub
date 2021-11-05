@@ -21,7 +21,7 @@ namespace FastGithub.UI
             }
 
             StartFastGithub();
-            SetWebBrowserVersion(9000);
+            SetWebBrowserVersion();
 
             var app = new Application();
             app.StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
@@ -51,12 +51,18 @@ namespace FastGithub.UI
         /// <summary>
         /// 设置浏览器版本
         /// </summary>
-        /// <param name="version"></param>
-        private static void SetWebBrowserVersion(int version)
+        private static void SetWebBrowserVersion()
         {
-            var registry = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", true);
-            var key = $"{Process.GetCurrentProcess().ProcessName}.exe";
-            registry.SetValue(key, version, RegistryValueKind.DWord);
+            const string subKey = @"Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION";
+            var registryKey = Registry.CurrentUser.OpenSubKey(subKey, true);
+            if (registryKey == null)
+            {
+                registryKey = Registry.CurrentUser.CreateSubKey(subKey);
+            }
+            var name = $"{Process.GetCurrentProcess().ProcessName}.exe";
+            using var webBrowser = new System.Windows.Forms.WebBrowser();
+            var value = int.Parse($"{webBrowser.Version.Major}000");
+            registryKey.SetValue(name, value, RegistryValueKind.DWord);
         }
 
         /// <summary>
