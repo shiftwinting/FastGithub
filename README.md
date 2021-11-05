@@ -9,6 +9,8 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 ### 2 部署方式
 #### 2.1 windows-x64
 * 双击运行FastGithub.UI.exe
+* `fastgithub.exe start` // 以windows服务安装并启动
+* `fastgithub.exe stop` // 以windows服务卸载并删除
 
 #### 2.2 linux-x64
 * 执行`./fastgithub`
