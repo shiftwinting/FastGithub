@@ -74,16 +74,15 @@ namespace FastGithub.UI
         /// </summary>
         /// <returns></returns>
         private static void StartFastGithub()
-        {
-            const string fileName = FASTGITHUB_PATH;
-            if (File.Exists(fileName) == false)
+        { 
+            if (File.Exists(FASTGITHUB_PATH) == false)
             {
                 return;
             }
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = fileName,
+                FileName = FASTGITHUB_PATH,
                 Arguments = $"ParentProcessId={Process.GetCurrentProcess().Id} UdpLoggerPort={UdpLogger.Port}",
                 UseShellExecute = false,
                 CreateNoWindow = true
