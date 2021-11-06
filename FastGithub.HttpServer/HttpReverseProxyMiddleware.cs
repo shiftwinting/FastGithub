@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
@@ -79,7 +80,7 @@ namespace FastGithub.HttpServer
             }
 
             // 未配置的域名，但仍然被解析到本机ip的域名
-            if (OperatingSystem.IsWindows() && host.Host.Contains('.'))
+            if (OperatingSystem.IsWindows() && IsDomain(host.Host))
             {
                 this.logger.LogWarning($"域名{host.Host}可能已经被DNS污染");
                 domainConfig = defaultDomainConfig;
@@ -87,6 +88,12 @@ namespace FastGithub.HttpServer
             }
 
             return false;
+
+            // 是否为域名
+            static bool IsDomain(string host)
+            {
+                return IPAddress.TryParse(host, out _) == false && host.Contains('.');
+            }
         }
 
         /// <summary>
