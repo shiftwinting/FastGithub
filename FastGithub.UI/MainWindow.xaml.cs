@@ -13,26 +13,25 @@ namespace FastGithub.UI
     {
         private readonly System.Windows.Forms.NotifyIcon notifyIcon;
         private const string FASTGITHUB_UI = "FastGithub.UI";
-        private const string PROJECT_URI = "https://github.com/dotnetcore/FastGithub";
+        private const string RELEASES_URI = "https://github.com/dotnetcore/FastGithub/releases";
 
         public MainWindow()
         {
             InitializeComponent();
 
-            var about = new System.Windows.Forms.MenuItem("关于(&A)");
-            about.Click += (s, e) => Process.Start(PROJECT_URI);
+            var upgrade = new System.Windows.Forms.MenuItem("检测更新(&U)");
+            upgrade.Click += (s, e) => Process.Start(RELEASES_URI);
 
-            var exit = new System.Windows.Forms.MenuItem("退出(&C)");
+            var exit = new System.Windows.Forms.MenuItem("关闭应用(&C)");
             exit.Click += (s, e) => this.Close();
 
             var version = this.GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-
             this.Title = $"{FASTGITHUB_UI} v{version}";
             this.notifyIcon = new System.Windows.Forms.NotifyIcon
             {
                 Visible = true,
                 Text = FASTGITHUB_UI,
-                ContextMenu = new System.Windows.Forms.ContextMenu(new[] { about, exit }),
+                ContextMenu = new System.Windows.Forms.ContextMenu(new[] { upgrade, exit }),
                 Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath)
             };
 
