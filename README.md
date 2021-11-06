@@ -24,8 +24,8 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 * [具体配置详情](https://github.com/dotnetcore/FastGithub/blob/master/MacOSXConfig.md)
 
 ### 3 软件功能 
-* 为配置域名提供纯净的DNS解析；
-* 基于tcp连接测速的IP优选，挑选最快的IP；
+* 提供域名的纯净IP解析；
+* 提供IP测速并选择最快的IP；
 * 提供域名的tls连接自定义配置；
 * google的CDN资源替换，解决大量国外网站无法加载js和css的问题；
   
