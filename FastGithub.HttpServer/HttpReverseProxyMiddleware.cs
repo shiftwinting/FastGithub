@@ -79,8 +79,9 @@ namespace FastGithub.HttpServer
             }
 
             // 未配置的域名，但仍然被解析到本机ip的域名
-            if (host.Host.Contains('.') == true)
+            if (OperatingSystem.IsWindows() && host.Host.Contains('.'))
             {
+                this.logger.LogWarning($"域名{host.Host}可能已经被DNS污染");
                 domainConfig = defaultDomainConfig;
                 return true;
             }
