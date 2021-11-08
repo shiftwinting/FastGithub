@@ -22,7 +22,12 @@ github加速神器，解决github打不开、用户头像无法加载、releases
 * 安装cacert/fastgithub.cer并设置信任
 * 设置系统自动代理为`http://127.0.0.1:38457`，或手动代理http/https为`127.0.0.1:38457`
 * [具体配置详情](https://github.com/dotnetcore/FastGithub/blob/master/MacOSXConfig.md)
-
+ 
+#### 2.4 docker-compose一键部署
+* 准备好docker 18.09, docker-compose.
+* 在源码目录下，有一个docker-compose.yaml 文件，专用于在实际项目中，临时使用github.com源码，而做的demo配置。
+* 根据自己的需要更新docker-compose.yaml中的sample和build镜像即可完成拉github.com源码加速，并基于源码做后续的操作。
+ 
 ### 3 软件功能 
 * 提供域名的纯净IP解析；
 * 提供IP测速并选择最快的IP；
