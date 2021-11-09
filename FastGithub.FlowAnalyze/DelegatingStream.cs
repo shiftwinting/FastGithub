@@ -7,7 +7,7 @@ namespace FastGithub.FlowAnalyze
 {
     abstract class DelegatingStream : Stream
     {
-        public Stream Inner { get; }
+        protected Stream Inner { get; }
 
         public DelegatingStream(Stream inner)
         {
