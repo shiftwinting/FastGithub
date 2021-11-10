@@ -1,8 +1,8 @@
 ﻿using LiveCharts;
+using LiveCharts.Configurations;
 using LiveCharts.Wpf;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -18,19 +18,24 @@ namespace FastGithub.UI
         {
             Title = "上行速率",
             PointGeometry = null,
-            Values = new ChartValues<double>()
+            Values = new ChartValues<RateItem>()
         };
 
         private readonly LineSeries writeSeries = new LineSeries()
         {
             Title = "下行速率",
             PointGeometry = null,
-            Values = new ChartValues<double>()
+            Values = new ChartValues<RateItem>()
         };
 
-        public SeriesCollection Series { get; } = new SeriesCollection();
+        private static DateTime GetDateTime(double timestamp) => new DateTime(1970, 1, 1).Add(TimeSpan.FromMilliseconds(timestamp)).ToLocalTime();
 
-        public List<string> Labels { get; } = new List<string>();
+        private static double GetTimestamp(DateTime dateTime) => dateTime.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
+
+
+        public SeriesCollection Series { get; } = new SeriesCollection(Mappers.Xy<RateItem>().X(item => item.Timestamp).Y(item => item.Rate));
+
+        public Func<double, string> XFormatter { get; } = timestamp => GetDateTime(timestamp).ToString("HH:mm:ss");
 
         public Func<double, string> YFormatter { get; } = value => $"{FlowStatistics.ToNetworkSizeString((long)value)}/s";
 
@@ -77,16 +82,29 @@ namespace FastGithub.UI
             this.textBlockRead.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalRead);
             this.textBlockWrite.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalWrite);
 
-            this.readSeries.Values.Add(flowStatistics.ReadRate);
-            this.writeSeries.Values.Add(flowStatistics.WriteRate);
-            this.Labels.Add(DateTime.Now.ToString("HH:mm:ss"));
+            var timestamp = GetTimestamp(DateTime.Now);
+            this.readSeries.Values.Add(new RateItem(flowStatistics.ReadRate, timestamp));
+            this.writeSeries.Values.Add(new RateItem(flowStatistics.WriteRate, timestamp));
 
-            if (this.Labels.Count > 60)
+            if (this.readSeries.Values.Count > 60)
             {
                 this.readSeries.Values.RemoveAt(0);
                 this.writeSeries.Values.RemoveAt(0);
-                this.Labels.RemoveAt(0);
             }
         }
+
+        private class RateItem
+        {
+            public double Rate { get; }
+
+            public double Timestamp { get; }
+
+            public RateItem(double rate, double timestamp)
+            {
+                this.Rate = rate;
+                this.Timestamp = timestamp;
+            }
+        }
+
     }
 }
