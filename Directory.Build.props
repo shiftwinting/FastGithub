@@ -2,8 +2,7 @@
 	<PropertyGroup>
 		<Version>2.0.7</Version>	
 		<Nullable>enable</Nullable>
-		<TargetFramework>net6.0</TargetFramework>	
-		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+		<TargetFramework>net6.0</TargetFramework>
 		<IsWebConfigTransformDisabled>true</IsWebConfigTransformDisabled> 		
 		<Description>github加速神器</Description>
 		<Copyright>https://github.com/dotnetcore/FastGithub</Copyright>
