@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace FastGithub.HttpServer
 {
@@ -32,6 +33,12 @@ namespace FastGithub.HttpServer
         /// <param name="logger"></param>
         public void Install(string caCertFilePath, ILogger logger)
         {
+            var destCertFilePath = Path.Combine(this.RootCertPath, "fastgithub.crt");
+            if (File.Exists(destCertFilePath) && File.ReadAllBytes(caCertFilePath).SequenceEqual(File.ReadAllBytes(destCertFilePath)))
+            {
+                return;
+            }
+
             if (Environment.UserName != "root")
             {
                 logger.LogWarning($"无法自动安装CA证书{caCertFilePath}，因为没有root权限");
@@ -41,7 +48,6 @@ namespace FastGithub.HttpServer
             try
             {
                 Directory.CreateDirectory(this.RootCertPath);
-                var destCertFilePath = Path.Combine(this.RootCertPath, "fastgithub.crt");
                 File.Copy(caCertFilePath, destCertFilePath, overwrite: true);
                 Process.Start(this.CertUpdateFileName).WaitForExit();
             }
