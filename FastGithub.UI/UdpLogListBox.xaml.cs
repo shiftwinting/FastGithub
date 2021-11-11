@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Windows.Controls;
 
 namespace FastGithub.UI
@@ -19,16 +20,22 @@ namespace FastGithub.UI
         }
 
         private async void InitUdpLoggerAsync()
-        { 
+        {
             while (this.Dispatcher.HasShutdownStarted == false)
             {
-                var log = await UdpLogger.GetUdpLogAsync();
-                if (log != null)
+                try
                 {
-                    this.LogList.Add(log);
+                    var log = await UdpLogger.GetUdpLogAsync();
+                    if (log != null)
+                    {
+                        this.LogList.Add(log);
+                    }
+                }
+                catch (Exception)
+                {
                 }
             }
-        } 
+        }
 
         private void MenuItem_Copy_Click(object sender, System.Windows.RoutedEventArgs e)
         {

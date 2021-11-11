@@ -18,14 +18,16 @@ namespace FastGithub.UI
         {
             Title = "上行速率",
             PointGeometry = null,
-            Values = new ChartValues<RateItem>()
+            LineSmoothness = 1D,
+            Values = new ChartValues<RateTick>()
         };
 
         private readonly LineSeries writeSeries = new LineSeries()
         {
             Title = "下行速率",
             PointGeometry = null,
-            Values = new ChartValues<RateItem>()
+            LineSmoothness = 1D,
+            Values = new ChartValues<RateTick>()
         };
 
         private static DateTime GetDateTime(double timestamp) => new DateTime(1970, 1, 1).Add(TimeSpan.FromMilliseconds(timestamp)).ToLocalTime();
@@ -33,7 +35,7 @@ namespace FastGithub.UI
         private static double GetTimestamp(DateTime dateTime) => dateTime.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
 
 
-        public SeriesCollection Series { get; } = new SeriesCollection(Mappers.Xy<RateItem>().X(item => item.Timestamp).Y(item => item.Rate));
+        public SeriesCollection Series { get; } = new SeriesCollection(Mappers.Xy<RateTick>().X(item => item.Timestamp).Y(item => item.Rate));
 
         public Func<double, string> XFormatter { get; } = timestamp => GetDateTime(timestamp).ToString("HH:mm:ss");
 
@@ -47,10 +49,10 @@ namespace FastGithub.UI
             this.Series.Add(this.writeSeries);
 
             this.DataContext = this;
-            this.InitFlowChart();
+            this.InitFlowChartAsync();
         }
 
-        private async void InitFlowChart()
+        private async void InitFlowChartAsync()
         {
             using var httpClient = new HttpClient();
             while (this.Dispatcher.HasShutdownStarted == false)
@@ -83,8 +85,8 @@ namespace FastGithub.UI
             this.textBlockWrite.Text = FlowStatistics.ToNetworkSizeString(flowStatistics.TotalWrite);
 
             var timestamp = GetTimestamp(DateTime.Now);
-            this.readSeries.Values.Add(new RateItem(flowStatistics.ReadRate, timestamp));
-            this.writeSeries.Values.Add(new RateItem(flowStatistics.WriteRate, timestamp));
+            this.readSeries.Values.Add(new RateTick(flowStatistics.ReadRate, timestamp));
+            this.writeSeries.Values.Add(new RateTick(flowStatistics.WriteRate, timestamp));
 
             if (this.readSeries.Values.Count > 60)
             {
@@ -93,13 +95,13 @@ namespace FastGithub.UI
             }
         }
 
-        private class RateItem
+        private class RateTick
         {
             public double Rate { get; }
 
             public double Timestamp { get; }
 
-            public RateItem(double rate, double timestamp)
+            public RateTick(double rate, double timestamp)
             {
                 this.Rate = rate;
                 this.Timestamp = timestamp;

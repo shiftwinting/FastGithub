@@ -18,12 +18,12 @@
         <lvc:CartesianChart Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="flowChart" Series="{Binding Series}" LegendLocation="None" AnimationsSpeed="0:0:1" >
 
             <lvc:CartesianChart.AxisX >
-                <lvc:Axis Unit="1000" LabelsRotation="0" Foreground="#222" LabelFormatter="{Binding XFormatter}">
+                <lvc:Axis Foreground="#222" Unit="1000" LabelFormatter="{Binding XFormatter}">
                 </lvc:Axis>
             </lvc:CartesianChart.AxisX>
 
             <lvc:CartesianChart.AxisY>
-                <lvc:Axis Foreground="#222"  MinValue="0" LabelFormatter="{Binding YFormatter}">
+                <lvc:Axis Foreground="#222" MinValue="0" LabelFormatter="{Binding YFormatter}">
                 </lvc:Axis>
             </lvc:CartesianChart.AxisY>
 

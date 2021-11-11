@@ -149,6 +149,7 @@ namespace FastGithub
             }
             finally
             {
+                this.logger.LogInformation($"正在主动关闭，因为父进程已退出");
                 await this.host.StopAsync(cancellationToken);
             }
         }
