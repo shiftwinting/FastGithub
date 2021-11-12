@@ -21,7 +21,7 @@ namespace FastGithub
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfMacOS>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfWindows>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxCentOS>()
-                .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxDebain>()
+                .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxDebian>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxUbuntu>()
                 .AddSingleton<HttpProxyMiddleware>()
                 .AddSingleton<RequestLoggingMiddleware>()

@@ -2,7 +2,7 @@
 
 namespace FastGithub.HttpServer
 {
-    class CaCertInstallerOfLinuxDebain : CaCertInstallerOfLinux
+    class CaCertInstallerOfLinuxDebian : CaCertInstallerOfLinux
     {
         public override string RootCertPath => "/usr/local/share/ca-certificates";
 
@@ -14,7 +14,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public override bool IsSupported()
         {
-            return OperatingSystem.IsLinux() && base.IsReleasName("Debain");
+            return OperatingSystem.IsLinux() && base.IsReleasName("Debian");
         }
     }
 }

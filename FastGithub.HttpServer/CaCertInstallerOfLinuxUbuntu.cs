@@ -2,7 +2,7 @@
 
 namespace FastGithub.HttpServer
 {
-    sealed class CaCertInstallerOfLinuxUbuntu : CaCertInstallerOfLinuxDebain
+    sealed class CaCertInstallerOfLinuxUbuntu : CaCertInstallerOfLinuxDebian
     {
         /// <summary>
         /// 是否支持
