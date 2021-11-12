@@ -10,7 +10,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public override bool IsSupported()
         {
-            return OperatingSystem.IsLinux() && base.IsReleasName("CentOS");
+            return OperatingSystem.IsLinux() && IsReleasName("CentOS");
         }
     }
 }

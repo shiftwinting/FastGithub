@@ -53,6 +53,7 @@ namespace FastGithub.HttpServer
             }
             catch (Exception ex)
             {
+                File.Delete(destCertFilePath);
                 logger.LogWarning(ex.Message, "自动安装证书异常");
             }
         }
@@ -63,21 +64,22 @@ namespace FastGithub.HttpServer
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        protected bool IsReleasName(string name)
+        protected static bool IsReleasName(string name)
         {
             if (File.Exists(OS_RELEASE_FILE) == false)
             {
                 return false;
             }
 
-            var releaseLines = File.ReadAllLines(OS_RELEASE_FILE);
-            if (releaseLines.Length == 0)
+            foreach (var line in File.ReadAllLines(OS_RELEASE_FILE))
             {
-                return false;
+                if (line.StartsWith("NAME=") && line.Contains(name))
+                {
+                    return true;
+                }
             }
 
-            var nameLine = releaseLines[0];
-            return nameLine.Contains(name);
+            return false;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public override bool IsSupported()
         {
-            return OperatingSystem.IsLinux() && base.IsReleasName("Debian");
+            return OperatingSystem.IsLinux() && IsReleasName("Debian");
         }
     }
 }
