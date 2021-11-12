@@ -20,6 +20,7 @@ namespace FastGithub
                 .AddSingleton<CertService>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfMacOS>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfWindows>()
+                .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxRedHat>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxCentOS>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxDebian>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxUbuntu>()
