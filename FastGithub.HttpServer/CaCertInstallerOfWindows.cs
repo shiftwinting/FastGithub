@@ -6,6 +6,13 @@ namespace FastGithub.HttpServer
 {
     sealed class CaCertInstallerOfWindows : ICaCertInstaller
     {
+        private readonly Logger<CaCertInstallerOfWindows> logger;
+
+        public CaCertInstallerOfWindows(Logger<CaCertInstallerOfWindows> logger)
+        {
+            this.logger = logger;
+        }
+
         /// <summary>
         /// 是否支持
         /// </summary>
@@ -19,8 +26,7 @@ namespace FastGithub.HttpServer
         /// 安装ca证书
         /// </summary>
         /// <param name="caCertFilePath">证书文件路径</param>
-        /// <param name="logger"></param>
-        public void Install(string caCertFilePath, ILogger logger)
+        public void Install(string caCertFilePath)
         {
             try
             {
@@ -44,7 +50,7 @@ namespace FastGithub.HttpServer
             }
             catch (Exception)
             {
-                logger.LogWarning($"请手动安装CA证书{caCertFilePath}到“将所有的证书都放入下列存储”\\“受信任的根证书颁发机构”");
+                this.logger.LogWarning($"请手动安装CA证书{caCertFilePath}到“将所有的证书都放入下列存储”\\“受信任的根证书颁发机构”");
             }
         }
     }

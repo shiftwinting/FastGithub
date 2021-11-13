@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace FastGithub.HttpServer
+﻿namespace FastGithub.HttpServer
 {
     /// <summary>
     /// CA证书安装器
@@ -17,7 +15,6 @@ namespace FastGithub.HttpServer
         /// 安装ca证书
         /// </summary>
         /// <param name="caCertFilePath">证书文件路径</param>
-        /// <param name="logger"></param>
-        void Install(string caCertFilePath,ILogger logger);
+        void Install(string caCertFilePath);
     }
 }

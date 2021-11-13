@@ -1,20 +1,16 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
 
 namespace FastGithub.HttpServer
 {
-    class CaCertInstallerOfLinuxRedHat : CaCertInstallerOfLinux
+    sealed class CaCertInstallerOfLinuxRedHat : CaCertInstallerOfLinux
     {
-        public override string RootCertPath => "/etc/pki/ca-trust/source/anchors";
+        protected override string CertToolName => "update-ca-trust";
 
-        public override string CertUpdateFileName => "update-ca-trust";
+        protected override string CertStorePath => "/etc/pki/ca-trust/source/anchors";
 
-        /// <summary>
-        /// 是否支持
-        /// </summary>
-        /// <returns></returns>
-        public override bool IsSupported()
+        public CaCertInstallerOfLinuxRedHat(ILogger<CaCertInstallerOfLinuxRedHat> logger)
+            : base(logger)
         {
-            return OperatingSystem.IsLinux() && IsReleasName("Red Hat");
         }
     }
 }

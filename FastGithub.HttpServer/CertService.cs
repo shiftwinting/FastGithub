@@ -76,7 +76,7 @@ namespace FastGithub.HttpServer
             var installer = this.certInstallers.FirstOrDefault(item => item.IsSupported());
             if (installer != null)
             {
-                installer.Install(this.CaCerFilePath, this.logger);
+                installer.Install(this.CaCerFilePath);
             }
             else
             {
