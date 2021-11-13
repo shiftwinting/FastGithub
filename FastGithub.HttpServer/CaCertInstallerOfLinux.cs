@@ -13,12 +13,12 @@ namespace FastGithub.HttpServer
         /// <summary>
         /// 更新工具文件名
         /// </summary>
-        protected abstract string CertToolName { get; }
+        protected abstract string CaCertUpdatePath { get; }
 
         /// <summary>
         /// 证书根目录
         /// </summary>
-        protected abstract string CertStorePath { get; }
+        protected abstract string CaCertStorePath { get; }
 
 
         public CaCertInstallerOfLinux(ILogger logger)
@@ -32,7 +32,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public bool IsSupported()
         {
-            return OperatingSystem.IsLinux() && File.Exists(this.CertToolName);
+            return OperatingSystem.IsLinux() && File.Exists(this.CaCertUpdatePath);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace FastGithub.HttpServer
         /// <param name="caCertFilePath">证书文件路径</param>
         public void Install(string caCertFilePath)
         {
-            var destCertFilePath = Path.Combine(this.CertStorePath, "fastgithub.crt");
+            var destCertFilePath = Path.Combine(this.CaCertStorePath, "fastgithub.crt");
             if (File.Exists(destCertFilePath) && File.ReadAllBytes(caCertFilePath).SequenceEqual(File.ReadAllBytes(destCertFilePath)))
             {
                 return;
@@ -55,9 +55,10 @@ namespace FastGithub.HttpServer
 
             try
             {
-                Directory.CreateDirectory(this.CertStorePath);
+                Directory.CreateDirectory(this.CaCertStorePath);
                 File.Copy(caCertFilePath, destCertFilePath, overwrite: true);
-                Process.Start(this.CertToolName).WaitForExit();
+                Process.Start(this.CaCertUpdatePath).WaitForExit();
+                this.logger.LogInformation($"已自动向系统安装根证书");
             }
             catch (Exception ex)
             {

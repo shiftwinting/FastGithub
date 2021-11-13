@@ -6,9 +6,9 @@ namespace FastGithub.HttpServer
 {
     sealed class CaCertInstallerOfWindows : ICaCertInstaller
     {
-        private readonly Logger<CaCertInstallerOfWindows> logger;
+        private readonly ILogger<CaCertInstallerOfWindows> logger;
 
-        public CaCertInstallerOfWindows(Logger<CaCertInstallerOfWindows> logger)
+        public CaCertInstallerOfWindows(ILogger<CaCertInstallerOfWindows> logger)
         {
             this.logger = logger;
         }
