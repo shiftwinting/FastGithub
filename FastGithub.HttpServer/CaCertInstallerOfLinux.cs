@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace FastGithub.HttpServer
 {
@@ -20,6 +21,8 @@ namespace FastGithub.HttpServer
         /// </summary>
         protected abstract string CaCertStorePath { get; }
 
+        [DllImport("libc", SetLastError = true)]
+        private static extern uint geteuid();
 
         public CaCertInstallerOfLinux(ILogger logger)
         {
@@ -47,7 +50,7 @@ namespace FastGithub.HttpServer
                 return;
             }
 
-            if (Environment.UserName != "root")
+            if (geteuid() != 0)
             {
                 this.logger.LogWarning($"无法自动安装CA证书{caCertFilePath}，因为没有root权限");
                 return;
