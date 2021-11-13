@@ -49,7 +49,7 @@ namespace FastGithub.HttpServer
 
             if (Environment.UserName != "root")
             {
-                this.logger.LogWarning($"无法自动安装根证书{caCertFilePath}，因为没有root权限");
+                this.logger.LogWarning($"无法自动安装CA证书{caCertFilePath}，因为没有root权限");
                 return;
             }
 
@@ -58,12 +58,12 @@ namespace FastGithub.HttpServer
                 Directory.CreateDirectory(this.CaCertStorePath);
                 File.Copy(caCertFilePath, destCertFilePath, overwrite: true);
                 Process.Start(this.CaCertUpdatePath).WaitForExit();
-                this.logger.LogInformation($"已自动向系统安装根证书{caCertFilePath}");
+                this.logger.LogInformation($"已自动向系统安装CA证书{caCertFilePath}");
             }
             catch (Exception ex)
             {
                 File.Delete(destCertFilePath);
-                this.logger.LogWarning(ex.Message, "自动安装证书异常");
+                this.logger.LogWarning(ex.Message, "自动安装CA证书异常");
             }
         }
     }
