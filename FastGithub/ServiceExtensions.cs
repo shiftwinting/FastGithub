@@ -4,9 +4,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PInvoke;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 
 namespace FastGithub
@@ -14,7 +17,7 @@ namespace FastGithub
     /// <summary>
     /// IHostBuilder扩展
     /// </summary>
-    static class WindowsServiceExtensions
+    static class ServiceExtensions
     {
         /// <summary>
         /// 控制命令
@@ -24,6 +27,10 @@ namespace FastGithub
             Start,
             Stop,
         }
+
+        [SupportedOSPlatform("linux")]
+        [DllImport("libc", SetLastError = true)]
+        private static extern uint geteuid();
 
         /// <summary>
         /// 使用windows服务
@@ -48,11 +55,18 @@ namespace FastGithub
         /// <param name="singleton"></param>
         public static void Run(this IHost host, bool singleton = true)
         {
-            if (OperatingSystem.IsWindows() && TryGetCommand(out var cmd))
+            if (TryGetCommand(out var cmd) && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()))
             {
                 try
                 {
-                    UseCommand(cmd);
+                    if (OperatingSystem.IsWindows())
+                    {
+                        UseCommandAtWindows(cmd);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        UseCommandAtLinux(cmd);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -86,7 +100,7 @@ namespace FastGithub
         /// </summary> 
         /// <param name="cmd"></param>
         [SupportedOSPlatform("windows")]
-        private static void UseCommand(Command cmd)
+        private static void UseCommandAtWindows(Command cmd)
         {
             var binaryPath = Environment.GetCommandLineArgs().First();
             var serviceName = Path.GetFileNameWithoutExtension(binaryPath);
@@ -106,5 +120,54 @@ namespace FastGithub
             }
         }
 
+        /// <summary>
+        /// 应用控制指令
+        /// </summary> 
+        /// <param name="cmd"></param>
+        [SupportedOSPlatform("linux")]
+        private static void UseCommandAtLinux(Command cmd)
+        {
+            if (geteuid() != 0)
+            {
+                throw new UnauthorizedAccessException("无法操作服务：没有root权限");
+            }
+
+            var binaryPath = Path.GetFullPath(Environment.GetCommandLineArgs().First());
+            var serviceName = Path.GetFileNameWithoutExtension(binaryPath);
+            var serviceFilePath = $"/etc/systemd/system/{serviceName}.service";
+
+            if (cmd == Command.Start)
+            {
+                var serviceBuilder = new StringBuilder()
+                    .AppendLine("[Unit]")
+                    .AppendLine($"Description={serviceName}")
+                    .AppendLine()
+                    .AppendLine("[Service]")
+                    .AppendLine("Type=notify")
+                    .AppendLine($"User={Environment.UserName}")
+                    .AppendLine($"ExecStart={binaryPath}")
+                    .AppendLine($"WorkingDirectory={Path.GetDirectoryName(binaryPath)}")
+                    .AppendLine()
+                    .AppendLine("[Install]")
+                    .AppendLine("WantedBy=multi-user.target");
+                File.WriteAllText(serviceFilePath, serviceBuilder.ToString());
+
+                Process.Start("chcon", $"--type=bin_t {binaryPath}").WaitForExit(); // SELinux
+                Process.Start("systemctl", "daemon-reload").WaitForExit();
+                Process.Start("systemctl", $"start {serviceName}.service").WaitForExit();
+                Process.Start("systemctl", $"enable {serviceName}.service").WaitForExit();
+            }
+            else if (cmd == Command.Stop)
+            {
+                Process.Start("systemctl", $"stop {serviceName}.service").WaitForExit();
+                Process.Start("systemctl", $"disable {serviceName}.service").WaitForExit();
+
+                if (File.Exists(serviceFilePath))
+                {
+                    File.Delete(serviceFilePath);
+                }
+                Process.Start("systemctl", "daemon-reload").WaitForExit();
+            }
+        }
     }
 }

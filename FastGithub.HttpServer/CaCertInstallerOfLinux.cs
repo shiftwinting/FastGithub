@@ -52,7 +52,7 @@ namespace FastGithub.HttpServer
 
             if (geteuid() != 0)
             {
-                this.logger.LogWarning($"无法自动安装CA证书{caCertFilePath}，因为没有root权限");
+                this.logger.LogWarning($"无法自动安装CA证书{caCertFilePath}：没有root权限");
                 return;
             }
 
