@@ -41,7 +41,7 @@ namespace FastGithub.HttpServer
         /// <param name="caCertFilePath">证书文件路径</param>
         public void Install(string caCertFilePath)
         {
-            var destCertFilePath = Path.Combine(this.CaCertStorePath, "fastgithub.crt");
+            var destCertFilePath = Path.Combine(this.CaCertStorePath, Path.GetFileName(caCertFilePath));
             if (File.Exists(destCertFilePath) && File.ReadAllBytes(caCertFilePath).SequenceEqual(File.ReadAllBytes(destCertFilePath)))
             {
                 return;
@@ -49,7 +49,7 @@ namespace FastGithub.HttpServer
 
             if (Environment.UserName != "root")
             {
-                this.logger.LogWarning($"无法自动安装CA证书{caCertFilePath}，因为没有root权限");
+                this.logger.LogWarning($"无法自动安装根证书{caCertFilePath}，因为没有root权限");
                 return;
             }
 
@@ -58,7 +58,7 @@ namespace FastGithub.HttpServer
                 Directory.CreateDirectory(this.CaCertStorePath);
                 File.Copy(caCertFilePath, destCertFilePath, overwrite: true);
                 Process.Start(this.CaCertUpdatePath).WaitForExit();
-                this.logger.LogInformation($"已自动向系统安装根证书");
+                this.logger.LogInformation($"已自动向系统安装根证书{caCertFilePath}");
             }
             catch (Exception ex)
             {

@@ -25,7 +25,7 @@ namespace FastGithub.HttpServer
         /// <summary>
         /// 获取证书文件路径
         /// </summary>
-        public string CaCerFilePath { get; } = $"{CACERT_PATH}/fastgithub.cer";
+        public string CaCerFilePath { get; } = OperatingSystem.IsLinux() ? $"{CACERT_PATH}/fastgithub.crt" : $"{CACERT_PATH}/fastgithub.cer";
 
         /// <summary>
         /// 获取私钥文件路径
