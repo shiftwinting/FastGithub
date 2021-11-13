@@ -82,7 +82,7 @@ namespace FastGithub.DomainResolve
             await TomlUtil.SetlogLevelAsync(this.tomlFilePath, 6, cancellationToken);
             await TomlUtil.SetEdnsClientSubnetAsync(this.tomlFilePath, cancellationToken);
 
-            if (OperatingSystem.IsWindows() && Process.GetCurrentProcess().SessionId == 0)
+            if (OperatingSystem.IsWindows() && Environment.UserInteractive == false)
             {
                 ServiceInstallUtil.StopAndDeleteService(this.serviceName);
                 ServiceInstallUtil.InstallAndStartService(this.serviceName, this.exeFilePath, ServiceStartType.SERVICE_DEMAND_START);
@@ -108,7 +108,7 @@ namespace FastGithub.DomainResolve
         {
             try
             {
-                if (OperatingSystem.IsWindows() && Process.GetCurrentProcess().SessionId == 0)
+                if (OperatingSystem.IsWindows() && Environment.UserInteractive == false)
                 {
                     ServiceInstallUtil.StopAndDeleteService(this.serviceName);
                 }
