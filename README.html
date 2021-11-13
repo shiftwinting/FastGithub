@@ -382,8 +382,7 @@ code {
 </ul>
 <h4 id="22-linux-x64">2.2 linux-x64</h4>
 <ul>
-<li>执行<code>./fastgithub</code></li>
-<li>安装cacert/fastgithub.cer到受信任的根证书颁发机构</li>
+<li>执行<code>sudo ./fastgithub</code></li>
 <li>设置系统自动代理为<code>http://127.0.0.1:38457</code>，或手动代理http/https为<code>127.0.0.1:38457</code></li>
 </ul>
 <h4 id="23-macos-x64">2.3 macOS-x64</h4>
@@ -392,6 +391,12 @@ code {
 <li>安装cacert/fastgithub.cer并设置信任</li>
 <li>设置系统自动代理为<code>http://127.0.0.1:38457</code>，或手动代理http/https为<code>127.0.0.1:38457</code></li>
 <li><a href="https://github.com/dotnetcore/FastGithub/blob/master/MacOSXConfig.md">具体配置详情</a></li>
+</ul>
+<h4 id="24-docker-compose%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2">2.4 docker-compose一键部署</h4>
+<ul>
+<li>准备好docker 18.09, docker-compose.</li>
+<li>在源码目录下，有一个docker-compose.yaml 文件，专用于在实际项目中，临时使用github.com源码，而做的demo配置。</li>
+<li>根据自己的需要更新docker-compose.yaml中的sample和build镜像即可完成拉github.com源码加速，并基于源码做后续的操作。</li>
 </ul>
 <h3 id="3-%E8%BD%AF%E4%BB%B6%E5%8A%9F%E8%83%BD">3 软件功能</h3>
 <ul>
