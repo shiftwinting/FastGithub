@@ -55,6 +55,7 @@ namespace FastGithub
         /// <param name="singleton"></param>
         public static void Run(this IHost host, bool singleton = true)
         {
+            var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(FastGithub));
             if (TryGetCommand(out var cmd) && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()))
             {
                 try
@@ -67,11 +68,11 @@ namespace FastGithub
                     {
                         UseCommandAtLinux(cmd);
                     }
+                    logger.LogInformation("服务操作成功");
                 }
                 catch (Exception ex)
                 {
-                    var loggerFactory = host.Services.GetRequiredService<ILoggerFactory>();
-                    loggerFactory.CreateLogger(nameof(FastGithub)).LogError(ex.Message);
+                    logger.LogError(ex.Message);
                 }
             }
             else
@@ -80,6 +81,10 @@ namespace FastGithub
                 if (singleton == false || firstInstance)
                 {
                     HostingAbstractionsHostExtensions.Run(host);
+                }
+                else
+                {
+                    logger.LogWarning($"程序将自动关闭：系统已运行其它实例");
                 }
             }
         }
