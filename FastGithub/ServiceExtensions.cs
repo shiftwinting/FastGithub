@@ -56,26 +56,7 @@ namespace FastGithub
         public static void Run(this IHost host, bool singleton = true)
         {
             var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(FastGithub));
-            if (TryGetCommand(out var cmd) && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()))
-            {
-                try
-                {
-                    if (OperatingSystem.IsWindows())
-                    {
-                        UseCommandAtWindows(cmd);
-                    }
-                    else if (OperatingSystem.IsLinux())
-                    {
-                        UseCommandAtLinux(cmd);
-                    }
-                    logger.LogInformation("服务操作成功");
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex.Message);
-                }
-            }
-            else
+            if (UseCommand(logger) == false)
             {
                 using var mutex = new Mutex(true, "Global\\FastGithub", out var firstInstance);
                 if (singleton == false || firstInstance)
@@ -90,14 +71,40 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 获取控制指令
+        /// 使用命令
         /// </summary>
-        /// <param name="cmd"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
-        private static bool TryGetCommand(out Command cmd)
+        private static bool UseCommand(ILogger logger)
         {
             var args = Environment.GetCommandLineArgs();
-            return Enum.TryParse(args.Skip(1).FirstOrDefault(), true, out cmd);
+            if (Enum.TryParse<Command>(args.Skip(1).FirstOrDefault(), true, out var cmd) == false)
+            {
+                return false;
+            }
+
+            var action = cmd == Command.Start ? "启动" : "停止";
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    UseCommandAtWindows(cmd);
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    UseCommandAtLinux(cmd);
+                }
+                else
+                {
+                    return false;
+                }
+                logger.LogInformation($"服务{action}成功");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message, $"服务{action}异常");
+            }
+            return true;
         }
 
         /// <summary>
