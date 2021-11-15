@@ -59,6 +59,10 @@ namespace FastGithub.HttpServer
             try
             {
                 Directory.CreateDirectory(this.CaCertStorePath);
+                foreach (var item in Directory.GetFiles(this.CaCertStorePath, "fastgithub.*"))
+                {
+                    File.Delete(item);
+                }
                 File.Copy(caCertFilePath, destCertFilePath, overwrite: true);
                 Process.Start(this.CaCertUpdatePath).WaitForExit();
                 this.logger.LogInformation($"已自动向系统安装CA证书{caCertFilePath}");
