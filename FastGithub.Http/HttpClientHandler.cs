@@ -108,7 +108,7 @@ namespace FastGithub.Http
                 catch (OperationCanceledException)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    innerExceptions.Add(new SocketException((int)SocketError.TimedOut));
+                    innerExceptions.Add(new HttpConnectTimeoutException(ipEndPoint.Address));
                 }
                 catch (Exception ex)
                 {
