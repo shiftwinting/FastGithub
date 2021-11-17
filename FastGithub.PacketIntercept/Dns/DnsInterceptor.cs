@@ -146,6 +146,11 @@ namespace FastGithub.PacketIntercept.Dns
             {
                 var record = new IPAddressResourceRecord(domain, IPAddress.Loopback, this.ttl);
                 response.AnswerRecords.Add(record);
+                this.logger.LogInformation($"{domain}->{IPAddress.Loopback}");
+            }
+            else
+            {
+                this.logger.LogInformation($"{domain}->NULL");
             }
             var responsePayload = response.ToArray();
 
@@ -182,7 +187,6 @@ namespace FastGithub.PacketIntercept.Dns
                 : WinDivertDirection.Inbound;
 
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
-            this.logger.LogInformation($"已拦截向dns://{destAddress}:{destPort}查询{domain}");
         }
 
 

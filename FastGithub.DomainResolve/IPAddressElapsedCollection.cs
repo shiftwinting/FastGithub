@@ -79,7 +79,7 @@ namespace FastGithub.DomainResolve
 
         public override string ToString()
         {
-            return $"[{string.Join(',', this.addressElapseds.Select(item => item.Adddress))}]";
+            return $"[{string.Join(", ", this.addressElapseds.Select(item => item.Adddress))}]";
         }
     }
 }
