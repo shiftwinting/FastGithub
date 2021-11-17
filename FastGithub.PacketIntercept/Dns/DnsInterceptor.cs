@@ -165,7 +165,7 @@ namespace FastGithub.PacketIntercept.Dns
                 destAddress = packet.IPv6Header->DstAddr;
                 packet.IPv6Header->DstAddr = packet.IPv6Header->SrcAddr;
                 packet.IPv6Header->SrcAddr = destAddress;
-                packet.IPv6Header->Length = (ushort)packetLength;
+                packet.IPv6Header->Length = (ushort)(packetLength - sizeof(IPv6Header));
             }
 
             // 修改udp包
