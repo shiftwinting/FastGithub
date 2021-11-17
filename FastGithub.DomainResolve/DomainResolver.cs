@@ -1,4 +1,5 @@
 ﻿using FastGithub.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,16 +17,19 @@ namespace FastGithub.DomainResolve
     sealed class DomainResolver : IDomainResolver
     {
         private readonly DnsClient dnsClient;
+        private readonly ILogger<DomainResolver> logger;
         private readonly ConcurrentDictionary<DnsEndPoint, IPAddressElapsedCollection> dnsEndPointAddressElapseds = new();
 
         /// <summary>
         /// 域名解析器
-        /// </summary> 
+        /// </summary>
         /// <param name="dnsClient"></param>
-        public DomainResolver(DnsClient dnsClient)
+        /// <param name="logger"></param>
+        public DomainResolver(DnsClient dnsClient, ILogger<DomainResolver> logger)
         {
             this.dnsClient = dnsClient;
-        } 
+            this.logger = logger;
+        }
 
         /// <summary>
         /// 解析ip
@@ -52,6 +56,7 @@ namespace FastGithub.DomainResolve
         {
             if (this.dnsEndPointAddressElapseds.TryGetValue(endPoint, out var addressElapseds) && addressElapseds.IsEmpty == false)
             {
+                this.logger.LogInformation($"{endPoint.Host}: {addressElapseds}");
                 foreach (var addressElapsed in addressElapseds)
                 {
                     yield return addressElapsed.Adddress;

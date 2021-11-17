@@ -76,5 +76,10 @@ namespace FastGithub.DomainResolve
         {
             return this.addressElapseds.GetEnumerator();
         }
+
+        public override string ToString()
+        {
+            return $"[{string.Join(',', this.addressElapseds.Select(item => item.Adddress))}]";
+        }
     }
 }
