@@ -91,12 +91,7 @@ namespace FastGithub.DomainResolve
 
             foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
             {
-                if (Socket.OSSupportsIPv4 && fallbackDns.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    yield return fallbackDns;
-                }
-
-                if (Socket.OSSupportsIPv6 && fallbackDns.AddressFamily == AddressFamily.InterNetworkV6)
+                if (Socket.OSSupportsIPv6 || fallbackDns.AddressFamily != AddressFamily.InterNetworkV6)
                 {
                     yield return fallbackDns;
                 }
@@ -161,9 +156,8 @@ namespace FastGithub.DomainResolve
                 ? (IRequestResolver)new TcpRequestResolver(dns)
                 : new UdpRequestResolver(dns, new TcpRequestResolver(dns), this.resolveTimeout);
 
-            var answerRecords = await GetAnswerRecordsAsync(resolver, endPoint.Host, cancellationToken);
-            var addresses = answerRecords
-                .OfType<IPAddressResourceRecord>()
+            var addressRecords = await GetAddressRecordsAsync(resolver, endPoint.Host, cancellationToken);
+            var addresses = addressRecords
                 .Where(item => IPAddress.IsLoopback(item.IPAddress) == false)
                 .Select(item => item.IPAddress)
                 .ToArray();
@@ -178,7 +172,7 @@ namespace FastGithub.DomainResolve
                 addresses = await OrderByConnectAnyAsync(addresses, endPoint.Port, cancellationToken);
             }
 
-            var timeToLive = answerRecords.First().TimeToLive;
+            var timeToLive = addressRecords.First().TimeToLive;
             if (timeToLive <= TimeSpan.Zero)
             {
                 timeToLive = this.defaultEmptyTtl;
@@ -188,25 +182,25 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 获取答案
+        /// 获取IP记录
         /// </summary>
         /// <param name="resolver"></param>
         /// <param name="domain"></param> 
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private static async Task<IList<IResourceRecord>> GetAnswerRecordsAsync(IRequestResolver resolver, string domain, CancellationToken cancellationToken)
+        private static async Task<IList<IPAddressResourceRecord>> GetAddressRecordsAsync(IRequestResolver resolver, string domain, CancellationToken cancellationToken)
         {
-            var answerRecords = new List<IResourceRecord>();
+            var answerRecords = new List<IPAddressResourceRecord>();
             if (Socket.OSSupportsIPv4 == true)
             {
                 var records = await GetAnswerAsync(RecordType.A);
-                answerRecords.AddRange(records);
+                answerRecords.AddRange(records.OfType<IPAddressResourceRecord>());
             }
 
             if (Socket.OSSupportsIPv6 == true)
             {
                 var records = await GetAnswerAsync(RecordType.AAAA);
-                answerRecords.AddRange(records);
+                answerRecords.AddRange(records.OfType<IPAddressResourceRecord>());
             }
             return answerRecords;
 
