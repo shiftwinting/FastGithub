@@ -91,7 +91,12 @@ namespace FastGithub.DomainResolve
 
             foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
             {
-                if (Socket.OSSupportsIPv6 || fallbackDns.AddressFamily != AddressFamily.InterNetworkV6)
+                if (Socket.OSSupportsIPv4 && fallbackDns.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    yield return fallbackDns;
+                }
+
+                if (Socket.OSSupportsIPv6 && fallbackDns.AddressFamily == AddressFamily.InterNetworkV6)
                 {
                     yield return fallbackDns;
                 }
@@ -191,16 +196,20 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private static async Task<IList<IResourceRecord>> GetAnswerRecordsAsync(IRequestResolver resolver, string domain, CancellationToken cancellationToken)
         {
-            var answerRecords = await GetAnswerAsync(RecordType.A);
+            var answerRecords = new List<IResourceRecord>();
+            if (Socket.OSSupportsIPv4 == true)
+            {
+                var records = await GetAnswerAsync(RecordType.A);
+                answerRecords.AddRange(records);
+            }
+
             if (Socket.OSSupportsIPv6 == true)
             {
-                var ipv6Records = await GetAnswerAsync(RecordType.AAAA);
-                foreach (var record in ipv6Records)
-                {
-                    answerRecords.Add(record);
-                }
+                var records = await GetAnswerAsync(RecordType.AAAA);
+                answerRecords.AddRange(records);
             }
             return answerRecords;
+
 
             async Task<IList<IResourceRecord>> GetAnswerAsync(RecordType recordType)
             {
