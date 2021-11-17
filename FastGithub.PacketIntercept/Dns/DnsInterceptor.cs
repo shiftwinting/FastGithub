@@ -142,16 +142,9 @@ namespace FastGithub.PacketIntercept.Dns
 
             // dns响应数据
             var response = Response.FromRequest(request);
-            if (question.Type == RecordType.A)
-            {
-                var record = new IPAddressResourceRecord(domain, IPAddress.Loopback, this.ttl);
-                response.AnswerRecords.Add(record);
-                this.logger.LogInformation($"{domain}->{IPAddress.Loopback}");
-            }
-            else
-            {
-                this.logger.LogInformation($"{domain}->NULL");
-            }
+            var loopback = question.Type == RecordType.A ? IPAddress.Loopback : IPAddress.Loopback.MapToIPv6();
+            var record = new IPAddressResourceRecord(domain, loopback, this.ttl);
+            response.AnswerRecords.Add(record);
             var responsePayload = response.ToArray();
 
             // 修改payload和包长 
@@ -187,6 +180,7 @@ namespace FastGithub.PacketIntercept.Dns
                 : WinDivertDirection.Inbound;
 
             WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
+            this.logger.LogInformation($"{domain}->{loopback}");
         }
 
 

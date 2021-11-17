@@ -91,7 +91,10 @@ namespace FastGithub.DomainResolve
 
             foreach (var fallbackDns in this.fastGithubConfig.FallbackDns)
             {
-                yield return fallbackDns;
+                if (Socket.OSSupportsIPv6 || fallbackDns.AddressFamily != AddressFamily.InterNetworkV6)
+                {
+                    yield return fallbackDns;
+                }
             }
         }
 
@@ -153,17 +156,8 @@ namespace FastGithub.DomainResolve
                 ? (IRequestResolver)new TcpRequestResolver(dns)
                 : new UdpRequestResolver(dns, new TcpRequestResolver(dns), this.resolveTimeout);
 
-            var request = new Request
-            {
-                RecursionDesired = true,
-                OperationCode = OperationCode.Query
-            };
-
-            request.Questions.Add(new Question(new Domain(endPoint.Host), RecordType.A));
-            var clientRequest = new ClientRequest(resolver, request);
-            var response = await clientRequest.Resolve(cancellationToken);
-
-            var addresses = response.AnswerRecords
+            var answerRecords = await GetAnswerRecordsAsync(resolver, endPoint.Host, cancellationToken);
+            var addresses = answerRecords
                 .OfType<IPAddressResourceRecord>()
                 .Where(item => IPAddress.IsLoopback(item.IPAddress) == false)
                 .Select(item => item.IPAddress)
@@ -179,7 +173,7 @@ namespace FastGithub.DomainResolve
                 addresses = await OrderByConnectAnyAsync(addresses, endPoint.Port, cancellationToken);
             }
 
-            var timeToLive = response.AnswerRecords.First().TimeToLive;
+            var timeToLive = answerRecords.First().TimeToLive;
             if (timeToLive <= TimeSpan.Zero)
             {
                 timeToLive = this.defaultEmptyTtl;
@@ -187,6 +181,43 @@ namespace FastGithub.DomainResolve
 
             return new LookupResult(addresses, timeToLive);
         }
+
+        /// <summary>
+        /// 获取答案
+        /// </summary>
+        /// <param name="resolver"></param>
+        /// <param name="domain"></param> 
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private static async Task<IList<IResourceRecord>> GetAnswerRecordsAsync(IRequestResolver resolver, string domain, CancellationToken cancellationToken)
+        {
+            var answerRecords = await GetAnswerAsync(RecordType.A);
+            if (Socket.OSSupportsIPv6 == true)
+            {
+                var ipv6Records = await GetAnswerAsync(RecordType.AAAA);
+                foreach (var record in ipv6Records)
+                {
+                    answerRecords.Add(record);
+                }
+            }
+            return answerRecords;
+
+            async Task<IList<IResourceRecord>> GetAnswerAsync(RecordType recordType)
+            {
+                var request = new Request
+                {
+                    RecursionDesired = true,
+                    OperationCode = OperationCode.Query
+                };
+
+                request.Questions.Add(new Question(new Domain(domain), recordType));
+                var clientRequest = new ClientRequest(resolver, request);
+                var response = await clientRequest.Resolve(cancellationToken);
+                return response.AnswerRecords;
+            }
+        }
+
+
         /// <summary>
         /// 连接速度排序
         /// </summary>
