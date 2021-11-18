@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 
 namespace FastGithub.Configuration
 {
@@ -29,20 +28,16 @@ namespace FastGithub.Configuration
         /// <summary>
         /// 获取可用的随机Tcp端口
         /// </summary>
-        /// <param name="minValue"></param>
-        /// <param name="addressFamily"></param>
+        /// <param name="minValue"></param> 
         /// <returns></returns>
-        private static int GetAvailableTcpPort(int minValue, AddressFamily addressFamily = AddressFamily.InterNetwork)
+        private static int GetAvailableTcpPort(int minValue)
         {
             var hashSet = new HashSet<int>();
             var tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
 
             foreach (var endpoint in tcpListeners)
             {
-                if (endpoint.AddressFamily == addressFamily)
-                {
-                    hashSet.Add(endpoint.Port);
-                }
+                hashSet.Add(endpoint.Port);
             }
 
             for (var port = minValue; port < IPEndPoint.MaxPort; port++)

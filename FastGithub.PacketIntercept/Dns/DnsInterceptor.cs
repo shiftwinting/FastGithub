@@ -142,7 +142,7 @@ namespace FastGithub.PacketIntercept.Dns
 
             // dns响应数据
             var response = Response.FromRequest(request);
-            var loopback = question.Type == RecordType.A ? IPAddress.Loopback : IPAddress.Loopback.MapToIPv6();
+            var loopback = question.Type == RecordType.A ? IPAddress.Loopback : IPAddress.IPv6Loopback;
             var record = new IPAddressResourceRecord(domain, loopback, this.ttl);
             response.AnswerRecords.Add(record);
             var responsePayload = response.ToArray();

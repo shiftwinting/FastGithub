@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
-using System.Net;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,7 +53,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 throw new Win32Exception();
             }
 
-            this.logger.LogInformation($"tcp://{IPAddress.Loopback}:{this.oldServerPort} => tcp://{IPAddress.Loopback}:{this.newServerPort}");
+            this.logger.LogInformation($"tcp://localhost:{this.oldServerPort} => tcp://localhost:{this.newServerPort}");
             cancellationToken.Register(hwnd => WinDivert.WinDivertClose((IntPtr)hwnd!), handle);
 
             var packetLength = 0U;
