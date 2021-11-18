@@ -61,14 +61,15 @@ namespace FastGithub.DomainResolve
         /// 解析域名
         /// </summary>
         /// <param name="endPoint">远程结节</param>
+        /// <param name="fastSort">是否使用快速排序</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<IPAddress> ResolveAsync(DnsEndPoint endPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IPAddress> ResolveAsync(DnsEndPoint endPoint, bool fastSort, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<IPAddress>();
             foreach (var dns in this.GetDnsServers())
             {
-                var addresses = await this.LookupAsync(dns, endPoint, cancellationToken);
+                var addresses = await this.LookupAsync(dns, endPoint, fastSort, cancellationToken);
                 foreach (var address in addresses)
                 {
                     if (hashSet.Add(address) == true)
@@ -106,9 +107,10 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="dns"></param>
         /// <param name="endPoint"></param>
+        /// <param name="fastSort"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddress[]> LookupAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken = default)
+        private async Task<IPAddress[]> LookupAsync(IPEndPoint dns, DnsEndPoint endPoint, bool fastSort, CancellationToken cancellationToken = default)
         {
             var key = $"{dns}/{endPoint}";
             var semaphore = this.semaphoreSlims.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
@@ -121,7 +123,7 @@ namespace FastGithub.DomainResolve
                     return value;
                 }
 
-                var result = await this.LookupCoreAsync(dns, endPoint, cancellationToken);
+                var result = await this.LookupCoreAsync(dns, endPoint, fastSort, cancellationToken);
                 this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
                 return result.Addresses;
             }
@@ -146,9 +148,10 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="dns"></param>
         /// <param name="endPoint"></param>
+        /// <param name="fastSort"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<LookupResult> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, CancellationToken cancellationToken = default)
+        private async Task<LookupResult> LookupCoreAsync(IPEndPoint dns, DnsEndPoint endPoint, bool fastSort, CancellationToken cancellationToken = default)
         {
             if (endPoint.Host == LOCALHOST)
             {
@@ -170,7 +173,7 @@ namespace FastGithub.DomainResolve
                 return new LookupResult(addresses, this.minTimeToLive);
             }
 
-            if (addresses.Length > 1)
+            if (fastSort && addresses.Length > 1)
             {
                 addresses = await OrderByConnectAnyAsync(addresses, endPoint.Port, cancellationToken);
             }
@@ -237,8 +240,13 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private static async Task<IPAddress[]> OrderByConnectAnyAsync(IPAddress[] addresses, int port, CancellationToken cancellationToken)
         {
-            var tasks = addresses.Select(address => ConnectAsync(address, port, cancellationToken));
-            var fastestAddress = await await Task.WhenAny(tasks);
+            using var controlTokenSource = new CancellationTokenSource(connectTimeout);
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, controlTokenSource.Token);
+
+            var connectTasks = addresses.Select(address => ConnectAsync(address, port, linkedTokenSource.Token));
+            var fastestAddress = await await Task.WhenAny(connectTasks);
+            controlTokenSource.Cancel();
+
             if (fastestAddress == null)
             {
                 return addresses;
@@ -266,10 +274,8 @@ namespace FastGithub.DomainResolve
         {
             try
             {
-                using var timeoutTokenSource = new CancellationTokenSource(connectTimeout);
-                using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
                 using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                await socket.ConnectAsync(address, port, linkedTokenSource.Token);
+                await socket.ConnectAsync(address, port, cancellationToken);
                 return address;
             }
             catch (Exception)
