@@ -124,8 +124,7 @@ namespace FastGithub.DomainResolve
                 }
 
                 var result = await this.LookupCoreAsync(dns, endPoint, fastSort, cancellationToken);
-                this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
-                return result.Addresses;
+                return this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
             }
             catch (OperationCanceledException)
             {
@@ -135,7 +134,7 @@ namespace FastGithub.DomainResolve
             catch (Exception ex)
             {
                 this.logger.LogWarning($"dns://{dns}无法解析{endPoint.Host}：{ex.Message}");
-                return Array.Empty<IPAddress>();
+                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.maxTimeToLive);
             }
             finally
             {
