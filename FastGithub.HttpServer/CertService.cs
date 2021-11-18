@@ -148,6 +148,7 @@ namespace FastGithub.HttpServer
 
             yield return Environment.MachineName;
             yield return IPAddress.Loopback.ToString();
+            yield return IPAddress.IPv6Loopback.ToString();
         }
     }
 }
