@@ -18,20 +18,20 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
+        private readonly DnsClient dnsClient;
+        private readonly FastGithubConfig fastGithubConfig;
+        private readonly ILogger<DomainResolver> logger;
         private record EndPointItem(string Host, int Port);
+        private readonly ConcurrentDictionary<DnsEndPoint, IPAddressElapsedCollection> dnsEndPointAddressElapseds = new();
+
         private static readonly string dnsEndpointFile = "dnsendpoints.json";
         private static readonly SemaphoreSlim dnsEndpointLocker = new(1, 1);
-        private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions jsonOptions = new()
         {
             WriteIndented = true,
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-
-        private readonly DnsClient dnsClient;
-        private readonly FastGithubConfig fastGithubConfig;
-        private readonly ILogger<DomainResolver> logger;
-        private readonly ConcurrentDictionary<DnsEndPoint, IPAddressElapsedCollection> dnsEndPointAddressElapseds = new();
 
         /// <summary>
         /// 域名解析器
@@ -80,7 +80,7 @@ namespace FastGithub.DomainResolve
                 var dnsEndPoints = new List<DnsEndPoint>();
                 foreach (var item in endPointItems)
                 {
-                    if (this.fastGithubConfig.IsMatch(item.Host))
+                    if (this.fastGithubConfig.IsMatch(item.Host) == true)
                     {
                         dnsEndPoints.Add(new DnsEndPoint(item.Host, item.Port));
                     }
