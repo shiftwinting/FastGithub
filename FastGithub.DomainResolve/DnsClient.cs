@@ -32,9 +32,12 @@ namespace FastGithub.DomainResolve
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-        private readonly TimeSpan defaultEmptyTtl = TimeSpan.FromSeconds(30d);
+
+        private readonly TimeSpan minTimeToLive = TimeSpan.FromSeconds(30d);
+        private readonly TimeSpan maxTimeToLive = TimeSpan.FromMinutes(10d);
+
         private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
-        private static readonly TimeSpan maxConnectTimeout = TimeSpan.FromSeconds(2d);
+        private static readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
 
         private record LookupResult(IPAddress[] Addresses, TimeSpan TimeToLive);
 
@@ -164,7 +167,7 @@ namespace FastGithub.DomainResolve
 
             if (addresses.Length == 0)
             {
-                return new LookupResult(addresses, this.defaultEmptyTtl);
+                return new LookupResult(addresses, this.minTimeToLive);
             }
 
             if (addresses.Length > 1)
@@ -181,7 +184,11 @@ namespace FastGithub.DomainResolve
             var timeToLive = totalTimeToLive / addressRecords.Count;
             if (timeToLive <= TimeSpan.Zero)
             {
-                timeToLive = this.defaultEmptyTtl;
+                timeToLive = this.minTimeToLive;
+            }
+            else if (timeToLive > this.maxTimeToLive)
+            {
+                timeToLive = this.maxTimeToLive;
             }
 
             return new LookupResult(addresses, timeToLive);
@@ -265,7 +272,7 @@ namespace FastGithub.DomainResolve
         {
             try
             {
-                using var timeoutTokenSource = new CancellationTokenSource(maxConnectTimeout);
+                using var timeoutTokenSource = new CancellationTokenSource(connectTimeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
                 using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 await socket.ConnectAsync(address, port, linkedTokenSource.Token);
