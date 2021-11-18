@@ -80,7 +80,7 @@ namespace FastGithub.DomainResolve
 
             await TomlUtil.SetListensAsync(this.tomlFilePath, localEndPoint, cancellationToken);
             await TomlUtil.SetlogLevelAsync(this.tomlFilePath, 6, cancellationToken);
-            await TomlUtil.SetEdnsClientSubnetAsync(this.tomlFilePath, cancellationToken);
+            await TomlUtil.SetMinMaxTTLAsync(this.tomlFilePath, TimeSpan.FromMinutes(1d), TimeSpan.FromMinutes(2d), cancellationToken);
 
             if (OperatingSystem.IsWindows() && Environment.UserInteractive == false)
             {
