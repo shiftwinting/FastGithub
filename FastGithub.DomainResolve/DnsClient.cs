@@ -172,7 +172,13 @@ namespace FastGithub.DomainResolve
                 addresses = await OrderByConnectAnyAsync(addresses, endPoint.Port, cancellationToken);
             }
 
-            var timeToLive = addressRecords.First().TimeToLive;
+            var totalTimeToLive = TimeSpan.Zero;
+            foreach (var record in addressRecords)
+            {
+                totalTimeToLive = totalTimeToLive.Add(record.TimeToLive);
+            }
+
+            var timeToLive = totalTimeToLive / addressRecords.Count;
             if (timeToLive <= TimeSpan.Zero)
             {
                 timeToLive = this.defaultEmptyTtl;
