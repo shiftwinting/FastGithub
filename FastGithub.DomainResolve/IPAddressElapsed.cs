@@ -50,7 +50,7 @@ namespace FastGithub.DomainResolve
             {
                 using var timeoutTokenSource = new CancellationTokenSource(maxConnectTimeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 await socket.ConnectAsync(address, port, linkedTokenSource.Token);
                 return new IPAddressElapsed(address, stopWatch.Elapsed);
             }

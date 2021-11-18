@@ -128,7 +128,7 @@ namespace FastGithub.Http
         /// <returns></returns>
         private async ValueTask<Stream> ConnectAsync(SocketsHttpConnectionContext context, IPEndPoint ipEndPoint, CancellationToken cancellationToken)
         {
-            var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(ipEndPoint, cancellationToken);
             var stream = new NetworkStream(socket, ownsSocket: true);
 
@@ -181,11 +181,11 @@ namespace FastGithub.Http
             }
             else
             {
-                if(IPAddress.TryParse(this.domainConfig.IPAddress, out address))
+                if (IPAddress.TryParse(this.domainConfig.IPAddress, out address))
                 {
                     yield return new IPEndPoint(address, dnsEndPoint.Port);
                 }
-                 
+
                 await foreach (var item in this.domainResolver.ResolveAllAsync(dnsEndPoint, cancellationToken))
                 {
                     yield return new IPEndPoint(item, dnsEndPoint.Port);

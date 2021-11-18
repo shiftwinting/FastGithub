@@ -274,7 +274,7 @@ namespace FastGithub.DomainResolve
         {
             try
             {
-                using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 await socket.ConnectAsync(address, port, cancellationToken);
                 return address;
             }
