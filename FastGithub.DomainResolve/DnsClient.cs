@@ -190,22 +190,22 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         private static async Task<IList<IPAddressResourceRecord>> GetAddressRecordsAsync(IRequestResolver resolver, string domain, CancellationToken cancellationToken)
         {
-            var answerRecords = new List<IPAddressResourceRecord>();
+            var addressRecords = new List<IPAddressResourceRecord>();
             if (Socket.OSSupportsIPv4 == true)
             {
-                var records = await GetAnswerAsync(RecordType.A);
-                answerRecords.AddRange(records.OfType<IPAddressResourceRecord>());
+                var records = await GetRecordsAsync(RecordType.A);
+                addressRecords.AddRange(records);
             }
 
             if (Socket.OSSupportsIPv6 == true)
             {
-                var records = await GetAnswerAsync(RecordType.AAAA);
-                answerRecords.AddRange(records.OfType<IPAddressResourceRecord>());
+                var records = await GetRecordsAsync(RecordType.AAAA);
+                addressRecords.AddRange(records);
             }
-            return answerRecords;
+            return addressRecords;
 
 
-            async Task<IList<IResourceRecord>> GetAnswerAsync(RecordType recordType)
+            async Task<IEnumerable<IPAddressResourceRecord>> GetRecordsAsync(RecordType recordType)
             {
                 var request = new Request
                 {
@@ -216,7 +216,7 @@ namespace FastGithub.DomainResolve
                 request.Questions.Add(new Question(new Domain(domain), recordType));
                 var clientRequest = new ClientRequest(resolver, request);
                 var response = await clientRequest.Resolve(cancellationToken);
-                return response.AnswerRecords;
+                return response.AnswerRecords.OfType<IPAddressResourceRecord>();
             }
         }
 
