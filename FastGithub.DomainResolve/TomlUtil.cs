@@ -36,9 +36,21 @@ namespace FastGithub.DomainResolve
         /// <param name="logLevel"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static Task SetlogLevelAsync(string tomlPath, int logLevel, CancellationToken cancellationToken)
+        public static Task SetLogLevelAsync(string tomlPath, int logLevel, CancellationToken cancellationToken)
         {
             return SetAsync(tomlPath, "log_level", new TomlInteger { Value = logLevel }, cancellationToken);
+        }
+
+        /// <summary>
+        /// 设置负载均衡模式
+        /// </summary>
+        /// <param name="tomlPath"></param>
+        /// <param name="value"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static Task SetLBStrategyAsync(string tomlPath, string value, CancellationToken cancellationToken)
+        {
+            return SetAsync(tomlPath, "lb_strategy", new TomlString { Value = value }, cancellationToken);
         }
 
         /// <summary>
@@ -59,7 +71,7 @@ namespace FastGithub.DomainResolve
             await SetAsync(tomlPath, "cache_max_ttl", maxValue, cancellationToken);
             await SetAsync(tomlPath, "cache_neg_max_ttl", maxValue, cancellationToken);
         }
-         
+
         /// <summary>
         /// 设置指定键的值
         /// </summary>

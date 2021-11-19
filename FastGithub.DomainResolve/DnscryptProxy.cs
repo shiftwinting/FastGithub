@@ -79,7 +79,8 @@ namespace FastGithub.DomainResolve
             var localEndPoint = new IPEndPoint(IPAddress.Loopback, port);
 
             await TomlUtil.SetListensAsync(this.tomlFilePath, localEndPoint, cancellationToken);
-            await TomlUtil.SetlogLevelAsync(this.tomlFilePath, 6, cancellationToken);
+            await TomlUtil.SetLogLevelAsync(this.tomlFilePath, 6, cancellationToken);
+            await TomlUtil.SetLBStrategyAsync(this.tomlFilePath, "ph", cancellationToken);
             await TomlUtil.SetMinMaxTTLAsync(this.tomlFilePath, TimeSpan.FromMinutes(1d), TimeSpan.FromMinutes(2d), cancellationToken);
 
             if (OperatingSystem.IsWindows() && Environment.UserInteractive == false)
