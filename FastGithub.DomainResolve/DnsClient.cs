@@ -128,13 +128,13 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogWarning($"dns://{dns}无法解析{endPoint.Host}：请求超时");
+                this.logger.LogWarning($"{endPoint.Host}@{dns}：请求超时。");
                 return Array.Empty<IPAddress>();
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"dns://{dns}无法解析{endPoint.Host}：{ex.Message}");
-                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.maxTimeToLive);
+                this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
+                return Array.Empty<IPAddress>();
             }
             finally
             {
