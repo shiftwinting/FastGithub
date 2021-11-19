@@ -34,7 +34,7 @@ namespace FastGithub.DomainResolve
         /// <summary>
         /// 获取延时
         /// </summary>
-        public TimeSpan Elapsed { get; private set; } = TimeSpan.MaxValue;
+        public TimeSpan Elapsed { get; private set; }
 
         /// <summary>
         /// IP延时
@@ -48,10 +48,10 @@ namespace FastGithub.DomainResolve
         }
 
         /// <summary>
-        /// 是否可以更新延时
+        /// 是否需求更新延时
         /// </summary>
         /// <returns></returns>
-        public bool CanUpdateElapsed()
+        public bool NeedUpdateElapsed()
         {
             return Environment.TickCount64 - this.lastTestTickCount > maxLifeTime;
         }

@@ -97,38 +97,44 @@ namespace FastGithub.DomainResolve
         {
             foreach (var keyValue in this.dnsEndPointAddressElapseds)
             {
-                var dnsEndPoint = keyValue.Key;
-                var hashSet = new HashSet<IPAddressElapsed>();
-
-                foreach (var item in keyValue.Value)
+                var oldValues = keyValue.Value;
+                if (oldValues.Length >= MAX_ADDRESS_COUNT)
                 {
-                    hashSet.Add(item);
+                    if (oldValues.Any(item => item.NeedUpdateElapsed()) == false)
+                    {
+                        continue;
+                    }
                 }
 
+                var dnsEndPoint = keyValue.Key;
+                var hashSet = new HashSet<IPAddressElapsed>(oldValues);
                 await foreach (var adddress in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
                 {
                     hashSet.Add(new IPAddressElapsed(adddress, dnsEndPoint.Port));
                 }
 
-                var updateTasks = hashSet
-                    .Where(item => item.CanUpdateElapsed())
-                    .Select(item => item.UpdateElapsedAsync(cancellationToken));
+                // 两个以上才进行测速排序
+                if (hashSet.Count > 1)
+                {
+                    var updateTasks = hashSet
+                        .Where(item => item.NeedUpdateElapsed())
+                        .Select(item => item.UpdateElapsedAsync(cancellationToken));
+                    await Task.WhenAll(updateTasks);
+                }
 
-                await Task.WhenAll(updateTasks);
-
-                var addressElapseds = hashSet
+                var newValues = hashSet
                     .Where(item => item.Elapsed < TimeSpan.MaxValue)
                     .OrderBy(item => item.Elapsed)
                     .Take(count: MAX_ADDRESS_COUNT)
                     .ToArray();
 
-                if (keyValue.Value.SequenceEqual(addressElapseds) == false)
+                if (oldValues.SequenceEqual(newValues) == false)
                 {
-                    var addressArray = string.Join(", ", addressElapseds.Select(item => item.ToString()));
+                    this.dnsEndPointAddressElapseds[dnsEndPoint] = newValues;
+
+                    var addressArray = string.Join(", ", newValues.Select(item => item.ToString()));
                     this.logger.LogInformation($"{dnsEndPoint.Host}->[{addressArray}]");
                 }
-
-                this.dnsEndPointAddressElapseds[dnsEndPoint] = addressElapseds;
             }
         }
     }
