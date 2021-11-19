@@ -99,7 +99,11 @@ namespace FastGithub.DomainResolve
                 if (keyValue.Value.IsEmpty || keyValue.Value.IsExpired)
                 {
                     var dnsEndPoint = keyValue.Key;
-                    var addresses = new List<IPAddress>();
+                    var addresses = new HashSet<IPAddress>();
+                    foreach (var item in keyValue.Value)
+                    {
+                        addresses.Add(item.Adddress);
+                    }
                     await foreach (var adddress in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
                     {
                         addresses.Add(adddress);
@@ -108,14 +112,17 @@ namespace FastGithub.DomainResolve
                     var addressElapseds = IPAddressElapsedCollection.Empty;
                     if (addresses.Count == 1)
                     {
-                        var addressElapsed = new IPAddressElapsed(addresses[0], TimeSpan.Zero);
+                        var addressElapsed = new IPAddressElapsed(addresses.First(), TimeSpan.Zero);
                         addressElapseds = new IPAddressElapsedCollection(addressElapsed);
                     }
                     else if (addresses.Count > 1)
                     {
-                        var tasks = addresses.Select(address => IPAddressElapsed.ParseAsync(address, dnsEndPoint.Port, cancellationToken));
-                        addressElapseds = new IPAddressElapsedCollection(await Task.WhenAll(tasks));
+                        var parseTasks = addresses.Select(address => IPAddressElapsed.ParseAsync(address, dnsEndPoint.Port, cancellationToken));
+                        var parseValues = await Task.WhenAll(parseTasks);
+                        var connectedValues = parseValues.Where(item => item.Elapsed < TimeSpan.MaxValue);
+                        addressElapseds = new IPAddressElapsedCollection(connectedValues);
                     }
+
                     this.dnsEndPointAddressElapseds[dnsEndPoint] = addressElapseds;
                     this.logger.LogInformation($"{dnsEndPoint.Host}->{addressElapseds}");
                 }

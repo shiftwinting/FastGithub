@@ -36,7 +36,7 @@ namespace FastGithub.DomainResolve
         private readonly TimeSpan minTimeToLive = TimeSpan.FromSeconds(30d);
         private readonly TimeSpan maxTimeToLive = TimeSpan.FromMinutes(10d);
 
-        private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(2d).TotalMilliseconds;
+        private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(4d).TotalMilliseconds;
         private static readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(2d);
 
         private record LookupResult(IList<IPAddress> Addresses, TimeSpan TimeToLive);
