@@ -128,7 +128,6 @@ namespace FastGithub.DomainResolve
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogWarning($"{endPoint.Host}@{dns}：请求超时。");
                 return Array.Empty<IPAddress>();
             }
             catch (Exception ex)
