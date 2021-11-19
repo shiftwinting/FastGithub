@@ -16,30 +16,33 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
-        const int MAX_ADDRESS_COUNT = 4;
         private readonly DnsClient dnsClient;
         private readonly DomainPersistence persistence;
+        private readonly IPAddressStatusService statusService;
         private readonly ILogger<DomainResolver> logger;
-        private readonly ConcurrentDictionary<DnsEndPoint, IPAddressElapsed[]> dnsEndPointAddressElapseds = new();
+        private readonly ConcurrentDictionary<DnsEndPoint, IPAddress[]> dnsEndPointAddress = new();
 
         /// <summary>
         /// 域名解析器
         /// </summary>
         /// <param name="dnsClient"></param>
         /// <param name="persistence"></param>
+        /// <param name="statusService"></param>
         /// <param name="logger"></param>
         public DomainResolver(
             DnsClient dnsClient,
             DomainPersistence persistence,
+            IPAddressStatusService statusService,
             ILogger<DomainResolver> logger)
         {
             this.dnsClient = dnsClient;
             this.persistence = persistence;
+            this.statusService = statusService;
             this.logger = logger;
 
             foreach (var endPoint in persistence.ReadDnsEndPoints())
             {
-                this.dnsEndPointAddressElapseds.TryAdd(endPoint, Array.Empty<IPAddressElapsed>());
+                this.dnsEndPointAddress.TryAdd(endPoint, Array.Empty<IPAddress>());
             }
         }
 
@@ -67,18 +70,18 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async IAsyncEnumerable<IPAddress> ResolveAllAsync(DnsEndPoint endPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            if (this.dnsEndPointAddressElapseds.TryGetValue(endPoint, out var addressElapseds) && addressElapseds.Length > 0)
+            if (this.dnsEndPointAddress.TryGetValue(endPoint, out var addresses) && addresses.Length > 0)
             {
-                foreach (var addressElapsed in addressElapseds)
+                foreach (var address in addresses)
                 {
-                    yield return addressElapsed.Adddress;
+                    yield return address;
                 }
             }
             else
             {
-                if (this.dnsEndPointAddressElapseds.TryAdd(endPoint, Array.Empty<IPAddressElapsed>()))
+                if (this.dnsEndPointAddress.TryAdd(endPoint, Array.Empty<IPAddress>()))
                 {
-                    await this.persistence.WriteDnsEndPointsAsync(this.dnsEndPointAddressElapseds.Keys, cancellationToken);
+                    await this.persistence.WriteDnsEndPointsAsync(this.dnsEndPointAddress.Keys, cancellationToken);
                 }
 
                 await foreach (var adddress in this.dnsClient.ResolveAsync(endPoint, fastSort: true, cancellationToken))
@@ -95,44 +98,29 @@ namespace FastGithub.DomainResolve
         /// <returns></returns>
         public async Task TestAllEndPointsAsync(CancellationToken cancellationToken)
         {
-            foreach (var keyValue in this.dnsEndPointAddressElapseds)
+            foreach (var keyValue in this.dnsEndPointAddress)
             {
-                var oldValues = keyValue.Value;
-                if (oldValues.Length >= MAX_ADDRESS_COUNT)
-                {
-                    if (oldValues.Any(item => item.NeedUpdateElapsed()) == false)
-                    {
-                        continue;
-                    }
-                }
-
                 var dnsEndPoint = keyValue.Key;
-                var hashSet = new HashSet<IPAddressElapsed>(oldValues);
-                await foreach (var adddress in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
+                var oldAddresses = keyValue.Value;
+
+                var hashSet = new HashSet<IPAddress>(oldAddresses);
+                await foreach (var address in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
                 {
-                    hashSet.Add(new IPAddressElapsed(adddress, dnsEndPoint.Port));
+                    hashSet.Add(address);
                 }
 
-                // 两个以上才进行测速排序
-                if (hashSet.Count > 1)
-                {
-                    var updateTasks = hashSet
-                        .Where(item => item.NeedUpdateElapsed())
-                        .Select(item => item.UpdateElapsedAsync(cancellationToken));
-                    await Task.WhenAll(updateTasks);
-                }
-
-                var newValues = hashSet
+                var statusArray = await this.statusService.GetParallelAsync(hashSet, dnsEndPoint.Port, cancellationToken);
+                var newAddresses = statusArray
                     .Where(item => item.Elapsed < TimeSpan.MaxValue)
                     .OrderBy(item => item.Elapsed)
-                    .Take(count: MAX_ADDRESS_COUNT)
+                    .Select(item => item.Address)
                     .ToArray();
 
-                if (oldValues.SequenceEqual(newValues) == false)
+                if (oldAddresses.SequenceEqual(newAddresses) == false)
                 {
-                    this.dnsEndPointAddressElapseds[dnsEndPoint] = newValues;
+                    this.dnsEndPointAddress[dnsEndPoint] = newAddresses;
 
-                    var addressArray = string.Join(", ", newValues.Select(item => item.ToString()));
+                    var addressArray = string.Join(", ", newAddresses.Select(item => item.ToString()));
                     this.logger.LogInformation($"{dnsEndPoint.Host}->[{addressArray}]");
                 }
             }
