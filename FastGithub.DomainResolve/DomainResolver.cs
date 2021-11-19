@@ -109,13 +109,7 @@ namespace FastGithub.DomainResolve
                     hashSet.Add(address);
                 }
 
-                var statusArray = await this.statusService.GetParallelAsync(hashSet, dnsEndPoint.Port, cancellationToken);
-                var newAddresses = statusArray
-                    .Where(item => item.Elapsed < TimeSpan.MaxValue)
-                    .OrderBy(item => item.Elapsed)
-                    .Select(item => item.Address)
-                    .ToArray();
-
+                var newAddresses = await this.statusService.GetAvailableAddressesAsync(hashSet, dnsEndPoint.Port, cancellationToken);
                 if (oldAddresses.SequenceEqual(newAddresses) == false)
                 {
                     this.dnsEndPointAddress[dnsEndPoint] = newAddresses;
