@@ -9,6 +9,7 @@ namespace FastGithub.UI
     /// </summary>
     public partial class UdpLogListBox : UserControl
     {
+        private readonly int maxLogCount = 100;
         public ObservableCollection<UdpLog> LogList { get; } = new ObservableCollection<UdpLog>();
 
         public UdpLogListBox()
@@ -28,7 +29,11 @@ namespace FastGithub.UI
                     var log = await UdpLogger.GetUdpLogAsync();
                     if (log != null)
                     {
-                        this.LogList.Add(log);
+                        this.LogList.Insert(0, log);
+                        if (this.LogList.Count > this.maxLogCount)
+                        {
+                            this.LogList.RemoveAt(this.maxLogCount);
+                        }
                     }
                 }
                 catch (Exception)
