@@ -16,6 +16,7 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
+        const int MAX_ADDRESS_COUNT = 4;
         private readonly DnsClient dnsClient;
         private readonly DomainPersistence persistence;
         private readonly ILogger<DomainResolver> logger;
@@ -118,6 +119,7 @@ namespace FastGithub.DomainResolve
                 var addressElapseds = hashSet
                     .Where(item => item.Elapsed < TimeSpan.MaxValue)
                     .OrderBy(item => item.Elapsed)
+                    .Take(count: MAX_ADDRESS_COUNT)
                     .ToArray();
 
                 if (keyValue.Value.SequenceEqual(addressElapseds) == false)
