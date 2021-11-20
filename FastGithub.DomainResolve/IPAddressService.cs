@@ -13,26 +13,27 @@ using System.Threading.Tasks;
 namespace FastGithub.DomainResolve
 {
     /// <summary>
-    /// IP状态服务
-    /// 状态缓存5分钟
-    /// 连接超时5秒
+    /// IP服务
+    /// 域名IP关系缓存10分钟
+    /// IPEndPoint时延缓存5分钟
+    /// IPEndPoint连接超时5秒
     /// </summary>
     sealed class IPAddressService
     {
         private record DomainAddress(string Domain, IPAddress Address);
-        private readonly TimeSpan domainExpiration = TimeSpan.FromMinutes(5d);
+        private readonly TimeSpan domainAddressExpiration = TimeSpan.FromMinutes(10d);
         private readonly IMemoryCache domainAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private record AddressElapsed(IPAddress Address, TimeSpan Elapsed);
-        private readonly TimeSpan brokeExpiration = TimeSpan.FromMinutes(1d);
-        private readonly TimeSpan normalExpiration = TimeSpan.FromMinutes(5d);
+        private readonly TimeSpan brokeElapsedExpiration = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan normaleElapsedExpiration = TimeSpan.FromMinutes(5d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
         private readonly IMemoryCache addressElapsedCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private readonly DnsClient dnsClient;
 
         /// <summary>
-        /// IP状态服务
+        /// IP服务
         /// </summary>
         /// <param name="dnsClient"></param>
         public IPAddressService(DnsClient dnsClient)
@@ -66,7 +67,7 @@ namespace FastGithub.DomainResolve
             {
                 ipEndPoints.Add(new IPEndPoint(address, dnsEndPoint.Port));
                 var domainAddress = new DomainAddress(dnsEndPoint.Host, address);
-                this.domainAddressCache.Set(domainAddress, default(object), this.domainExpiration);
+                this.domainAddressCache.Set(domainAddress, default(object), this.domainAddressExpiration);
             }
 
             if (ipEndPoints.Count == 0)
@@ -107,14 +108,14 @@ namespace FastGithub.DomainResolve
                 await socket.ConnectAsync(endPoint, linkedTokenSource.Token);
 
                 addressElapsed = new AddressElapsed(endPoint.Address, stopWatch.Elapsed);
-                return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normalExpiration);
+                return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normaleElapsedExpiration);
             }
             catch (Exception)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 addressElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
-                var expiration = NetworkInterface.GetIsNetworkAvailable() ? this.normalExpiration : this.brokeExpiration;
+                var expiration = NetworkInterface.GetIsNetworkAvailable() ? this.normaleElapsedExpiration : this.brokeElapsedExpiration;
                 return this.addressElapsedCache.Set(endPoint, addressElapsed, expiration);
             }
             finally
