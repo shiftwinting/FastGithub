@@ -103,13 +103,7 @@ namespace FastGithub.DomainResolve
                 var dnsEndPoint = keyValue.Key;
                 var oldAddresses = keyValue.Value;
 
-                var hashSet = new HashSet<IPAddress>(oldAddresses);
-                await foreach (var address in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
-                {
-                    hashSet.Add(address);
-                }
-
-                var newAddresses = await this.statusService.GetAvailableAddressesAsync(hashSet, dnsEndPoint.Port, cancellationToken);
+                var newAddresses = await this.statusService.GetAvailableAddressesAsync(dnsEndPoint, cancellationToken);
                 if (oldAddresses.SequenceEqual(newAddresses) == false)
                 {
                     this.dnsEndPointAddress[dnsEndPoint] = newAddresses;
