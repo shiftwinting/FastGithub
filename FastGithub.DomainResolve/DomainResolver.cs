@@ -18,7 +18,7 @@ namespace FastGithub.DomainResolve
     {
         private readonly DnsClient dnsClient;
         private readonly DomainPersistence persistence;
-        private readonly IPAddressStatusService statusService;
+        private readonly IPAddressService addressService;
         private readonly ILogger<DomainResolver> logger;
         private readonly ConcurrentDictionary<DnsEndPoint, IPAddress[]> dnsEndPointAddress = new();
 
@@ -27,17 +27,17 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="dnsClient"></param>
         /// <param name="persistence"></param>
-        /// <param name="statusService"></param>
+        /// <param name="addressService"></param>
         /// <param name="logger"></param>
         public DomainResolver(
             DnsClient dnsClient,
             DomainPersistence persistence,
-            IPAddressStatusService statusService,
+            IPAddressService addressService,
             ILogger<DomainResolver> logger)
         {
             this.dnsClient = dnsClient;
             this.persistence = persistence;
-            this.statusService = statusService;
+            this.addressService = addressService;
             this.logger = logger;
 
             foreach (var endPoint in persistence.ReadDnsEndPoints())
@@ -103,7 +103,7 @@ namespace FastGithub.DomainResolve
                 var dnsEndPoint = keyValue.Key;
                 var oldAddresses = keyValue.Value;
 
-                var newAddresses = await this.statusService.GetAvailableAddressesAsync(dnsEndPoint, cancellationToken);
+                var newAddresses = await this.addressService.GetAddressesAsync(dnsEndPoint, oldAddresses, cancellationToken);
                 if (oldAddresses.SequenceEqual(newAddresses) == false)
                 {
                     this.dnsEndPointAddress[dnsEndPoint] = newAddresses;

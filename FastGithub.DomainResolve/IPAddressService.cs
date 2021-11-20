@@ -17,12 +17,17 @@ namespace FastGithub.DomainResolve
     /// 状态缓存5分钟
     /// 连接超时5秒
     /// </summary>
-    sealed class IPAddressStatusService
+    sealed class IPAddressService
     {
+        private record DomainAddress(string Domain, IPAddress Address);
+        private readonly TimeSpan domainExpiration = TimeSpan.FromMinutes(5d);
+        private readonly IMemoryCache domainAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+
+        private record AddressElapsed(IPAddress Address, TimeSpan Elapsed);
         private readonly TimeSpan brokeExpiration = TimeSpan.FromMinutes(1d);
         private readonly TimeSpan normalExpiration = TimeSpan.FromMinutes(5d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
-        private readonly IMemoryCache statusCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        private readonly IMemoryCache addressElapsedCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private readonly DnsClient dnsClient;
 
@@ -30,7 +35,7 @@ namespace FastGithub.DomainResolve
         /// IP状态服务
         /// </summary>
         /// <param name="dnsClient"></param>
-        public IPAddressStatusService(DnsClient dnsClient)
+        public IPAddressService(DnsClient dnsClient)
         {
             this.dnsClient = dnsClient;
         }
@@ -39,24 +44,40 @@ namespace FastGithub.DomainResolve
         /// 并行获取可连接的IP
         /// </summary>
         /// <param name="dnsEndPoint"></param>
+        /// <param name="oldAddresses"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<IPAddress[]> GetAvailableAddressesAsync(DnsEndPoint dnsEndPoint, CancellationToken cancellationToken)
+        public async Task<IPAddress[]> GetAddressesAsync(DnsEndPoint dnsEndPoint, IEnumerable<IPAddress> oldAddresses, CancellationToken cancellationToken)
         {
-            var addresses = new List<IPAddress>();
-            await foreach (var address in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
+            var ipEndPoints = new HashSet<IPEndPoint>();
+
+            // 历史未过期的IP节点
+            foreach (var address in oldAddresses)
             {
-                addresses.Add(address);
+                var domainAddress = new DomainAddress(dnsEndPoint.Host, address);
+                if (this.domainAddressCache.TryGetValue(domainAddress, out _))
+                {
+                    ipEndPoints.Add(new IPEndPoint(address, dnsEndPoint.Port));
+                }
             }
 
-            if (addresses.Count == 0)
+            // 新解析出的IP节点
+            await foreach (var address in this.dnsClient.ResolveAsync(dnsEndPoint, fastSort: false, cancellationToken))
+            {
+                ipEndPoints.Add(new IPEndPoint(address, dnsEndPoint.Port));
+                var domainAddress = new DomainAddress(dnsEndPoint.Host, address);
+                this.domainAddressCache.Set(domainAddress, default(object), this.domainExpiration);
+            }
+
+            if (ipEndPoints.Count == 0)
             {
                 return Array.Empty<IPAddress>();
             }
 
-            var statusTasks = addresses.Select(address => this.GetStatusAsync(address, dnsEndPoint.Port, cancellationToken));
-            var statusArray = await Task.WhenAll(statusTasks);
-            return statusArray
+            var addressElapsedTasks = ipEndPoints.Select(item => this.GetAddressElapsedAsync(item, cancellationToken));
+            var addressElapseds = await Task.WhenAll(addressElapsedTasks);
+
+            return addressElapseds
                 .Where(item => item.Elapsed < TimeSpan.MaxValue)
                 .OrderBy(item => item.Elapsed)
                 .Select(item => item.Address)
@@ -65,18 +86,16 @@ namespace FastGithub.DomainResolve
 
 
         /// <summary>
-        /// 获取IP状态
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="port"></param>
+        /// 获取IP节点的时延
+        /// </summary> 
+        /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<IPAddressStatus> GetStatusAsync(IPAddress address, int port, CancellationToken cancellationToken)
+        private async Task<AddressElapsed> GetAddressElapsedAsync(IPEndPoint endPoint, CancellationToken cancellationToken)
         {
-            var endPoint = new IPEndPoint(address, port);
-            if (this.statusCache.TryGetValue<IPAddressStatus>(endPoint, out var status))
+            if (this.addressElapsedCache.TryGetValue<AddressElapsed>(endPoint, out var addressElapsed))
             {
-                return status;
+                return addressElapsed;
             }
 
             var stopWatch = Stopwatch.StartNew();
@@ -87,16 +106,16 @@ namespace FastGithub.DomainResolve
                 using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 await socket.ConnectAsync(endPoint, linkedTokenSource.Token);
 
-                status = new IPAddressStatus(endPoint.Address, stopWatch.Elapsed);
-                return this.statusCache.Set(endPoint, status, this.normalExpiration);
+                addressElapsed = new AddressElapsed(endPoint.Address, stopWatch.Elapsed);
+                return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normalExpiration);
             }
             catch (Exception)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                status = new IPAddressStatus(endPoint.Address, TimeSpan.MaxValue);
+                addressElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
                 var expiration = NetworkInterface.GetIsNetworkAvailable() ? this.normalExpiration : this.brokeExpiration;
-                return this.statusCache.Set(endPoint, status, expiration);
+                return this.addressElapsedCache.Set(endPoint, addressElapsed, expiration);
             }
             finally
             {
