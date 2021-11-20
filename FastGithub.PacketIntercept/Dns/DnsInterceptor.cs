@@ -27,7 +27,7 @@ namespace FastGithub.PacketIntercept.Dns
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<DnsInterceptor> logger;
 
-        private readonly TimeSpan ttl = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan ttl = TimeSpan.FromMinutes(5d);
 
         /// <summary>
         /// 刷新DNS缓存
