@@ -104,11 +104,13 @@ namespace FastGithub.DomainResolve
                 var oldAddresses = keyValue.Value;
 
                 var newAddresses = await this.addressService.GetAddressesAsync(dnsEndPoint, oldAddresses, cancellationToken);
-                if (oldAddresses.SequenceEqual(newAddresses) == false)
-                {
-                    this.dnsEndPointAddress[dnsEndPoint] = newAddresses;
+                this.dnsEndPointAddress[dnsEndPoint] = newAddresses;
 
-                    var addressArray = string.Join(", ", newAddresses.Select(item => item.ToString()));
+                var oldSegmentum = oldAddresses.Take(5);
+                var newSegmentum = newAddresses.Take(5);
+                if (oldSegmentum.SequenceEqual(newSegmentum) == false)
+                {
+                    var addressArray = string.Join(", ", newSegmentum.Select(item => item.ToString()));
                     this.logger.LogInformation($"{dnsEndPoint.Host}->[{addressArray}]");
                 }
             }
