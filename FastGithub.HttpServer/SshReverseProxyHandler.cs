@@ -12,7 +12,7 @@ namespace FastGithub.HttpServer
         /// </summary>
         /// <param name="domainResolver"></param>
         public SshReverseProxyHandler(IDomainResolver domainResolver)
-            : base(domainResolver, new("ssh.github.com", 443))
+            : base(domainResolver, new("github.com", 22))
         {
         }
     }
