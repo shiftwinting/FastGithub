@@ -1,5 +1,4 @@
-﻿using FastGithub.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -44,23 +43,7 @@ namespace FastGithub.DomainResolve
             {
                 this.dnsEndPointAddress.TryAdd(endPoint, Array.Empty<IPAddress>());
             }
-        }
-
-
-        /// <summary>
-        /// 解析ip
-        /// </summary>
-        /// <param name="endPoint">节点</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<IPAddress> ResolveAnyAsync(DnsEndPoint endPoint, CancellationToken cancellationToken = default)
-        {
-            await foreach (var address in this.ResolveAllAsync(endPoint, cancellationToken))
-            {
-                return address;
-            }
-            throw new FastGithubException($"解析不到{endPoint.Host}的IP");
-        }
+        } 
 
         /// <summary>
         /// 解析域名
@@ -68,7 +51,7 @@ namespace FastGithub.DomainResolve
         /// <param name="endPoint">节点</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<IPAddress> ResolveAllAsync(DnsEndPoint endPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IPAddress> ResolveAsync(DnsEndPoint endPoint, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             if (this.dnsEndPointAddress.TryGetValue(endPoint, out var addresses) && addresses.Length > 0)
             {

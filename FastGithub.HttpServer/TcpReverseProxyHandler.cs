@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastGithub.HttpServer
@@ -17,6 +18,7 @@ namespace FastGithub.HttpServer
     {
         private readonly IDomainResolver domainResolver;
         private readonly DnsEndPoint endPoint;
+        private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
 
         /// <summary>
         /// tcp反射代理处理者
@@ -36,9 +38,9 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public override async Task OnConnectedAsync(ConnectionContext context)
         {
-            using var targetStream = await this.CreateConnectionAsync();
-            var task1 = targetStream.CopyToAsync(context.Transport.Output);
-            var task2 = context.Transport.Input.CopyToAsync(targetStream);
+            using var connection = await this.CreateConnectionAsync();
+            var task1 = connection.CopyToAsync(context.Transport.Output);
+            var task2 = context.Transport.Input.CopyToAsync(connection);
             await Task.WhenAny(task1, task2);
         }
 
@@ -50,12 +52,13 @@ namespace FastGithub.HttpServer
         private async Task<Stream> CreateConnectionAsync()
         {
             var innerExceptions = new List<Exception>();
-            await foreach (var address in this.domainResolver.ResolveAllAsync(this.endPoint))
+            await foreach (var address in this.domainResolver.ResolveAsync(this.endPoint))
             {
                 var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 try
                 {
-                    await socket.ConnectAsync(address, this.endPoint.Port);
+                    using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
+                    await socket.ConnectAsync(address, this.endPoint.Port, timeoutTokenSource.Token);
                     return new NetworkStream(socket, ownsSocket: false);
                 }
                 catch (Exception ex)

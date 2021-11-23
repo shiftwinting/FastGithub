@@ -186,7 +186,7 @@ namespace FastGithub.Http
                     yield return new IPEndPoint(this.domainConfig.IPAddress, dnsEndPoint.Port);
                 }
 
-                await foreach (var item in this.domainResolver.ResolveAllAsync(dnsEndPoint, cancellationToken))
+                await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint, cancellationToken))
                 {
                     yield return new IPEndPoint(item, dnsEndPoint.Port);
                 }
