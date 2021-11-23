@@ -69,9 +69,18 @@ namespace FastGithub.Configuration
 
             public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
-                return value is string stringVal && binders.TryGetValue(typeof(T), out var binder)
-                    ? binder.Read(stringVal)
-                    : base.ConvertFrom(context, culture, value);
+                if (value is string stringVal)
+                {
+                    if (stringVal.Equals(string.Empty))
+                    {
+                        return default(T);
+                    }
+                    else if (binders.TryGetValue(typeof(T), out var binder))
+                    {
+                        return binder.Read(stringVal);
+                    }
+                }
+                return base.ConvertFrom(context, culture, value);
             }
 
             public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
