@@ -181,9 +181,9 @@ namespace FastGithub.Http
             }
             else
             {
-                if (IPAddress.TryParse(this.domainConfig.IPAddress, out address))
+                if (this.domainConfig.IPAddress != null)
                 {
-                    yield return new IPEndPoint(address, dnsEndPoint.Port);
+                    yield return new IPEndPoint(this.domainConfig.IPAddress, dnsEndPoint.Port);
                 }
 
                 await foreach (var item in this.domainResolver.ResolveAllAsync(dnsEndPoint, cancellationToken))
