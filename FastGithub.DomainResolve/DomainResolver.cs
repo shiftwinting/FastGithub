@@ -111,7 +111,7 @@ namespace FastGithub.DomainResolve
                 if (oldSegmentum.SequenceEqual(newSegmentum) == false)
                 {
                     var addressArray = string.Join(", ", newSegmentum.Select(item => item.ToString()));
-                    this.logger.LogInformation($"{dnsEndPoint.Host}->[{addressArray}]");
+                    this.logger.LogInformation($"{dnsEndPoint.Host}:{dnsEndPoint.Port}->[{addressArray}]");
                 }
             }
         }
