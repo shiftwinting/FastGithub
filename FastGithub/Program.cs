@@ -72,6 +72,7 @@ namespace FastGithub
                         if (OperatingSystem.IsWindows())
                         {
                             kestrel.ListenSshReverseProxy();
+                            kestrel.ListenGitReverseProxy();
                         }
                         else
                         {

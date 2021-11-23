@@ -16,6 +16,11 @@ namespace FastGithub.Configuration
         public static int Ssh { get; }
 
         /// <summary>
+        /// git端口
+        /// </summary>
+        public static int Git { get; }
+
+        /// <summary>
         /// http端口
         /// </summary>
         public static int Http { get; }
@@ -31,7 +36,8 @@ namespace FastGithub.Configuration
         static ReverseProxyPort()
         {
             var ports = new TcpListenerPortCollection();
-            Ssh = OperatingSystem.IsWindows() ? ports.GetAvailablePort(22) : ports.GetAvailablePort(3822);
+            Ssh = ports.GetAvailablePort(22);
+            Git = ports.GetAvailablePort(9418);
             Http = OperatingSystem.IsWindows() ? ports.GetAvailablePort(80) : ports.GetAvailablePort(3880);
             Https = OperatingSystem.IsWindows() ? ports.GetAvailablePort(443) : ports.GetAvailablePort(38443);
         }

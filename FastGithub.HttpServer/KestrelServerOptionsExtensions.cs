@@ -60,10 +60,23 @@ namespace FastGithub
                 listen.UseConnectionHandler<SshReverseProxyHandler>();
             });
 
-            if (OperatingSystem.IsWindows())
+            kestrel.GetLogger().LogInformation($"已监听ssh://localhost:{sshPort}，github的ssh反向代理服务启动完成");
+        }
+
+        /// <summary>
+        /// 尝试监听git反向代理
+        /// </summary>
+        /// <param name="kestrel"></param>
+        public static void ListenGitReverseProxy(this KestrelServerOptions kestrel)
+        {
+            var gitPort = ReverseProxyPort.Git;
+            kestrel.ListenLocalhost(gitPort, listen =>
             {
-                kestrel.GetLogger().LogInformation($"已监听ssh://localhost:{sshPort}，github的ssh反向代理服务启动完成");
-            }
+                listen.UseFlowAnalyze();
+                listen.UseConnectionHandler<GitReverseProxyHandler>();
+            });
+
+            kestrel.GetLogger().LogInformation($"已监听git://localhost:{gitPort}，github的git反向代理服务启动完成");
         }
 
         /// <summary>
