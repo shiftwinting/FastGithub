@@ -36,7 +36,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         public override async Task OnConnectedAsync(ConnectionContext context)
         {
-            var targetStream = await this.CreateConnectionAsync();
+            using var targetStream = await this.CreateConnectionAsync();
             var task1 = targetStream.CopyToAsync(context.Transport.Output);
             var task2 = context.Transport.Input.CopyToAsync(targetStream);
             await Task.WhenAny(task1, task2);
