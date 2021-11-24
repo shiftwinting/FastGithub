@@ -133,12 +133,12 @@ namespace FastGithub.DomainResolve
             catch (SocketException ex)
             {
                 this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
-                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.maxTimeToLive);
+                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.minTimeToLive);
             }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
-                return Array.Empty<IPAddress>();
+                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.minTimeToLive);
             }
             finally
             {
