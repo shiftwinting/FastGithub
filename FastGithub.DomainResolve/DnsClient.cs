@@ -130,6 +130,11 @@ namespace FastGithub.DomainResolve
             {
                 return Array.Empty<IPAddress>();
             }
+            catch (SocketException ex)
+            {
+                this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
+                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.maxTimeToLive);
+            }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
