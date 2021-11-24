@@ -31,7 +31,7 @@ namespace FastGithub.DomainResolve
         private readonly ILogger<DnsClient> logger;
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
-        private readonly IMemoryCache dnsCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        private readonly IMemoryCache dnsLookupCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private readonly TimeSpan minTimeToLive = TimeSpan.FromSeconds(30d);
         private readonly TimeSpan maxTimeToLive = TimeSpan.FromMinutes(10d);
@@ -118,13 +118,13 @@ namespace FastGithub.DomainResolve
 
             try
             {
-                if (this.dnsCache.TryGetValue<IList<IPAddress>>(key, out var value))
+                if (this.dnsLookupCache.TryGetValue<IList<IPAddress>>(key, out var value))
                 {
                     return value;
                 }
 
                 var result = await this.LookupCoreAsync(dns, endPoint, fastSort, cancellationToken);
-                return this.dnsCache.Set(key, result.Addresses, result.TimeToLive);
+                return this.dnsLookupCache.Set(key, result.Addresses, result.TimeToLive);
             }
             catch (OperationCanceledException)
             {
@@ -133,12 +133,12 @@ namespace FastGithub.DomainResolve
             catch (SocketException ex)
             {
                 this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
-                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.minTimeToLive);
+                return this.dnsLookupCache.Set(key, Array.Empty<IPAddress>(), this.minTimeToLive);
             }
             catch (Exception ex)
             {
                 this.logger.LogWarning($"{endPoint.Host}@{dns}：{ex.Message}");
-                return this.dnsCache.Set(key, Array.Empty<IPAddress>(), this.minTimeToLive);
+                return Array.Empty<IPAddress>();
             }
             finally
             {
