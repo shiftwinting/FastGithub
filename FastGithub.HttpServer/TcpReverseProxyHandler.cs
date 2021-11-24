@@ -32,38 +32,42 @@ namespace FastGithub.HttpServer
         }
 
         /// <summary>
-        /// ssh连接后
+        /// tcp连接后
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
         public override async Task OnConnectedAsync(ConnectionContext context)
         {
-            using var connection = await this.CreateConnectionAsync();
-            var task1 = connection.CopyToAsync(context.Transport.Output);
-            var task2 = context.Transport.Input.CopyToAsync(connection);
+            var cancellationToken = context.ConnectionClosed;
+            using var connection = await this.CreateConnectionAsync(cancellationToken);
+            var task1 = connection.CopyToAsync(context.Transport.Output, cancellationToken);
+            var task2 = context.Transport.Input.CopyToAsync(connection, cancellationToken);
             await Task.WhenAny(task1, task2);
         }
 
         /// <summary>
         /// 创建连接
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="AggregateException"></exception>
-        private async Task<Stream> CreateConnectionAsync()
+        private async Task<Stream> CreateConnectionAsync(CancellationToken cancellationToken)
         {
             var innerExceptions = new List<Exception>();
-            await foreach (var address in this.domainResolver.ResolveAsync(this.endPoint))
+            await foreach (var address in this.domainResolver.ResolveAsync(this.endPoint, cancellationToken))
             {
                 var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 try
                 {
                     using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
-                    await socket.ConnectAsync(address, this.endPoint.Port, timeoutTokenSource.Token);
+                    using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                    await socket.ConnectAsync(address, this.endPoint.Port, linkedTokenSource.Token);
                     return new NetworkStream(socket, ownsSocket: false);
                 }
                 catch (Exception ex)
                 {
                     socket.Dispose();
+                    cancellationToken.ThrowIfCancellationRequested();
                     innerExceptions.Add(ex);
                 }
             }

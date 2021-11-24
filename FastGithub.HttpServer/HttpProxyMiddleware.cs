@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -88,7 +89,8 @@ namespace FastGithub.HttpServer
             }
             else if (context.Request.Method == HttpMethods.Connect)
             {
-                using var connection = await this.CreateConnectionAsync(host);
+                var cancellationToken = context.RequestAborted;
+                using var connection = await this.CreateConnectionAsync(host, cancellationToken);
                 var responseFeature = context.Features.Get<IHttpResponseFeature>();
                 if (responseFeature != null)
                 {
@@ -100,7 +102,9 @@ namespace FastGithub.HttpServer
                 var transport = context.Features.Get<IConnectionTransportFeature>()?.Transport;
                 if (transport != null)
                 {
-                    await Task.WhenAny(connection.CopyToAsync(transport.Output), transport.Input.CopyToAsync(connection));
+                    var task1 = connection.CopyToAsync(transport.Output, cancellationToken);
+                    var task2 = transport.Input.CopyToAsync(connection, cancellationToken);
+                    await Task.WhenAny(task1, task2);
                 }
             }
             else
@@ -156,23 +160,26 @@ namespace FastGithub.HttpServer
         /// 创建连接
         /// </summary>
         /// <param name="host"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="AggregateException"></exception>
-        private async Task<Stream> CreateConnectionAsync(HostString host)
+        private async Task<Stream> CreateConnectionAsync(HostString host, CancellationToken cancellationToken)
         {
             var innerExceptions = new List<Exception>();
-            await foreach (var endPoint in this.GetTargetEndPointsAsync(host))
+            await foreach (var endPoint in this.GetUpstreamEndPointsAsync(host, cancellationToken))
             {
                 var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 try
                 {
                     using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
-                    await socket.ConnectAsync(endPoint, timeoutTokenSource.Token);
+                    using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
+                    await socket.ConnectAsync(endPoint, linkedTokenSource.Token);
                     return new NetworkStream(socket, ownsSocket: false);
                 }
                 catch (Exception ex)
                 {
                     socket.Dispose();
+                    cancellationToken.ThrowIfCancellationRequested();
                     innerExceptions.Add(ex);
                 }
             }
@@ -183,8 +190,9 @@ namespace FastGithub.HttpServer
         /// 获取目标终节点
         /// </summary>
         /// <param name="host"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async IAsyncEnumerable<EndPoint> GetTargetEndPointsAsync(HostString host)
+        private async IAsyncEnumerable<EndPoint> GetUpstreamEndPointsAsync(HostString host, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var targetHost = host.Host;
             var targetPort = host.Port ?? HTTPS_PORT;
@@ -215,7 +223,7 @@ namespace FastGithub.HttpServer
             }
 
             var dnsEndPoint = new DnsEndPoint(targetHost, targetPort);
-            await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint))
+            await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint, cancellationToken))
             {
                 yield return new IPEndPoint(item, targetPort);
             }

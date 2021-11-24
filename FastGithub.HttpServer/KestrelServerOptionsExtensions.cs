@@ -48,7 +48,7 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 尝试监听ssh反向代理
+        /// 监听ssh反向代理
         /// </summary>
         /// <param name="kestrel"></param>
         public static void ListenSshReverseProxy(this KestrelServerOptions kestrel)
@@ -57,14 +57,14 @@ namespace FastGithub
             kestrel.ListenLocalhost(sshPort, listen =>
             {
                 listen.UseFlowAnalyze();
-                listen.UseConnectionHandler<SshReverseProxyHandler>();
+                listen.UseConnectionHandler<GithubSshReverseProxyHandler>();
             });
 
             kestrel.GetLogger().LogInformation($"已监听ssh://localhost:{sshPort}，github的ssh反向代理服务启动完成");
         }
 
         /// <summary>
-        /// 尝试监听git反向代理
+        /// 监听git反向代理
         /// </summary>
         /// <param name="kestrel"></param>
         public static void ListenGitReverseProxy(this KestrelServerOptions kestrel)
@@ -73,14 +73,14 @@ namespace FastGithub
             kestrel.ListenLocalhost(gitPort, listen =>
             {
                 listen.UseFlowAnalyze();
-                listen.UseConnectionHandler<GitReverseProxyHandler>();
+                listen.UseConnectionHandler<GithubGitReverseProxyHandler>();
             });
 
             kestrel.GetLogger().LogInformation($"已监听git://localhost:{gitPort}，github的git反向代理服务启动完成");
         }
 
         /// <summary>
-        /// 尝试监听http反向代理
+        /// 监听http反向代理
         /// </summary>
         /// <param name="kestrel"></param>
         public static void ListenHttpReverseProxy(this KestrelServerOptions kestrel)
