@@ -23,6 +23,6 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task TestAllEndPointsAsync(CancellationToken cancellationToken = default);
+        Task TestSpeedAsync(CancellationToken cancellationToken = default);
     }
 }

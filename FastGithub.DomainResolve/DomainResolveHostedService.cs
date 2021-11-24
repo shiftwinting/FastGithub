@@ -45,7 +45,7 @@ namespace FastGithub.DomainResolve
 
                 while (stoppingToken.IsCancellationRequested == false)
                 {
-                    await this.domainResolver.TestAllEndPointsAsync(stoppingToken);
+                    await this.domainResolver.TestSpeedAsync(stoppingToken);
                     await Task.Delay(this.testPeriodTimeSpan, stoppingToken);
                 }
             }

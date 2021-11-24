@@ -43,7 +43,7 @@ namespace FastGithub.DomainResolve
             {
                 this.dnsEndPointAddress.TryAdd(endPoint, Array.Empty<IPAddress>());
             }
-        } 
+        }
 
         /// <summary>
         /// 解析域名
@@ -79,9 +79,9 @@ namespace FastGithub.DomainResolve
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task TestAllEndPointsAsync(CancellationToken cancellationToken)
+        public async Task TestSpeedAsync(CancellationToken cancellationToken)
         {
-            foreach (var keyValue in this.dnsEndPointAddress)
+            foreach (var keyValue in this.dnsEndPointAddress.OrderBy(item => item.Value.Length))
             {
                 var dnsEndPoint = keyValue.Key;
                 var oldAddresses = keyValue.Value;
