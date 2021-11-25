@@ -212,13 +212,13 @@ namespace FastGithub.HttpServer
 
             if (targetPort == HTTP_PORT)
             {
-                yield return new IPEndPoint(IPAddress.Loopback, ReverseProxyPort.Http);
+                yield return new IPEndPoint(IPAddress.Loopback, GlobalListener.HttpPort);
                 yield break;
             }
 
             if (targetPort == HTTPS_PORT)
             {
-                yield return new IPEndPoint(IPAddress.Loopback, ReverseProxyPort.Https);
+                yield return new IPEndPoint(IPAddress.Loopback, GlobalListener.HttpsPort);
                 yield break;
             }
 
