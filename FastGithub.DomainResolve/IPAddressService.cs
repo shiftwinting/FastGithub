@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -110,18 +109,36 @@ namespace FastGithub.DomainResolve
                 addressElapsed = new AddressElapsed(endPoint.Address, stopWatch.Elapsed);
                 return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normaleElapsedExpiration);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 addressElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
-                var expiration = NetworkInterface.GetIsNetworkAvailable() ? this.normaleElapsedExpiration : this.brokeElapsedExpiration;
+                var expiration = IsLocalNetworkProblem(ex) ? this.brokeElapsedExpiration : this.normaleElapsedExpiration;
                 return this.addressElapsedCache.Set(endPoint, addressElapsed, expiration);
             }
             finally
             {
                 stopWatch.Stop();
             }
+        }
+
+        /// <summary>
+        /// 是否为本机网络问题
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <returns></returns>
+        private static bool IsLocalNetworkProblem(Exception ex)
+        {
+            if (ex is not SocketException socketException)
+            {
+                return false;
+            }
+
+            var code = socketException.SocketErrorCode;
+            return code == SocketError.NetworkDown ||
+                code == SocketError.NetworkUnreachable ||
+                code == SocketError.HostUnreachable;
         }
     }
 }
