@@ -24,8 +24,8 @@ namespace FastGithub.DomainResolve
         private readonly IMemoryCache domainAddressCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
         private record AddressElapsed(IPAddress Address, TimeSpan Elapsed);
-        private readonly TimeSpan brokeElapsedExpiration = TimeSpan.FromMinutes(1d);
-        private readonly TimeSpan normaleElapsedExpiration = TimeSpan.FromMinutes(5d);
+        private readonly TimeSpan problemElapsedExpiration = TimeSpan.FromMinutes(1d);
+        private readonly TimeSpan normalElapsedExpiration = TimeSpan.FromMinutes(5d);
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(5d);
         private readonly IMemoryCache addressElapsedCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
@@ -107,14 +107,14 @@ namespace FastGithub.DomainResolve
                 await socket.ConnectAsync(endPoint, linkedTokenSource.Token);
 
                 addressElapsed = new AddressElapsed(endPoint.Address, stopWatch.Elapsed);
-                return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normaleElapsedExpiration);
+                return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normalElapsedExpiration);
             }
             catch (Exception ex)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 addressElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
-                var expiration = IsLocalNetworkProblem(ex) ? this.brokeElapsedExpiration : this.normaleElapsedExpiration;
+                var expiration = IsLocalNetworkProblem(ex) ? this.problemElapsedExpiration : this.normalElapsedExpiration;
                 return this.addressElapsedCache.Set(endPoint, addressElapsed, expiration);
             }
             finally
@@ -136,9 +136,7 @@ namespace FastGithub.DomainResolve
             }
 
             var code = socketException.SocketErrorCode;
-            return code == SocketError.NetworkDown ||
-                code == SocketError.NetworkUnreachable ||
-                code == SocketError.HostUnreachable;
+            return code == SocketError.NetworkDown || code == SocketError.NetworkUnreachable;
         }
     }
 }
