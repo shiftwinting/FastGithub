@@ -6,9 +6,9 @@ using System.Globalization;
 namespace FastGithub.Configuration
 {
     /// <summary>
-    /// 配置值绑定器
+    /// TypeConverter类型转换绑定器
     /// </summary>
-    static class ValueBinder
+    static class TypeConverterBinder
     {
         private static readonly Dictionary<Type, Binder> binders = new();
 

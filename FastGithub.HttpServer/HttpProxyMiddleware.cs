@@ -200,32 +200,26 @@ namespace FastGithub.HttpServer
             if (IPAddress.TryParse(targetHost, out var address) == true)
             {
                 yield return new IPEndPoint(address, targetPort);
-                yield break;
             }
-
-            // 不关心的域名，直接使用系统dns
-            if (this.fastGithubConfig.IsMatch(targetHost) == false)
+            else if (this.fastGithubConfig.IsMatch(targetHost) == false)
             {
                 yield return new DnsEndPoint(targetHost, targetPort);
-                yield break;
             }
-
-            if (targetPort == HTTP_PORT)
+            else if (targetPort == HTTP_PORT)
             {
                 yield return new IPEndPoint(IPAddress.Loopback, GlobalListener.HttpPort);
-                yield break;
             }
-
-            if (targetPort == HTTPS_PORT)
+            else if (targetPort == HTTPS_PORT)
             {
                 yield return new IPEndPoint(IPAddress.Loopback, GlobalListener.HttpsPort);
-                yield break;
             }
-
-            var dnsEndPoint = new DnsEndPoint(targetHost, targetPort);
-            await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint, cancellationToken))
+            else
             {
-                yield return new IPEndPoint(item, targetPort);
+                var dnsEndPoint = new DnsEndPoint(targetHost, targetPort);
+                await foreach (var item in this.domainResolver.ResolveAsync(dnsEndPoint, cancellationToken))
+                {
+                    yield return new IPEndPoint(item, targetPort);
+                }
             }
         }
 

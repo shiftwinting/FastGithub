@@ -15,8 +15,9 @@ namespace FastGithub.DomainResolve
     /// </summary> 
     sealed class DomainResolver : IDomainResolver
     {
+        private const int MAX_IP_COUNT = 3;
         private readonly DnsClient dnsClient;
-        private readonly DomainPersistence persistence;
+        private readonly PersistenceService persistence;
         private readonly IPAddressService addressService;
         private readonly ILogger<DomainResolver> logger;
         private readonly ConcurrentDictionary<DnsEndPoint, IPAddress[]> dnsEndPointAddress = new();
@@ -30,7 +31,7 @@ namespace FastGithub.DomainResolve
         /// <param name="logger"></param>
         public DomainResolver(
             DnsClient dnsClient,
-            DomainPersistence persistence,
+            PersistenceService persistence,
             IPAddressService addressService,
             ILogger<DomainResolver> logger)
         {
@@ -89,11 +90,11 @@ namespace FastGithub.DomainResolve
                 var newAddresses = await this.addressService.GetAddressesAsync(dnsEndPoint, oldAddresses, cancellationToken);
                 this.dnsEndPointAddress[dnsEndPoint] = newAddresses;
 
-                var oldSegmentum = oldAddresses.Take(5);
-                var newSegmentum = newAddresses.Take(5);
-                if (oldSegmentum.SequenceEqual(newSegmentum) == false)
+                var oldSegmentums = oldAddresses.Take(MAX_IP_COUNT);
+                var newSegmentums = newAddresses.Take(MAX_IP_COUNT);
+                if (oldSegmentums.SequenceEqual(newSegmentums) == false)
                 {
-                    var addressArray = string.Join(", ", newSegmentum.Select(item => item.ToString()));
+                    var addressArray = string.Join(", ", newSegmentums.Select(item => item.ToString()));
                     this.logger.LogInformation($"{dnsEndPoint.Host}:{dnsEndPoint.Port}->[{addressArray}]");
                 }
             }
