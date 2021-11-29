@@ -17,6 +17,7 @@ namespace FastGithub
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
+            ConsoleUtil.DisableQuickEdit();
             CreateHostBuilder(args).Build().Run();
         }
 
