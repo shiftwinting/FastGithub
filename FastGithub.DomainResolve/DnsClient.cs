@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -33,7 +34,7 @@ namespace FastGithub.DomainResolve
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreSlims = new();
         private readonly IMemoryCache dnsLookupCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
 
-        private readonly TimeSpan minTimeToLive = TimeSpan.FromSeconds(30d);
+        private readonly TimeSpan minTimeToLive = TimeSpan.FromMinutes(1d);
         private readonly TimeSpan maxTimeToLive = TimeSpan.FromMinutes(10d);
 
         private readonly int resolveTimeout = (int)TimeSpan.FromSeconds(4d).TotalMilliseconds;
@@ -130,10 +131,10 @@ namespace FastGithub.DomainResolve
             {
                 return Array.Empty<IPAddress>();
             }
-            catch (SocketException ex)
+            catch (IOException ex) when (ex.InnerException is SocketException)
             {
                 this.logger.LogWarning($"{endPoint.Host}@{dns}->{ex.Message}");
-                return this.dnsLookupCache.Set(key, Array.Empty<IPAddress>(), this.minTimeToLive);
+                return this.dnsLookupCache.Set(key, Array.Empty<IPAddress>(), this.maxTimeToLive);
             }
             catch (Exception ex)
             {
