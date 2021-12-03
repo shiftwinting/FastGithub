@@ -117,9 +117,9 @@ namespace FastGithub.DomainResolve
                 return true;
             }
 
-            if (this.dnsStateCache.TryGetValue<bool>(dns, out var state))
+            if (this.dnsStateCache.TryGetValue<bool>(dns, out var available))
             {
-                return state;
+                return available;
             }
 
             var key = dns.ToString();
@@ -138,6 +138,10 @@ namespace FastGithub.DomainResolve
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 return this.dnsStateCache.Set(dns, false, this.stateExpiration);
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
 
