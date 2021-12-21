@@ -46,9 +46,12 @@ namespace FastGithub.PacketIntercept.Dns
 
             var hasConflicting = false;
             var hostsBuilder = new StringBuilder();
-            var lines = await File.ReadAllLinesAsync(hostsPath, cancellationToken);
-            foreach (var line in lines)
+            using var fileStream = new FileStream(hostsPath, FileMode.Open, FileAccess.Read);
+            using var streamReader = new StreamReader(fileStream);
+
+            while (streamReader.EndOfStream == false)
             {
+                var line = await streamReader.ReadLineAsync();
                 if (this.IsConflictingLine(line))
                 {
                     hasConflicting = true;
@@ -60,12 +63,13 @@ namespace FastGithub.PacketIntercept.Dns
                 }
             }
 
+
             if (hasConflicting == true)
             {
                 try
                 {
                     File.Move(hostsPath, Path.ChangeExtension(hostsPath, ".bak"), overwrite: true);
-                    await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), cancellationToken);
+                    await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), streamReader.CurrentEncoding, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -89,9 +93,9 @@ namespace FastGithub.PacketIntercept.Dns
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        private bool IsConflictingLine(string line)
+        private bool IsConflictingLine(string? line)
         {
-            if (line.TrimStart().StartsWith("#"))
+            if (line == null || line.TrimStart().StartsWith("#"))
             {
                 return false;
             }
