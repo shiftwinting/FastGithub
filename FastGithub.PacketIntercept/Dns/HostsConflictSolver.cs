@@ -44,23 +44,26 @@ namespace FastGithub.PacketIntercept.Dns
                 return;
             }
 
+            Encoding hostsEncoding;
             var hasConflicting = false;
             var hostsBuilder = new StringBuilder();
-            using var fileStream = new FileStream(hostsPath, FileMode.Open, FileAccess.Read);
-            using var streamReader = new StreamReader(fileStream);
-
-            while (streamReader.EndOfStream == false)
+            using (var fileStream = new FileStream(hostsPath, FileMode.Open, FileAccess.Read))
             {
-                var line = await streamReader.ReadLineAsync();
-                if (this.IsConflictingLine(line))
+                using var streamReader = new StreamReader(fileStream);
+                while (streamReader.EndOfStream == false)
                 {
-                    hasConflicting = true;
-                    hostsBuilder.AppendLine($"# {line}");
+                    var line = await streamReader.ReadLineAsync();
+                    if (this.IsConflictingLine(line))
+                    {
+                        hasConflicting = true;
+                        hostsBuilder.AppendLine($"# {line}");
+                    }
+                    else
+                    {
+                        hostsBuilder.AppendLine(line);
+                    }
                 }
-                else
-                {
-                    hostsBuilder.AppendLine(line);
-                }
+                hostsEncoding = streamReader.CurrentEncoding;
             }
 
 
@@ -68,8 +71,7 @@ namespace FastGithub.PacketIntercept.Dns
             {
                 try
                 {
-                    File.Move(hostsPath, Path.ChangeExtension(hostsPath, ".bak"), overwrite: true);
-                    await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), streamReader.CurrentEncoding, cancellationToken);
+                    await File.WriteAllTextAsync(hostsPath, hostsBuilder.ToString(), hostsEncoding, cancellationToken);
                 }
                 catch (Exception ex)
                 {
