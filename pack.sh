@@ -18,3 +18,8 @@ zip -r fastgithub_linux-arm64.zip fastgithub_linux-arm64
 chmod 777 ./fastgithub_osx-x64/fastgithub
 chmod 777 ./fastgithub_osx-x64/dnscrypt-proxy/dnscrypt-proxy
 zip -r fastgithub_osx-x64.zip fastgithub_osx-x64
+
+# osx-arm64
+chmod 777 ./fastgithub_osx-arm64/fastgithub
+chmod 777 ./fastgithub_osx-arm64/dnscrypt-proxy/dnscrypt-proxy
+zip -r fastgithub_osx-arm64.zip fastgithub_osx-arm64

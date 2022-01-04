@@ -5,3 +5,4 @@ dotnet publish -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true --sel
 dotnet publish -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true --self-contained -r linux-x64 -o "%output%/fastgithub_linux-x64" ./FastGithub/FastGithub.csproj
 dotnet publish -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true --self-contained -r linux-arm64 -o "%output%/fastgithub_linux-arm64" ./FastGithub/FastGithub.csproj
 dotnet publish -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true --self-contained -r osx-x64 -o "%output%/fastgithub_osx-x64" ./FastGithub/FastGithub.csproj
+dotnet publish -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true --self-contained -r osx-arm64 -o "%output%/fastgithub_osx-arm64" ./FastGithub/FastGithub.csproj
