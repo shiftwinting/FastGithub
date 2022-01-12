@@ -51,20 +51,19 @@ namespace FastGithub.HttpServer
             }
 
             var request = context.Request;
-            var response = context.Response;
-            var message = $"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms";
+            var response = context.Response; 
             var exception = context.GetForwarderErrorFeature()?.Exception;
             if (exception == null)
             {
-                this.logger.LogInformation(message);
+                this.logger.LogInformation($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms");
             }
             else if (IsError(exception))
             {
-                this.logger.LogError($"{message}{Environment.NewLine}{exception}");
+                this.logger.LogError($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms{Environment.NewLine}{exception}");
             }
             else
             {
-                this.logger.LogWarning($"{message}{Environment.NewLine}{GetMessage(exception)}");
+                this.logger.LogWarning($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms{Environment.NewLine}{GetMessage(exception)}");
             }
         }
 
