@@ -63,7 +63,7 @@ namespace FastGithub.UI
             var length = await taskCompletionSource.Task;
 
             var json = Encoding.UTF8.GetString(buffer, 0, length);
-            var log= JsonConvert.DeserializeObject<UdpLog>(json);
+            var log = JsonConvert.DeserializeObject<UdpLog>(json);
             if (log != null)
             {
                 log.Message = log.Message.Replace("\"", null);
