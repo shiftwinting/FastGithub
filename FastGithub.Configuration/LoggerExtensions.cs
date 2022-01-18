@@ -18,6 +18,16 @@ namespace FastGithub
             => logger.Log(level, formattableString.Format, formattableString.GetArguments());
 
         /// <summary>
+        /// 输出日志
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="level"></param>
+        /// <param name="error"></param>
+        /// <param name="formattableString"></param>
+        public static void Log(this ILogger logger, LogLevel level, Exception? error, FormattableString formattableString)
+            => logger.Log(level, error, formattableString.Format, formattableString.GetArguments());
+
+        /// <summary>
         /// 输出Trace日志
         /// </summary>
         /// <param name="logger"></param>
@@ -56,6 +66,14 @@ namespace FastGithub
         /// <param name="formattableString"></param>
         public static void LogError(this ILogger logger, FormattableString formattableString)
             => logger.Log(LogLevel.Error, formattableString);
+
+        /// <summary>
+        /// 输出日志
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="formattableString"></param>
+        public static void LogError(this ILogger logger, Exception error, FormattableString formattableString)
+            => logger.Log(LogLevel.Error, error, formattableString);
 
         /// <summary>
         /// 输出Critical日志
