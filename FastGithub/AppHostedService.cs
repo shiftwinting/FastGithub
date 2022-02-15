@@ -68,10 +68,17 @@ namespace FastGithub
         {
             if (OperatingSystem.IsWindows() == false)
             {
-                if (await this.UseFastGithubProxyAsync() == false)
+                try
                 {
-                    var httpProxyPort = this.fastGithubOptions.Value.HttpProxyPort;
-                    this.logger.LogWarning($"请设置系统自动代理为http://{IPAddress.Loopback}:{httpProxyPort}，或手动代理http/https为{IPAddress.Loopback}:{httpProxyPort}");
+                    if (await this.UseFastGithubProxyAsync() == false)
+                    {
+                        var httpProxyPort = this.fastGithubOptions.Value.HttpProxyPort;
+                        this.logger.LogWarning($"请设置系统自动代理为http://{IPAddress.Loopback}:{httpProxyPort}，或手动代理http/https为{IPAddress.Loopback}:{httpProxyPort}");
+                    }
+                }
+                catch (Exception)
+                {
+                    this.logger.LogWarning("尝试获取代理信息失败");
                 }
             }
         }
