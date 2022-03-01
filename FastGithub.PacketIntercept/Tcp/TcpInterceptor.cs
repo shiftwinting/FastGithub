@@ -71,6 +71,7 @@ namespace FastGithub.PacketIntercept.Tcp
 
             while (cancellationToken.IsCancellationRequested == false)
             {
+                winDivertAddress.Reset();
                 if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength) == false)
                 {
                     throw new Win32Exception();
@@ -100,6 +101,15 @@ namespace FastGithub.PacketIntercept.Tcp
         unsafe private void ModifyTcpPacket(WinDivertBuffer winDivertBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
         {
             var packet = WinDivert.WinDivertHelperParsePacket(winDivertBuffer, packetLength);
+            if (packet.IPv4Header != null && packet.IPv4Header->SrcAddr.Equals(IPAddress.Loopback) == false)
+            {
+                return;
+            }
+            if (packet.IPv6Header != null && packet.IPv6Header->SrcAddr.Equals(IPAddress.IPv6Loopback) == false)
+            {
+                return;
+            }
+
             if (packet.TcpHeader->DstPort == oldServerPort)
             {
                 packet.TcpHeader->DstPort = this.newServerPort;
