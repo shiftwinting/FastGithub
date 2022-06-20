@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.Certs.CaCertInstallers
 {
     sealed class CaCertInstallerOfMacOS : ICaCertInstaller
     {
@@ -27,7 +27,7 @@ namespace FastGithub.HttpServer
         /// <param name="caCertFilePath">证书文件路径</param>
         public void Install(string caCertFilePath)
         {
-            this.logger.LogWarning($"请手动安装CA证书然后设置信任CA证书{caCertFilePath}");
+            logger.LogWarning($"请手动安装CA证书然后设置信任CA证书{caCertFilePath}");
         }
     }
 }

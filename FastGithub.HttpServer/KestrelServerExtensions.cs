@@ -1,8 +1,11 @@
 ﻿using FastGithub.Configuration;
-using FastGithub.HttpServer;
+using FastGithub.HttpServer.Certs;
+using FastGithub.HttpServer.TcpMiddlewares;
+using FastGithub.HttpServer.TlsMiddlewares;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,7 +16,7 @@ namespace FastGithub
     /// <summary>
     /// Kestrel扩展
     /// </summary>
-    public static class KestrelServerOptionsExtensions
+    public static class KestrelServerExtensions
     {
         /// <summary>
         /// 无限制
@@ -40,13 +43,21 @@ namespace FastGithub
                 throw new FastGithubException($"tcp端口{httpProxyPort}已经被其它进程占用，请在配置文件更换{nameof(FastGithubOptions.HttpProxyPort)}为其它端口");
             }
 
-            var logger = kestrel.GetLogger();
-            kestrel.ListenLocalhost(httpProxyPort);
-            logger.LogInformation($"已监听http://localhost:{httpProxyPort}，http代理服务启动完成");
+            kestrel.ListenLocalhost(httpProxyPort, listen =>
+            {
+                var proxyMiddleware = kestrel.ApplicationServices.GetRequiredService<HttpProxyMiddleware>();
+                var tunnelMiddleware = kestrel.ApplicationServices.GetRequiredService<TunnelMiddleware>();
+
+                listen.Use(next => context => proxyMiddleware.InvokeAsync(next, context));
+                listen.UseTls();
+                listen.Use(next => context => tunnelMiddleware.InvokeAsync(next, context));
+            });
+
+            kestrel.GetLogger().LogInformation($"已监听http://localhost:{httpProxyPort}，http代理服务启动完成");
         }
 
         /// <summary>
-        /// 监听ssh反向代理
+        /// 监听ssh协议代理
         /// </summary>
         /// <param name="kestrel"></param>
         public static void ListenSshReverseProxy(this KestrelServerOptions kestrel)
@@ -62,7 +73,7 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 监听git反向代理
+        /// 监听git协议代理代理
         /// </summary>
         /// <param name="kestrel"></param>
         public static void ListenGitReverseProxy(this KestrelServerOptions kestrel)
@@ -99,10 +110,6 @@ namespace FastGithub
         /// <exception cref="FastGithubException"></exception>
         public static void ListenHttpsReverseProxy(this KestrelServerOptions kestrel)
         {
-            var certService = kestrel.ApplicationServices.GetRequiredService<CertService>();
-            certService.CreateCaCertIfNotExists();
-            certService.InstallAndTrustCaCert();
-
             var httpsPort = GlobalListener.HttpsPort;
             kestrel.ListenLocalhost(httpsPort, listen =>
             {
@@ -110,10 +117,7 @@ namespace FastGithub
                 {
                     listen.UseFlowAnalyze();
                 }
-                listen.UseHttps(https =>
-                {
-                    https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain);
-                });
+                listen.UseTls();
             });
 
             if (OperatingSystem.IsWindows())
@@ -132,6 +136,37 @@ namespace FastGithub
         {
             var loggerFactory = kestrel.ApplicationServices.GetRequiredService<ILoggerFactory>();
             return loggerFactory.CreateLogger($"{nameof(FastGithub)}.{nameof(HttpServer)}");
+        }
+
+        /// <summary>
+        /// 使用Tls中间件
+        /// </summary>
+        /// <param name="listen"></param>
+        /// <param name="configureOptions">https配置</param>
+        /// <returns></returns>
+        public static ListenOptions UseTls(this ListenOptions listen)
+        {
+            var certService = listen.ApplicationServices.GetRequiredService<CertService>();
+            certService.CreateCaCertIfNotExists();
+            certService.InstallAndTrustCaCert();
+            return listen.UseTls(https => https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain));
+        }
+
+        /// <summary>
+        /// 使用Tls中间件
+        /// </summary>
+        /// <param name="listen"></param>
+        /// <param name="configureOptions">https配置</param>
+        /// <returns></returns>
+        private static ListenOptions UseTls(this ListenOptions listen, Action<HttpsConnectionAdapterOptions> configureOptions)
+        {
+            var invadeMiddleware = listen.ApplicationServices.GetRequiredService<TlsInvadeMiddleware>();
+            var restoreMiddleware = listen.ApplicationServices.GetRequiredService<TlsRestoreMiddleware>();
+
+            listen.Use(next => context => invadeMiddleware.InvokeAsync(next, context));
+            listen.UseHttps(configureOptions);
+            listen.Use(next => context => restoreMiddleware.InvokeAsync(next, context));
+            return listen;
         }
     }
 }

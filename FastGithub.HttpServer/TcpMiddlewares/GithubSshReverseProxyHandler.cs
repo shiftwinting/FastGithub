@@ -1,6 +1,6 @@
 ﻿using FastGithub.DomainResolve;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.TcpMiddlewares
 {
     /// <summary>
     /// github的ssh代理处理者

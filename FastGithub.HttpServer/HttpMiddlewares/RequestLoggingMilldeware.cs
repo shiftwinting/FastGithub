@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.HttpMiddlewares
 {
     /// <summary>
     /// 请求日志中间件
@@ -51,19 +51,19 @@ namespace FastGithub.HttpServer
             }
 
             var request = context.Request;
-            var response = context.Response; 
+            var response = context.Response;
             var exception = context.GetForwarderErrorFeature()?.Exception;
             if (exception == null)
             {
-                this.logger.LogInformation($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms");
+                logger.LogInformation($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms");
             }
             else if (IsError(exception))
             {
-                this.logger.LogError($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms{Environment.NewLine}{exception}");
+                logger.LogError($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms{Environment.NewLine}{exception}");
             }
             else
             {
-                this.logger.LogWarning($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms{Environment.NewLine}{GetMessage(exception)}");
+                logger.LogWarning($"{request.Method} {request.Scheme}://{request.Host}{request.Path} responded {response.StatusCode} in {stopwatch.Elapsed.TotalMilliseconds} ms{Environment.NewLine}{GetMessage(exception)}");
             }
         }
 

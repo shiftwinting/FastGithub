@@ -1,4 +1,4 @@
-﻿using FastGithub.HttpServer;
+﻿using FastGithub.HttpServer.HttpMiddlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,14 +10,14 @@ namespace FastGithub
     public static class ApplicationBuilderExtensions
     {
         /// <summary>
-        /// 使用http代理中间件
+        /// 使用http代理策略中间件
         /// </summary>
         /// <param name="app"></param> 
         /// <returns></returns>
-        public static IApplicationBuilder UseHttpProxy(this IApplicationBuilder app)
+        public static IApplicationBuilder UseHttpProxyPac(this IApplicationBuilder app)
         {
-            var middleware = app.ApplicationServices.GetRequiredService<HttpProxyMiddleware>();
-            return app.Use(next => context => middleware.InvokeAsync(context));
+            var middleware = app.ApplicationServices.GetRequiredService<HttpProxyPacMiddleware>();
+            return app.Use(next => context => middleware.InvokeAsync(context, next));
         }
 
         /// <summary>

@@ -9,10 +9,10 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.TcpMiddlewares
 {
     /// <summary>
-    /// tcp反射代理处理者
+    /// tcp协议代理处理者
     /// </summary>
     abstract class TcpReverseProxyHandler : ConnectionHandler
     {
@@ -21,7 +21,7 @@ namespace FastGithub.HttpServer
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
 
         /// <summary>
-        /// tcp反射代理处理者
+        /// tcp协议代理处理者
         /// </summary>
         /// <param name="domainResolver"></param>
         /// <param name="endPoint"></param>
@@ -39,7 +39,7 @@ namespace FastGithub.HttpServer
         public override async Task OnConnectedAsync(ConnectionContext context)
         {
             var cancellationToken = context.ConnectionClosed;
-            using var connection = await this.CreateConnectionAsync(cancellationToken);
+            using var connection = await CreateConnectionAsync(cancellationToken);
             var task1 = connection.CopyToAsync(context.Transport.Output, cancellationToken);
             var task2 = context.Transport.Input.CopyToAsync(connection, cancellationToken);
             await Task.WhenAny(task1, task2);
@@ -54,14 +54,14 @@ namespace FastGithub.HttpServer
         private async Task<Stream> CreateConnectionAsync(CancellationToken cancellationToken)
         {
             var innerExceptions = new List<Exception>();
-            await foreach (var address in this.domainResolver.ResolveAsync(this.endPoint, cancellationToken))
+            await foreach (var address in domainResolver.ResolveAsync(endPoint, cancellationToken))
             {
                 var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 try
                 {
-                    using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
+                    using var timeoutTokenSource = new CancellationTokenSource(connectTimeout);
                     using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                    await socket.ConnectAsync(address, this.endPoint.Port, linkedTokenSource.Token);
+                    await socket.ConnectAsync(address, endPoint.Port, linkedTokenSource.Token);
                     return new NetworkStream(socket, ownsSocket: false);
                 }
                 catch (Exception ex)
@@ -71,7 +71,7 @@ namespace FastGithub.HttpServer
                     innerExceptions.Add(ex);
                 }
             }
-            throw new AggregateException($"无法连接到{this.endPoint.Host}:{this.endPoint.Port}", innerExceptions);
+            throw new AggregateException($"无法连接到{endPoint.Host}:{endPoint.Port}", innerExceptions);
         }
     }
 }

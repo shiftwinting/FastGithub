@@ -1,4 +1,4 @@
-﻿namespace FastGithub.HttpServer
+﻿namespace FastGithub.HttpServer.HttpMiddlewares
 {
     /// <summary>
     /// 请求日志特性

@@ -19,7 +19,7 @@ using System.Net;
 using System.Text;
 using X509Certificate2 = System.Security.Cryptography.X509Certificates.X509Certificate2;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.Certs
 {
     /// <summary>
     /// 证书生成器

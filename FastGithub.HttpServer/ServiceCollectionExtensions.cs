@@ -1,4 +1,8 @@
-﻿using FastGithub.HttpServer;
+﻿using FastGithub.HttpServer.Certs;
+using FastGithub.HttpServer.Certs.CaCertInstallers;
+using FastGithub.HttpServer.HttpMiddlewares;
+using FastGithub.HttpServer.TcpMiddlewares;
+using FastGithub.HttpServer.TlsMiddlewares;
 using Microsoft.Extensions.DependencyInjection;
 namespace FastGithub
 {
@@ -22,7 +26,17 @@ namespace FastGithub
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfWindows>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxRedHat>()
                 .AddSingleton<ICaCertInstaller, CaCertInstallerOfLinuxDebian>()
+
+                // tcp
                 .AddSingleton<HttpProxyMiddleware>()
+                .AddSingleton<TunnelMiddleware>()
+
+                // tls
+                .AddSingleton<TlsInvadeMiddleware>()
+                .AddSingleton<TlsRestoreMiddleware>()
+
+                // http
+                .AddSingleton<HttpProxyPacMiddleware>()
                 .AddSingleton<RequestLoggingMiddleware>()
                 .AddSingleton<HttpReverseProxyMiddleware>();
         }

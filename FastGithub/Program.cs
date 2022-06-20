@@ -67,11 +67,10 @@ namespace FastGithub
                     webBuilder.UseKestrel(kestrel =>
                     {
                         kestrel.NoLimit();
-                        kestrel.ListenHttpsReverseProxy();
-                        kestrel.ListenHttpReverseProxy();
-
                         if (OperatingSystem.IsWindows())
                         {
+                            kestrel.ListenHttpsReverseProxy();
+                            kestrel.ListenHttpReverseProxy();
                             kestrel.ListenSshReverseProxy();
                             kestrel.ListenGitReverseProxy();
                         }

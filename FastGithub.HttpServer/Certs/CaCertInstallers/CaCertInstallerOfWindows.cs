@@ -2,7 +2,7 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.Certs.CaCertInstallers
 {
     sealed class CaCertInstallerOfWindows : ICaCertInstaller
     {
@@ -50,7 +50,7 @@ namespace FastGithub.HttpServer
             }
             catch (Exception)
             {
-                this.logger.LogWarning($"请手动安装CA证书{caCertFilePath}到“将所有的证书都放入下列存储”\\“受信任的根证书颁发机构”");
+                logger.LogWarning($"请手动安装CA证书{caCertFilePath}到“将所有的证书都放入下列存储”\\“受信任的根证书颁发机构”");
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace FastGithub.HttpServer
+﻿namespace FastGithub.HttpServer.Certs
 {
     /// <summary>
     /// CA证书安装器

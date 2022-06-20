@@ -8,7 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.Certs
 {
     /// <summary>
     /// 证书服务
@@ -54,17 +54,17 @@ namespace FastGithub.HttpServer
         /// </summary> 
         public bool CreateCaCertIfNotExists()
         {
-            if (File.Exists(this.CaCerFilePath) && File.Exists(this.CaKeyFilePath))
+            if (File.Exists(CaCerFilePath) && File.Exists(CaKeyFilePath))
             {
                 return false;
             }
 
-            File.Delete(this.CaCerFilePath);
-            File.Delete(this.CaKeyFilePath);
+            File.Delete(CaCerFilePath);
+            File.Delete(CaKeyFilePath);
 
             var validFrom = DateTime.Today.AddDays(-1);
             var validTo = DateTime.Today.AddYears(10);
-            CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, KEY_SIZE_BITS, validFrom, validTo, this.CaCerFilePath, this.CaKeyFilePath);
+            CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, KEY_SIZE_BITS, validFrom, validTo, CaCerFilePath, CaKeyFilePath);
             return true;
         }
 
@@ -73,14 +73,14 @@ namespace FastGithub.HttpServer
         /// </summary> 
         public void InstallAndTrustCaCert()
         {
-            var installer = this.certInstallers.FirstOrDefault(item => item.IsSupported());
+            var installer = certInstallers.FirstOrDefault(item => item.IsSupported());
             if (installer != null)
             {
-                installer.Install(this.CaCerFilePath);
+                installer.Install(CaCerFilePath);
             }
             else
             {
-                this.logger.LogWarning($"请根据你的系统平台手动安装和信任CA证书{this.CaCerFilePath}");
+                logger.LogWarning($"请根据你的系统平台手动安装和信任CA证书{CaCerFilePath}");
             }
 
             GitConfigSslverify(false);
@@ -119,7 +119,7 @@ namespace FastGithub.HttpServer
         public X509Certificate2 GetOrCreateServerCert(string? domain)
         {
             var key = $"{nameof(CertService)}:{domain}";
-            return this.serverCertCache.GetOrCreate(key, GetOrCreateCert);
+            return serverCertCache.GetOrCreate(key, GetOrCreateCert);
 
             // 生成域名的1年证书
             X509Certificate2 GetOrCreateCert(ICacheEntry entry)
@@ -129,7 +129,7 @@ namespace FastGithub.HttpServer
                 var validTo = DateTime.Today.AddYears(1);
 
                 entry.SetAbsoluteExpiration(validTo);
-                return CertGenerator.GenerateByCa(domains, KEY_SIZE_BITS, validFrom, validTo, this.CaCerFilePath, this.CaKeyFilePath);
+                return CertGenerator.GenerateByCa(domains, KEY_SIZE_BITS, validFrom, validTo, CaCerFilePath, CaKeyFilePath);
             }
         }
 

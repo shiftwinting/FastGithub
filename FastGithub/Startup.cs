@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using System;
 
 namespace FastGithub
@@ -53,26 +52,18 @@ namespace FastGithub
         /// <param name="app"></param>
         public void Configure(IApplicationBuilder app)
         {
-            var httpProxyPort = app.ApplicationServices.GetRequiredService<IOptions<FastGithubOptions>>().Value.HttpProxyPort;
-            app.MapWhen(context => context.Connection.LocalPort == httpProxyPort, appBuilder =>
-            {
-                appBuilder.UseHttpProxy();
-            });
+            app.UseHttpProxyPac();
+            app.UseRequestLogging();
+            app.UseHttpReverseProxy();
 
-            app.MapWhen(context => context.Connection.LocalPort != httpProxyPort, appBuilder =>
+            app.UseRouting();
+            app.DisableRequestLogging();
+            app.UseEndpoints(endpoint =>
             {
-                appBuilder.UseRequestLogging();
-                appBuilder.UseHttpReverseProxy();
-
-                appBuilder.UseRouting();
-                appBuilder.DisableRequestLogging();
-                appBuilder.UseEndpoints(endpoint =>
+                endpoint.MapGet("/flowStatistics", context =>
                 {
-                    endpoint.MapGet("/flowStatistics", context =>
-                    {
-                        var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
-                        return context.Response.WriteAsJsonAsync(flowStatistics);
-                    });
+                    var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
+                    return context.Response.WriteAsJsonAsync(flowStatistics);
                 });
             });
         }

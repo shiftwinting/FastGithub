@@ -8,7 +8,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Yarp.ReverseProxy.Forwarder;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.HttpMiddlewares
 {
     /// <summary>
     /// 反向代理中间件
@@ -43,7 +43,7 @@ namespace FastGithub.HttpServer
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var host = context.Request.Host;
-            if (this.TryGetDomainConfig(host, out var domainConfig) == false)
+            if (TryGetDomainConfig(host, out var domainConfig) == false)
             {
                 await next(context);
             }
@@ -51,8 +51,8 @@ namespace FastGithub.HttpServer
             {
                 var scheme = context.Request.Scheme;
                 var destinationPrefix = GetDestinationPrefix(scheme, host, domainConfig.Destination);
-                var httpClient = this.httpClientFactory.CreateHttpClient(host.Host, domainConfig);
-                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient);
+                var httpClient = httpClientFactory.CreateHttpClient(host.Host, domainConfig);
+                var error = await httpForwarder.SendAsync(context, destinationPrefix, httpClient, ForwarderRequestConfig.Empty, HttpTransformer.Empty);
                 await HandleErrorAsync(context, error);
             }
             else
@@ -74,7 +74,7 @@ namespace FastGithub.HttpServer
         /// <returns></returns>
         private bool TryGetDomainConfig(HostString host, [MaybeNullWhen(false)] out DomainConfig domainConfig)
         {
-            if (this.fastGithubConfig.TryGetDomainConfig(host.Host, out domainConfig) == true)
+            if (fastGithubConfig.TryGetDomainConfig(host.Host, out domainConfig) == true)
             {
                 return true;
             }
@@ -82,7 +82,7 @@ namespace FastGithub.HttpServer
             // 未配置的域名，但仍然被解析到本机ip的域名
             if (OperatingSystem.IsWindows() && IsDomain(host.Host))
             {
-                this.logger.LogWarning($"域名{host.Host}可能已经被DNS污染，如果域名为本机域名，请解析为非回环IP");
+                logger.LogWarning($"域名{host.Host}可能已经被DNS污染，如果域名为本机域名，请解析为非回环IP");
                 domainConfig = defaultDomainConfig;
                 return true;
             }
@@ -113,7 +113,7 @@ namespace FastGithub.HttpServer
 
             var baseUri = new Uri(defaultValue);
             var result = new Uri(baseUri, destination).ToString();
-            this.logger.LogInformation($"{defaultValue} => {result}");
+            logger.LogInformation($"{defaultValue} => {result}");
             return result;
         }
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FastGithub.HttpServer
+namespace FastGithub.HttpServer.Certs.CaCertInstallers
 {
     sealed class CaCertInstallerOfLinuxDebian : CaCertInstallerOfLinux
     {
