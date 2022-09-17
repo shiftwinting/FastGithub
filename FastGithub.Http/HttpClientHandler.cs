@@ -1,7 +1,6 @@
 ﻿using FastGithub.Configuration;
 using FastGithub.DomainResolve;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -200,32 +199,15 @@ namespace FastGithub.Http
         /// <returns></returns>
         private static IEnumerable<string> ReadDnsNames(X509Certificate? cert)
         {
-            if (cert == null)
+            if (cert is X509Certificate2 x509)
             {
-                yield break;
-            }
-            var parser = new Org.BouncyCastle.X509.X509CertificateParser();
-            var x509Cert = parser.ReadCertificate(cert.GetRawCertData());
-            var subjects = x509Cert.GetSubjectAlternativeNames();
-            if (subjects == null)
-            {
-                yield break;
-            }
-
-            foreach (var subject in subjects)
-            {
-                if (subject is IList list)
+                var extension = x509.Extensions.OfType<X509SubjectAlternativeNameExtension>().FirstOrDefault();
+                if (extension != null)
                 {
-                    if (list.Count >= 2 && list[0] is int nameType && nameType == 2)
-                    {
-                        var dnsName = list[1]?.ToString();
-                        if (dnsName != null)
-                        {
-                            yield return dnsName;
-                        }
-                    }
+                    return extension.EnumerateDnsNames();
                 }
             }
+            return Array.Empty<string>();
         }
 
         /// <summary>

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   
 	<ItemGroup>
-		<PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
-		<PackageReference Include="DNS" Version="6.1.0" />
-		<PackageReference Include="Tommy" Version="3.0.1" />
+		<PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+		<PackageReference Include="DNS" Version="7.0.0" />
+		<PackageReference Include="Tommy" Version="3.1.2" />
 		<ProjectReference Include="..\FastGithub.Configuration\FastGithub.Configuration.csproj" />
 	</ItemGroup>
 

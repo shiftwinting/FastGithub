@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<Version>2.1.4</Version>	
 		<Nullable>enable</Nullable>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<IsWebConfigTransformDisabled>true</IsWebConfigTransformDisabled> 		
 		<Description>github加速神器</Description>
 		<Copyright>https://github.com/dotnetcore/FastGithub</Copyright>

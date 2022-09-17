@@ -70,12 +70,10 @@ namespace FastGithub.HttpServer.Certs
             var subjectName = new X500DistinguishedName($"CN={nameof(FastGithub)}");
             this.caCert = CertGenerator.CreateCACertificate(subjectName, notBefore, notAfter);
 
-            var privateKey = this.caCert.GetRSAPrivateKey()?.ExportRSAPrivateKey();
-            var privateKeyPem = PemEncoding.Write("RSA PRIVATE KEY", privateKey);
+            var privateKeyPem = this.caCert.GetRSAPrivateKey()?.ExportRSAPrivateKeyPem();
             File.WriteAllText(this.CaKeyFilePath, new string(privateKeyPem), Encoding.ASCII);
 
-            var cert = this.caCert.Export(X509ContentType.Cert);
-            var certPem = PemEncoding.Write("CERTIFICATE", cert);
+            var certPem = this.caCert.ExportCertificatePem();
             File.WriteAllText(this.CaCerFilePath, new string(certPem), Encoding.ASCII);
 
             return true;
