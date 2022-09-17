@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace FastGithub.HttpServer.Certs
 {
@@ -16,10 +18,10 @@ namespace FastGithub.HttpServer.Certs
     sealed class CertService
     {
         private const string CACERT_PATH = "cacert";
-        private const int KEY_SIZE_BITS = 2048;
         private readonly IMemoryCache serverCertCache;
         private readonly IEnumerable<ICaCertInstaller> certInstallers;
         private readonly ILogger<CertService> logger;
+        private X509Certificate2? caCert;
 
 
         /// <summary>
@@ -54,17 +56,28 @@ namespace FastGithub.HttpServer.Certs
         /// </summary> 
         public bool CreateCaCertIfNotExists()
         {
-            if (File.Exists(CaCerFilePath) && File.Exists(CaKeyFilePath))
+            if (File.Exists(this.CaCerFilePath) && File.Exists(this.CaKeyFilePath))
             {
                 return false;
             }
 
-            File.Delete(CaCerFilePath);
-            File.Delete(CaKeyFilePath);
+            File.Delete(this.CaCerFilePath);
+            File.Delete(this.CaKeyFilePath);
 
-            var validFrom = DateTime.Today.AddDays(-1);
-            var validTo = DateTime.Today.AddYears(10);
-            CertGenerator.GenerateBySelf(new[] { nameof(FastGithub) }, KEY_SIZE_BITS, validFrom, validTo, CaCerFilePath, CaKeyFilePath);
+            var notBefore = DateTimeOffset.Now.AddDays(-1);
+            var notAfter = DateTimeOffset.Now.AddYears(10);
+
+            var subjectName = new X500DistinguishedName($"CN={nameof(FastGithub)}");
+            this.caCert = CertGenerator.CreateCACertificate(subjectName, notBefore, notAfter);
+
+            var privateKey = this.caCert.GetRSAPrivateKey()?.ExportRSAPrivateKey();
+            var privateKeyPem = PemEncoding.Write("RSA PRIVATE KEY", privateKey);
+            File.WriteAllText(this.CaKeyFilePath, new string(privateKeyPem), Encoding.ASCII);
+
+            var cert = this.caCert.Export(X509ContentType.Cert);
+            var certPem = PemEncoding.Write("CERTIFICATE", cert);
+            File.WriteAllText(this.CaCerFilePath, new string(certPem), Encoding.ASCII);
+
             return true;
         }
 
@@ -73,14 +86,14 @@ namespace FastGithub.HttpServer.Certs
         /// </summary> 
         public void InstallAndTrustCaCert()
         {
-            var installer = certInstallers.FirstOrDefault(item => item.IsSupported());
+            var installer = this.certInstallers.FirstOrDefault(item => item.IsSupported());
             if (installer != null)
             {
-                installer.Install(CaCerFilePath);
+                installer.Install(this.CaCerFilePath);
             }
             else
             {
-                logger.LogWarning($"请根据你的系统平台手动安装和信任CA证书{CaCerFilePath}");
+                this.logger.LogWarning($"请根据你的系统平台手动安装和信任CA证书{this.CaCerFilePath}");
             }
 
             GitConfigSslverify(false);
@@ -118,18 +131,31 @@ namespace FastGithub.HttpServer.Certs
         /// <returns></returns>
         public X509Certificate2 GetOrCreateServerCert(string? domain)
         {
+            if (this.caCert == null)
+            {
+                using var rsa = RSA.Create();
+                rsa.ImportFromPem(File.ReadAllText(this.CaKeyFilePath));
+                this.caCert = new X509Certificate2(this.CaCerFilePath).CopyWithPrivateKey(rsa);
+            }
+
             var key = $"{nameof(CertService)}:{domain}";
-            return serverCertCache.GetOrCreate(key, GetOrCreateCert);
+            var endCert = this.serverCertCache.GetOrCreate(key, GetOrCreateCert);
+            return endCert!;
 
             // 生成域名的1年证书
             X509Certificate2 GetOrCreateCert(ICacheEntry entry)
             {
-                var domains = GetDomains(domain).Distinct();
-                var validFrom = DateTime.Today.AddDays(-1);
-                var validTo = DateTime.Today.AddYears(1);
+                var notBefore = DateTimeOffset.Now.AddDays(-1);
+                var notAfter = DateTimeOffset.Now.AddYears(1);
+                entry.SetAbsoluteExpiration(notAfter);
 
-                entry.SetAbsoluteExpiration(validTo);
-                return CertGenerator.GenerateByCa(domains, KEY_SIZE_BITS, validFrom, validTo, CaCerFilePath, CaKeyFilePath);
+                var extraDomains = GetExtraDomains();
+
+                var subjectName = new X500DistinguishedName($"CN={domain}");
+                var endCert = CertGenerator.CreateEndCertificate(this.caCert, subjectName, extraDomains, notBefore, notAfter);
+
+                // 重新初始化证书，以兼容win平台不能使用内存证书
+                return new X509Certificate2(endCert.Export(X509ContentType.Pfx));
             }
         }
 
@@ -138,14 +164,8 @@ namespace FastGithub.HttpServer.Certs
         /// </summary>
         /// <param name="domain"></param>
         /// <returns></returns>
-        private static IEnumerable<string> GetDomains(string? domain)
+        private static IEnumerable<string> GetExtraDomains()
         {
-            if (string.IsNullOrEmpty(domain) == false)
-            {
-                yield return domain;
-                yield break;
-            }
-
             yield return Environment.MachineName;
             yield return IPAddress.Loopback.ToString();
             yield return IPAddress.IPv6Loopback.ToString();

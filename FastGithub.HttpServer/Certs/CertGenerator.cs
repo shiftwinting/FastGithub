@@ -1,23 +1,9 @@
-﻿using Org.BouncyCastle.Asn1.Pkcs;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.Asn1.X9;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Generators;
-using Org.BouncyCastle.Crypto.Operators;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
-using Org.BouncyCastle.OpenSsl;
-using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.Security;
-using Org.BouncyCastle.X509;
-using Org.BouncyCastle.X509.Extension;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using X509Certificate2 = System.Security.Cryptography.X509Certificates.X509Certificate2;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace FastGithub.HttpServer.Certs
 {
@@ -26,178 +12,145 @@ namespace FastGithub.HttpServer.Certs
     /// </summary>
     static class CertGenerator
     {
-        private static readonly SecureRandom secureRandom = new();
+        private static readonly Oid tlsServerOid = new("1.3.6.1.5.5.7.3.1");
+        private static readonly Oid tlsClientOid = new("1.3.6.1.5.5.7.3.2");
 
         /// <summary>
-        /// 生成自签名证书
+        /// 生成ca证书
         /// </summary>
-        /// <param name="domains"></param>
-        /// <param name="keySizeBits"></param>
-        /// <param name="validFrom"></param>
-        /// <param name="validTo"></param>
-        /// <param name="caPublicCerPath"></param>
-        /// <param name="caPrivateKeyPath"></param>
-        public static void GenerateBySelf(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath)
+        /// <param name="subjectName"></param>
+        /// <param name="notBefore"></param>
+        /// <param name="notAfter"></param>
+        /// <param name="rsaKeySizeInBits"></param>
+        /// <param name="pathLengthConstraint"></param>
+        /// <returns></returns>
+        public static X509Certificate2 CreateCACertificate(
+            X500DistinguishedName subjectName,
+            DateTimeOffset notBefore,
+            DateTimeOffset notAfter,
+            int rsaKeySizeInBits = 2048,
+            int pathLengthConstraint = 1)
         {
-            var keys = GenerateRsaKeyPair(keySizeBits);
-            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, domains.First(), null, keys.Private, 1);
+            using var rsa = RSA.Create(rsaKeySizeInBits);
+            var request = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            using var priWriter = new StreamWriter(caPrivateKeyPath);
-            var priPemWriter = new PemWriter(priWriter);
-            priPemWriter.WriteObject(keys.Private);
-            priPemWriter.Writer.Flush();
+            var basicConstraints = new X509BasicConstraintsExtension(true, pathLengthConstraint > 0, pathLengthConstraint, true);
+            request.CertificateExtensions.Add(basicConstraints);
 
-            using var pubWriter = new StreamWriter(caPublicCerPath);
-            var pubPemWriter = new PemWriter(pubWriter);
-            pubPemWriter.WriteObject(cert);
-            pubPemWriter.Writer.Flush();
+            var keyUsage = new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign, true);
+            request.CertificateExtensions.Add(keyUsage);
+
+            var oids = new OidCollection { tlsServerOid, tlsClientOid };
+            var enhancedKeyUsage = new X509EnhancedKeyUsageExtension(oids, true);
+            request.CertificateExtensions.Add(enhancedKeyUsage);
+
+            var dnsBuilder = new SubjectAlternativeNameBuilder();
+            dnsBuilder.Add(subjectName.Name[3..]);
+            request.CertificateExtensions.Add(dnsBuilder.Build());
+
+            var subjectKeyId = new X509SubjectKeyIdentifierExtension(request.PublicKey, false);
+            request.CertificateExtensions.Add(subjectKeyId);
+
+            return request.CreateSelfSigned(notBefore, notAfter);
         }
 
         /// <summary>
-        /// 生成CA签名证书
+        /// 生成服务器证书
         /// </summary>
-        /// <param name="domains"></param>
-        /// <param name="keySizeBits"></param>
-        /// <param name="validFrom"></param>
-        /// <param name="validTo"></param>
-        /// <param name="caPublicCerPath"></param>
-        /// <param name="caPrivateKeyPath"></param>
+        /// <param name="issuerCertificate"></param>
+        /// <param name="subjectName"></param>
+        /// <param name="extraDnsNames"></param>
+        /// <param name="notBefore"></param>
+        /// <param name="notAfter"></param>
+        /// <param name="rsaKeySizeInBits"></param>
         /// <returns></returns>
-        public static X509Certificate2 GenerateByCa(IEnumerable<string> domains, int keySizeBits, DateTime validFrom, DateTime validTo, string caPublicCerPath, string caPrivateKeyPath, string? password = default)
+        public static X509Certificate2 CreateEndCertificate(
+            X509Certificate2 issuerCertificate,
+            X500DistinguishedName subjectName,
+            IEnumerable<string>? extraDnsNames = default,
+            DateTimeOffset? notBefore = default,
+            DateTimeOffset? notAfter = default,
+            int rsaKeySizeInBits = 2048)
         {
-            if (File.Exists(caPublicCerPath) == false)
+            using var rsa = RSA.Create(rsaKeySizeInBits);
+            var request = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            var basicConstraints = new X509BasicConstraintsExtension(false, false, 0, true);
+            request.CertificateExtensions.Add(basicConstraints);
+
+            var keyUsage = new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, true);
+            request.CertificateExtensions.Add(keyUsage);
+
+            var oids = new OidCollection { tlsServerOid, tlsClientOid };
+            var enhancedKeyUsage = new X509EnhancedKeyUsageExtension(oids, true);
+            request.CertificateExtensions.Add(enhancedKeyUsage);
+
+            var authorityKeyId = GetAuthorityKeyIdentifierExtension(issuerCertificate);
+            request.CertificateExtensions.Add(authorityKeyId);
+
+            var subjectKeyId = new X509SubjectKeyIdentifierExtension(request.PublicKey, false);
+            request.CertificateExtensions.Add(subjectKeyId);
+
+            var dnsBuilder = new SubjectAlternativeNameBuilder();
+            dnsBuilder.Add(subjectName.Name[3..]);
+
+            if (extraDnsNames != null)
             {
-                throw new FileNotFoundException(caPublicCerPath);
+                foreach (var dnsName in extraDnsNames)
+                {
+                    dnsBuilder.Add(dnsName);
+                }
             }
 
-            if (File.Exists(caPrivateKeyPath) == false)
+            var dnsNames = dnsBuilder.Build();
+            request.CertificateExtensions.Add(dnsNames);
+
+            if (notBefore == null || notBefore.Value < issuerCertificate.NotBefore)
             {
-                throw new FileNotFoundException(caPublicCerPath);
+                notBefore = issuerCertificate.NotBefore;
             }
 
-            using var pubReader = new StreamReader(caPublicCerPath, Encoding.ASCII);
-            var caCert = (X509Certificate)new PemReader(pubReader).ReadObject();
+            if (notAfter == null || notAfter.Value > issuerCertificate.NotAfter)
+            {
+                notAfter = issuerCertificate.NotAfter;
+            }
 
-            using var priReader = new StreamReader(caPrivateKeyPath, Encoding.ASCII);
-            var reader = new PemReader(priReader);
-            var caPrivateKey = ((AsymmetricCipherKeyPair)reader.ReadObject()).Private;
-
-            var caSubjectName = GetSubjectName(caCert);
-            var keys = GenerateRsaKeyPair(keySizeBits);
-            var cert = GenerateCertificate(domains, keys.Public, validFrom, validTo, caSubjectName, caCert.GetPublicKey(), caPrivateKey, null);
-
-            return GeneratePfx(cert, keys.Private, password);
+            var serialNumber = BitConverter.GetBytes(Random.Shared.NextInt64());
+            using var certOnly = request.Create(issuerCertificate, notBefore.Value, notAfter.Value, serialNumber);
+            return certOnly.CopyWithPrivateKey(rsa);
         }
 
-        /// <summary>
-        /// 生成私钥
-        /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        private static AsymmetricCipherKeyPair GenerateRsaKeyPair(int length)
+
+
+        private static void Add(this SubjectAlternativeNameBuilder builder, string name)
         {
-            var keygenParam = new KeyGenerationParameters(secureRandom, length);
-            var keyGenerator = new RsaKeyPairGenerator();
-            keyGenerator.Init(keygenParam);
-            return keyGenerator.GenerateKeyPair();
-        }
-
-        /// <summary>
-        /// 生成证书
-        /// </summary>
-        /// <param name="domains"></param>
-        /// <param name="subjectPublic"></param>
-        /// <param name="validFrom"></param>
-        /// <param name="validTo"></param>
-        /// <param name="issuerName"></param>
-        /// <param name="issuerPublic"></param>
-        /// <param name="issuerPrivate"></param>
-        /// <param name="caPathLengthConstraint"></param>
-        /// <returns></returns>
-        private static X509Certificate GenerateCertificate(IEnumerable<string> domains, AsymmetricKeyParameter subjectPublic, DateTime validFrom, DateTime validTo, string issuerName, AsymmetricKeyParameter? issuerPublic, AsymmetricKeyParameter issuerPrivate, int? caPathLengthConstraint)
-        {
-            var signatureFactory = issuerPrivate is ECPrivateKeyParameters
-                ? new Asn1SignatureFactory(X9ObjectIdentifiers.ECDsaWithSha256.ToString(), issuerPrivate)
-                : new Asn1SignatureFactory(PkcsObjectIdentifiers.Sha256WithRsaEncryption.ToString(), issuerPrivate);
-
-            var certGenerator = new X509V3CertificateGenerator();
-            certGenerator.SetIssuerDN(new X509Name("CN=" + issuerName));
-            certGenerator.SetSubjectDN(new X509Name("CN=" + domains.First()));
-            certGenerator.SetSerialNumber(BigInteger.ProbablePrime(120, new Random()));
-            certGenerator.SetNotBefore(validFrom);
-            certGenerator.SetNotAfter(validTo);
-            certGenerator.SetPublicKey(subjectPublic);
-
-            if (issuerPublic != null)
+            if (IPAddress.TryParse(name, out var address))
             {
-                var akis = new AuthorityKeyIdentifierStructure(issuerPublic);
-                certGenerator.AddExtension(X509Extensions.AuthorityKeyIdentifier, false, akis);
-            }
-
-            if (caPathLengthConstraint != null && caPathLengthConstraint >= 0)
-            {
-                var basicConstraints = new BasicConstraints(caPathLengthConstraint.Value);
-                certGenerator.AddExtension(X509Extensions.BasicConstraints, true, basicConstraints);
-                certGenerator.AddExtension(X509Extensions.KeyUsage, false, new KeyUsage(KeyUsage.DigitalSignature | KeyUsage.CrlSign | KeyUsage.KeyCertSign));
+                builder.AddIpAddress(address);
             }
             else
             {
-                var basicConstraints = new BasicConstraints(cA: false);
-                certGenerator.AddExtension(X509Extensions.BasicConstraints, true, basicConstraints);
-                certGenerator.AddExtension(X509Extensions.KeyUsage, false, new KeyUsage(KeyUsage.DigitalSignature | KeyUsage.KeyEncipherment));
+                builder.AddDnsName(name);
             }
-            certGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeID.IdKPServerAuth));
-
-            var names = domains.Select(domain =>
-            {
-                var nameType = GeneralName.DnsName;
-                if (IPAddress.TryParse(domain, out _))
-                {
-                    nameType = GeneralName.IPAddress;
-                }
-                return new GeneralName(nameType, domain);
-            }).ToArray();
-
-            var subjectAltName = new GeneralNames(names);
-            certGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, subjectAltName);
-            return certGenerator.Generate(signatureFactory);
         }
 
 
-        /// <summary>
-        /// 生成pfx
-        /// </summary>
-        /// <param name="cert"></param>
-        /// <param name="privateKey"></param>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        private static X509Certificate2 GeneratePfx(X509Certificate cert, AsymmetricKeyParameter privateKey, string? password)
+        private static X509Extension GetAuthorityKeyIdentifierExtension(X509Certificate2 certificate)
         {
-            var subject = GetSubjectName(cert);
-            var pkcs12Store = new Pkcs12Store();
-            var certEntry = new X509CertificateEntry(cert);
-            pkcs12Store.SetCertificateEntry(subject, certEntry);
-            pkcs12Store.SetKeyEntry(subject, new AsymmetricKeyEntry(privateKey), new[] { certEntry });
+#if NET7_0_OR_GREATER
+            return X509AuthorityKeyIdentifierExtension.CreateFromCertificate(certificate, true, false);
+#else
+            var extension = certificate.Extensions.OfType<X509SubjectKeyIdentifierExtension>().First();
+            var subjectKeyIdentifier = extension.RawData.AsSpan(2);
+            var rawData = new byte[subjectKeyIdentifier.Length + 4];
+            rawData[0] = 0x30;
+            rawData[1] = 0x16;
+            rawData[2] = 0x80;
+            rawData[3] = 0x14;
+            subjectKeyIdentifier.CopyTo(rawData);
 
-            using var pfxStream = new MemoryStream();
-            pkcs12Store.Save(pfxStream, password?.ToCharArray(), secureRandom);
-            return new X509Certificate2(pfxStream.ToArray());
-        }
-
-
-        /// <summary>
-        /// 获取Subject
-        /// </summary>
-        /// <param name="cert"></param>
-        /// <returns></returns>
-        private static string GetSubjectName(X509Certificate cert)
-        {
-            var subject = cert.SubjectDN.ToString();
-            if (subject.StartsWith("CN=", StringComparison.OrdinalIgnoreCase))
-            {
-                subject = subject[3..];
-            }
-            return subject;
+            return new X509Extension("2.5.29.35", rawData, false);
+#endif
         }
     }
 }
