@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -136,11 +135,11 @@ namespace FastGithub.HttpServer.Certs
 
 
         private static X509Extension GetAuthorityKeyIdentifierExtension(X509Certificate2 certificate)
-        {
+        { 
+            var extension = new X509SubjectKeyIdentifierExtension(certificate.PublicKey, false);
 #if NET7_0_OR_GREATER
-            return X509AuthorityKeyIdentifierExtension.CreateFromCertificate(certificate, true, false);
+            return X509AuthorityKeyIdentifierExtension.CreateFromSubjectKeyIdentifier(extension);
 #else
-            var extension = certificate.Extensions.OfType<X509SubjectKeyIdentifierExtension>().First();
             var subjectKeyIdentifier = extension.RawData.AsSpan(2);
             var rawData = new byte[subjectKeyIdentifier.Length + 4];
             rawData[0] = 0x30;
