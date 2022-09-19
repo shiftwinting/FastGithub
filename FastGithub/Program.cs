@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Serilog;
-using Serilog.Sinks.Network;
+﻿using Microsoft.AspNetCore.Builder;
 using System;
 using System.IO;
-using System.Net;
+using System.Linq;
 
 namespace FastGithub
 {
+
     class Program
     {
         /// <summary>
@@ -18,68 +15,37 @@ namespace FastGithub
         public static void Main(string[] args)
         {
             ConsoleUtil.DisableQuickEdit();
-            CreateHostBuilder(args).Build().Run();
+
+            var contentRoot = Path.GetDirectoryName(Environment.GetCommandLineArgs().First());
+            if (string.IsNullOrEmpty(contentRoot) == false)
+            {
+                Environment.CurrentDirectory = contentRoot;
+            }
+            var options = new WebApplicationOptions
+            {
+                Args = args,
+                ContentRootPath = contentRoot
+            };
+            CreateWebApplication(options).Run();
         }
 
         /// <summary>
         /// 创建host
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="options"></param>
         /// <returns></returns>
-        public static IHostBuilder CreateHostBuilder(string[] args)
+        private static WebApplication CreateWebApplication(WebApplicationOptions options)
         {
-            return Host
-                .CreateDefaultBuilder(args)
-                .UseSystemd()
-                .UseWindowsService()
-                .UseDefaultServiceProvider(c =>
-                {
-                    c.ValidateOnBuild = false;
-                })
-                .ConfigureAppConfiguration(c =>
-                {
-                    const string APPSETTINGS = "appsettings";
-                    if (Directory.Exists(APPSETTINGS) == true)
-                    {
-                        foreach (var file in Directory.GetFiles(APPSETTINGS, "appsettings.*.json"))
-                        {
-                            var jsonFile = Path.Combine(APPSETTINGS, Path.GetFileName(file));
-                            c.AddJsonFile(jsonFile, true, true);
-                        }
-                    }
-                })
-                .UseSerilog((hosting, logger) =>
-                {
-                    var template = "{Timestamp:O} [{Level:u3}]{NewLine}{SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
-                    logger
-                        .ReadFrom.Configuration(hosting.Configuration)
-                        .Enrich.FromLogContext()
-                        .WriteTo.Console(outputTemplate: template)
-                        .WriteTo.File(Path.Combine("logs", @"log.txt"), rollingInterval: RollingInterval.Day, outputTemplate: template);
+            var builder = WebApplication.CreateBuilder(options);
+            builder.ConfigureHost();
+            builder.ConfigureWebHost();
+            builder.ConfigureConfiguration();
+            builder.ConfigureServices();
 
-                    var udpLoggerPort = hosting.Configuration.GetValue(nameof(AppOptions.UdpLoggerPort), 38457);
-                    logger.WriteTo.UDPSink(IPAddress.Loopback, udpLoggerPort);
-                })
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.UseShutdownTimeout(TimeSpan.FromSeconds(1d));
-                    webBuilder.UseKestrel(kestrel =>
-                    {
-                        kestrel.NoLimit();
-                        if (OperatingSystem.IsWindows())
-                        {
-                            kestrel.ListenHttpsReverseProxy();
-                            kestrel.ListenHttpReverseProxy();
-                            kestrel.ListenSshReverseProxy();
-                            kestrel.ListenGitReverseProxy();
-                        }
-                        else
-                        {
-                            kestrel.ListenHttpProxy();
-                        }
-                    });
-                });
+            var app = builder.Build();
+            app.ConfigureApp();
+            return app;
         }
+
     }
 }

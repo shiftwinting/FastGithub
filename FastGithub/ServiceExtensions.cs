@@ -38,13 +38,7 @@ namespace FastGithub
         /// <param name="hostBuilder"></param> 
         /// <returns></returns>
         public static IHostBuilder UseWindowsService(this IHostBuilder hostBuilder)
-        {
-            var contentRoot = Path.GetDirectoryName(Environment.GetCommandLineArgs().First());
-            if (contentRoot != null)
-            {
-                Environment.CurrentDirectory = contentRoot;
-                hostBuilder.UseContentRoot(contentRoot);
-            }
+        {            
             return WindowsServiceLifetimeHostBuilderExtensions.UseWindowsService(hostBuilder);
         }
 

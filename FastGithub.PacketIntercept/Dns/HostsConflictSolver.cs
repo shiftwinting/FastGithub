@@ -52,7 +52,7 @@ namespace FastGithub.PacketIntercept.Dns
                 using var streamReader = new StreamReader(fileStream);
                 while (streamReader.EndOfStream == false)
                 {
-                    var line = await streamReader.ReadLineAsync();
+                    var line = await streamReader.ReadLineAsync(cancellationToken);
                     if (this.IsConflictingLine(line))
                     {
                         hasConflicting = true;

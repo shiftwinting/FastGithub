@@ -1,37 +1,99 @@
 using FastGithub.Configuration;
 using FastGithub.FlowAnalyze;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog;
+using Serilog.Sinks.Network;
 using System;
+using System.IO;
+using System.Net;
 
 namespace FastGithub
 {
     /// <summary>
     /// 启动项
     /// </summary>
-    public class Startup
+    static class Startup
     {
-        public IConfiguration Configuration { get; }
+        /// <summary>
+        /// 配置通用主机
+        /// </summary>
+        /// <param name="builder"></param>
+        public static void ConfigureHost(this WebApplicationBuilder builder)
+        {
+            builder.Host.UseSystemd().UseWindowsService();
+            builder.Host.UseSerilog((hosting, logger) =>
+            {
+                var template = "{Timestamp:O} [{Level:u3}]{NewLine}{SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
+                logger
+                    .ReadFrom.Configuration(hosting.Configuration)
+                    .Enrich.FromLogContext()
+                    .WriteTo.Console(outputTemplate: template)
+                    .WriteTo.File(Path.Combine("logs", @"log.txt"), rollingInterval: RollingInterval.Day, outputTemplate: template);
+
+                var udpLoggerPort = hosting.Configuration.GetValue(nameof(AppOptions.UdpLoggerPort), 38457);
+                logger.WriteTo.UDPSink(IPAddress.Loopback, udpLoggerPort);
+            });
+        }
 
         /// <summary>
-        /// 启动项
+        /// 配置web主机
         /// </summary>
-        /// <param name="configuration"></param>
-        public Startup(IConfiguration configuration)
+        /// <param name="builder"></param>
+        public static void ConfigureWebHost(this WebApplicationBuilder builder)
         {
-            this.Configuration = configuration;
+            builder.WebHost.UseShutdownTimeout(TimeSpan.FromSeconds(1d));
+            builder.WebHost.UseKestrel(kestrel =>
+            {
+                kestrel.NoLimit();
+                if (OperatingSystem.IsWindows())
+                {
+                    kestrel.ListenHttpsReverseProxy();
+                    kestrel.ListenHttpReverseProxy();
+                    kestrel.ListenSshReverseProxy();
+                    kestrel.ListenGitReverseProxy();
+                }
+                else
+                {
+                    kestrel.ListenHttpProxy();
+                }
+            });
         }
+
+
+        /// <summary>
+        /// 配置配置
+        /// </summary>
+        /// <param name="builder"></param>
+        public static void ConfigureConfiguration(this WebApplicationBuilder builder)
+        {
+            const string APPSETTINGS = "appsettings";
+            if (Directory.Exists(APPSETTINGS) == true)
+            {
+                foreach (var file in Directory.GetFiles(APPSETTINGS, "appsettings.*.json"))
+                {
+                    var jsonFile = Path.Combine(APPSETTINGS, Path.GetFileName(file));
+                    builder.Configuration.AddJsonFile(jsonFile, true, true);
+                }
+            }
+        }
+
 
         /// <summary>
         /// 配置服务
         /// </summary>
-        /// <param name="services"></param>
-        public void ConfigureServices(IServiceCollection services)
+        /// <param name="builder"></param>
+        public static void ConfigureServices(this WebApplicationBuilder builder)
         {
-            services.Configure<AppOptions>(this.Configuration);
-            services.Configure<FastGithubOptions>(this.Configuration.GetSection(nameof(FastGithub)));
+            var services = builder.Services;
+            var configuration = builder.Configuration;
+
+            services.Configure<AppOptions>(configuration);
+            services.Configure<FastGithubOptions>(configuration.GetSection(nameof(FastGithub)));
 
             services.AddConfiguration();
             services.AddDomainResolve();
@@ -47,10 +109,10 @@ namespace FastGithub
         }
 
         /// <summary>
-        /// 配置中间件
+        /// 配置应用
         /// </summary>
         /// <param name="app"></param>
-        public void Configure(IApplicationBuilder app)
+        public static void ConfigureApp(this WebApplication app)
         {
             app.UseHttpProxyPac();
             app.UseRequestLogging();
@@ -58,13 +120,11 @@ namespace FastGithub
 
             app.UseRouting();
             app.DisableRequestLogging();
-            app.UseEndpoints(endpoint =>
+
+            app.MapGet("/flowStatistics", context =>
             {
-                endpoint.MapGet("/flowStatistics", context =>
-                {
-                    var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
-                    return context.Response.WriteAsJsonAsync(flowStatistics);
-                });
+                var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
+                return context.Response.WriteAsJsonAsync(flowStatistics);
             });
         }
     }
