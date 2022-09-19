@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using System;
 using System.IO;
-using System.Linq;
 
 namespace FastGithub
 {
@@ -15,8 +14,7 @@ namespace FastGithub
         public static void Main(string[] args)
         {
             ConsoleUtil.DisableQuickEdit();
-
-            var contentRoot = Path.GetDirectoryName(Environment.GetCommandLineArgs().First());
+            var contentRoot = Path.GetDirectoryName(Environment.ProcessPath);
             if (string.IsNullOrEmpty(contentRoot) == false)
             {
                 Environment.CurrentDirectory = contentRoot;
@@ -26,7 +24,7 @@ namespace FastGithub
                 Args = args,
                 ContentRootPath = contentRoot
             };
-            CreateWebApplication(options).Run();
+            CreateWebApplication(options).Run(singleton: true);
         }
 
         /// <summary>

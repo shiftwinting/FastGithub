@@ -1,4 +1,5 @@
 ﻿using FastGithub.DomainResolve;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -38,24 +39,24 @@ namespace FastGithub
         /// <param name="hostBuilder"></param> 
         /// <returns></returns>
         public static IHostBuilder UseWindowsService(this IHostBuilder hostBuilder)
-        {            
+        {
             return WindowsServiceLifetimeHostBuilderExtensions.UseWindowsService(hostBuilder);
         }
 
         /// <summary>
         /// 运行主机
         /// </summary>
-        /// <param name="host"></param>
+        /// <param name="app"></param>
         /// <param name="singleton"></param>
-        public static void Run(this IHost host, bool singleton = true)
+        public static void Run(this WebApplication app, bool singleton)
         {
-            var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(FastGithub));
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(FastGithub));
             if (UseCommand(logger) == false)
             {
                 using var mutex = new Mutex(true, "Global\\FastGithub", out var firstInstance);
                 if (singleton == false || firstInstance)
                 {
-                    HostingAbstractionsHostExtensions.Run(host);
+                    app.Run();
                 }
                 else
                 {
