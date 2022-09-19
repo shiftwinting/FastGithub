@@ -10,6 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 namespace FastGithub
 {
@@ -149,7 +152,7 @@ namespace FastGithub
             var certService = listen.ApplicationServices.GetRequiredService<CertService>();
             certService.CreateCaCertIfNotExists();
             certService.InstallAndTrustCaCert();
-            return listen.UseTls(https => https.ServerCertificateSelector = (ctx, domain) => certService.GetOrCreateServerCert(domain));
+            return listen.UseTls(domain => certService.GetOrCreateServerCert(domain));
         }
 
         /// <summary>
@@ -158,13 +161,23 @@ namespace FastGithub
         /// <param name="listen"></param>
         /// <param name="configureOptions">https配置</param>
         /// <returns></returns>
-        private static ListenOptions UseTls(this ListenOptions listen, Action<HttpsConnectionAdapterOptions> configureOptions)
+        private static ListenOptions UseTls(this ListenOptions listen, Func<string, X509Certificate2> certFactory)
         {
             var invadeMiddleware = listen.ApplicationServices.GetRequiredService<TlsInvadeMiddleware>();
             var restoreMiddleware = listen.ApplicationServices.GetRequiredService<TlsRestoreMiddleware>();
 
             listen.Use(next => context => invadeMiddleware.InvokeAsync(next, context));
-            listen.UseHttps(configureOptions);
+            listen.UseHttps(new TlsHandshakeCallbackOptions
+            {
+                OnConnection = context =>
+                {
+                    var options = new SslServerAuthenticationOptions
+                    {
+                        ServerCertificate = certFactory(context.ClientHelloInfo.ServerName)
+                    };
+                    return ValueTask.FromResult(options);
+                },
+            });
             listen.Use(next => context => restoreMiddleware.InvokeAsync(next, context));
             return listen;
         }
