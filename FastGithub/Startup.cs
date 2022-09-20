@@ -9,8 +9,11 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Sinks.Network;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Text.Json;
 
 namespace FastGithub
 {
@@ -87,6 +90,7 @@ namespace FastGithub
         /// ≈‰÷√∑˛ŒÒ
         /// </summary>
         /// <param name="builder"></param>
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Dictionary<string, DomainConfig>))]
         public static void ConfigureServices(this WebApplicationBuilder builder)
         {
             var services = builder.Services;
@@ -124,7 +128,8 @@ namespace FastGithub
             app.MapGet("/flowStatistics", context =>
             {
                 var flowStatistics = context.RequestServices.GetRequiredService<IFlowAnalyzer>().GetFlowStatistics();
-                return context.Response.WriteAsJsonAsync(flowStatistics);
+                var json = JsonSerializer.Serialize(flowStatistics, FlowStatisticsContext.Default.FlowStatistics);
+                return context.Response.WriteAsync(json);
             });
         }
     }

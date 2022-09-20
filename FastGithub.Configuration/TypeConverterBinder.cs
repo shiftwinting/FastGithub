@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace FastGithub.Configuration
@@ -18,7 +19,7 @@ namespace FastGithub.Configuration
         /// <typeparam name="T"></typeparam>
         /// <param name="reader"></param>
         /// <param name="writer"></param>
-        public static void Bind<T>(Func<string, T?> reader, Func<T?, string?> writer)
+        public static void Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Func<string, T?> reader, Func<T?, string?> writer)
         {
             binders[typeof(T)] = new Binder<T>(reader, writer);
 
@@ -37,7 +38,7 @@ namespace FastGithub.Configuration
         }
 
 
-        private class Binder<T> : Binder
+        private class Binder<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T> : Binder
         {
             private readonly Func<string, T?> reader;
             private readonly Func<T?, string?> writer;
@@ -60,7 +61,7 @@ namespace FastGithub.Configuration
         }
 
 
-        private class TypeConverter<T> : TypeConverter
+        private class TypeConverter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T> : TypeConverter
         {
             public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {

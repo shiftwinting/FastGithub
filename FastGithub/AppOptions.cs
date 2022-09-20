@@ -3,16 +3,16 @@
     /// <summary>
     /// app选项
     /// </summary>
-    public class AppOptions
+    public record AppOptions
     {
         /// <summary>
         /// 父进程id
         /// </summary>
-        public int ParentProcessId { get; set; }
+        public int ParentProcessId { get; init; }
 
         /// <summary>
         /// udp日志服务器端口
         /// </summary>
-        public int UdpLoggerPort { get; set; }
+        public int UdpLoggerPort { get; init; }
     }
 }
