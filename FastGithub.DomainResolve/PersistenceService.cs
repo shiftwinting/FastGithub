@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,20 +15,24 @@ namespace FastGithub.DomainResolve
     /// <summary>
     /// 域名持久化
     /// </summary>
-    sealed class PersistenceService
+    sealed partial class PersistenceService
     {
         private static readonly string dataFile = "dnsendpoints.json";
-        private static readonly SemaphoreSlim dataLocker = new(1, 1);
-        private static readonly JsonSerializerOptions jsonOptions = new()
-        {
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        private static readonly SemaphoreSlim dataLocker = new(1, 1); 
 
         private readonly FastGithubConfig fastGithubConfig;
         private readonly ILogger<PersistenceService> logger;
+
+
         private record EndPointItem(string Host, int Port);
+
+        [JsonSerializable(typeof(EndPointItem[]))]
+        [JsonSourceGenerationOptions(
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+        private partial class EndPointItemsContext : JsonSerializerContext
+        {
+        }
 
 
         /// <summary>
@@ -60,7 +65,7 @@ namespace FastGithub.DomainResolve
                 dataLocker.Wait();
 
                 var utf8Json = File.ReadAllBytes(dataFile);
-                var endPointItems = JsonSerializer.Deserialize<EndPointItem[]>(utf8Json, jsonOptions);
+                var endPointItems = JsonSerializer.Deserialize(utf8Json, EndPointItemsContext.Default.EndPointItemArray);
                 if (endPointItems == null)
                 {
                     return Array.Empty<DnsEndPoint>();
@@ -100,7 +105,7 @@ namespace FastGithub.DomainResolve
                 await dataLocker.WaitAsync(CancellationToken.None);
 
                 var endPointItems = dnsEndPoints.Select(item => new EndPointItem(item.Host, item.Port)).ToArray();
-                var utf8Json = JsonSerializer.SerializeToUtf8Bytes(endPointItems, jsonOptions);
+                var utf8Json = JsonSerializer.SerializeToUtf8Bytes(endPointItems, EndPointItemsContext.Default.EndPointItemArray);
                 await File.WriteAllBytesAsync(dataFile, utf8Json, cancellationToken);
             }
             catch (Exception ex)
