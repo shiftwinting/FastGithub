@@ -36,18 +36,6 @@ namespace FastGithub.PacketIntercept.Dns
         private static extern void DnsFlushResolverCache();
 
         /// <summary>
-        /// 首次加载驱动往往有异常，所以要提前加载
-        /// </summary>
-        static DnsInterceptor()
-        {
-            try
-            {
-                using (new WinDivert(Filter.False, WinDivertLayer.Network)) { }
-            }
-            catch (Exception) { }
-        }
-
-        /// <summary>
         /// dns拦截器
         /// </summary>
         /// <param name="fastGithubConfig"></param>
