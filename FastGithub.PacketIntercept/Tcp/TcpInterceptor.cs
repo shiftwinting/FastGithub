@@ -1,5 +1,4 @@
-﻿using FastGithub.WinDiverts;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Net;
@@ -7,6 +6,7 @@ using System.Net.Sockets;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
+using WindivertDotnet;
 
 namespace FastGithub.PacketIntercept.Tcp
 {
@@ -16,7 +16,7 @@ namespace FastGithub.PacketIntercept.Tcp
     [SupportedOSPlatform("windows")]
     abstract class TcpInterceptor : ITcpInterceptor
     {
-        private readonly string filter;
+        private readonly Filter filter;
         private readonly ushort oldServerPort;
         private readonly ushort newServerPort;
         private readonly ILogger logger;
@@ -29,7 +29,10 @@ namespace FastGithub.PacketIntercept.Tcp
         /// <param name="logger"></param>
         public TcpInterceptor(int oldServerPort, int newServerPort, ILogger logger)
         {
-            this.filter = $"loopback and (tcp.DstPort == {oldServerPort} or tcp.SrcPort == {newServerPort})";
+            this.filter = Filter.True
+                .And(f => f.Network.Loopback)
+                .And(f => f.Tcp.DstPort == oldServerPort || f.Tcp.SrcPort == newServerPort);
+
             this.oldServerPort = (ushort)oldServerPort;
             this.newServerPort = (ushort)newServerPort;
             this.logger = logger;
@@ -49,12 +52,7 @@ namespace FastGithub.PacketIntercept.Tcp
 
             await Task.Yield();
 
-            var handle = WinDivert.WinDivertOpen(this.filter, WinDivertLayer.Network, 0, WinDivertOpenFlags.None);
-            if (handle == new IntPtr(unchecked((long)ulong.MaxValue)))
-            {
-                throw new Win32Exception();
-            }
-
+            using var divert = new WinDivert(this.filter, WinDivertLayer.Network, 0, WinDivertFlag.None);
             if (Socket.OSSupportsIPv4)
             {
                 this.logger.LogInformation($"{IPAddress.Loopback}:{this.oldServerPort} <=> {IPAddress.Loopback}:{this.newServerPort}");
@@ -63,23 +61,18 @@ namespace FastGithub.PacketIntercept.Tcp
             {
                 this.logger.LogInformation($"{IPAddress.IPv6Loopback}:{this.oldServerPort} <=> {IPAddress.IPv6Loopback}:{this.newServerPort}");
             }
-            cancellationToken.Register(hwnd => WinDivert.WinDivertClose((IntPtr)hwnd!), handle);
+            cancellationToken.Register(d => ((WinDivert)d!).Dispose(), divert);
 
-            var packetLength = 0U;
-            using var winDivertBuffer = new WinDivertBuffer();
-            var winDivertAddress = new WinDivertAddress();
-
+            var addr = new WinDivertAddress();
+            using var packet = new WinDivertPacket();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                winDivertAddress.Reset();
-                if (WinDivert.WinDivertRecv(handle, winDivertBuffer, ref winDivertAddress, ref packetLength) == false)
-                {
-                    throw new Win32Exception();
-                }
+                addr.Clear();
+                divert.Recv(packet, ref addr);
 
                 try
                 {
-                    this.ModifyTcpPacket(winDivertBuffer, ref winDivertAddress, ref packetLength);
+                    this.ModifyTcpPacket(packet, ref addr);
                 }
                 catch (Exception ex)
                 {
@@ -87,7 +80,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 }
                 finally
                 {
-                    WinDivert.WinDivertSend(handle, winDivertBuffer, packetLength, ref winDivertAddress);
+                    divert.Send(packet, ref addr);
                 }
             }
         }
@@ -95,31 +88,30 @@ namespace FastGithub.PacketIntercept.Tcp
         /// <summary>
         /// 修改tcp数据端口的端口
         /// </summary>
-        /// <param name="winDivertBuffer"></param>
-        /// <param name="winDivertAddress"></param>
-        /// <param name="packetLength"></param> 
-        unsafe private void ModifyTcpPacket(WinDivertBuffer winDivertBuffer, ref WinDivertAddress winDivertAddress, ref uint packetLength)
+        /// <param name="packet"></param>
+        /// <param name="addr"></param>
+        unsafe private void ModifyTcpPacket(WinDivertPacket packet, ref WinDivertAddress addr)
         {
-            var packet = WinDivert.WinDivertHelperParsePacket(winDivertBuffer, packetLength);
-            if (packet.IPv4Header != null && packet.IPv4Header->SrcAddr.Equals(IPAddress.Loopback) == false)
+            var result = packet.GetParseResult();
+            if (result.IPV4Header != null && result.IPV4Header->SrcAddr.Equals(IPAddress.Loopback) == false)
             {
                 return;
             }
-            if (packet.IPv6Header != null && packet.IPv6Header->SrcAddr.Equals(IPAddress.IPv6Loopback) == false)
+            if (result.IPV6Header != null && result.IPV6Header->SrcAddr.Equals(IPAddress.IPv6Loopback) == false)
             {
                 return;
             }
 
-            if (packet.TcpHeader->DstPort == oldServerPort)
+            if (result.TcpHeader->DstPort == oldServerPort)
             {
-                packet.TcpHeader->DstPort = this.newServerPort;
+                result.TcpHeader->DstPort = this.newServerPort;
             }
             else
             {
-                packet.TcpHeader->SrcPort = oldServerPort;
+                result.TcpHeader->SrcPort = oldServerPort;
             }
-            winDivertAddress.Impostor = true;
-            WinDivert.WinDivertHelperCalcChecksums(winDivertBuffer, packetLength, ref winDivertAddress, WinDivertChecksumHelperParam.All);
+            addr.Flags |= WinDivertAddressFlag.Impostor;
+            packet.CalcChecksums(ref addr);
         }
     }
 }
