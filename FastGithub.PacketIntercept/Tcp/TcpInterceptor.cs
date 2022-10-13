@@ -50,8 +50,6 @@ namespace FastGithub.PacketIntercept.Tcp
                 return;
             }
 
-            await Task.Yield();
-
             using var divert = new WinDivert(this.filter, WinDivertLayer.Network, 0, WinDivertFlag.None);
             if (Socket.OSSupportsIPv4)
             {
@@ -63,16 +61,14 @@ namespace FastGithub.PacketIntercept.Tcp
             }
             cancellationToken.Register(d => ((WinDivert)d!).Dispose(), divert);
 
-            var addr = new WinDivertAddress();
             using var packet = new WinDivertPacket();
+            using var addr = new WinDivertAddress();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                addr.Clear();
-                divert.Recv(packet, ref addr);
-
+                await divert.RecvAsync(packet, addr);
                 try
                 {
-                    this.ModifyTcpPacket(packet, ref addr);
+                    this.ModifyTcpPacket(packet, addr);
                 }
                 catch (Exception ex)
                 {
@@ -80,7 +76,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 }
                 finally
                 {
-                    divert.Send(packet, ref addr);
+                    await divert.SendAsync(packet, addr);
                 }
             }
         }
@@ -90,7 +86,7 @@ namespace FastGithub.PacketIntercept.Tcp
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="addr"></param>
-        unsafe private void ModifyTcpPacket(WinDivertPacket packet, ref WinDivertAddress addr)
+        unsafe private void ModifyTcpPacket(WinDivertPacket packet, WinDivertAddress addr)
         {
             var result = packet.GetParseResult();
             if (result.IPV4Header != null && result.IPV4Header->SrcAddr.Equals(IPAddress.Loopback) == false)
@@ -111,7 +107,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 result.TcpHeader->SrcPort = oldServerPort;
             }
             addr.Flags |= WinDivertAddressFlag.Impostor;
-            packet.CalcChecksums(ref addr);
+            packet.CalcChecksums(addr);
         }
     }
 }

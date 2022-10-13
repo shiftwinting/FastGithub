@@ -60,8 +60,6 @@ namespace FastGithub.PacketIntercept.Dns
         /// <returns></returns>
         public async Task InterceptAsync(CancellationToken cancellationToken)
         {
-            await Task.Yield();
-
             using var divert = new WinDivert(filter, WinDivertLayer.Network);
             cancellationToken.Register(d =>
             {
@@ -69,16 +67,16 @@ namespace FastGithub.PacketIntercept.Dns
                 DnsFlushResolverCache();
             }, divert);
 
-            var addr = new WinDivertAddress();
             using var packet = new WinDivertPacket();
+            using var addr = new WinDivertAddress();
 
             DnsFlushResolverCache();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                divert.Recv(packet, ref addr);
+                await divert.RecvAsync(packet, addr);
                 try
                 {
-                    this.ModifyDnsPacket(packet, ref addr);
+                    this.ModifyDnsPacket(packet, addr);
                 }
                 catch (Exception ex)
                 {
@@ -86,7 +84,7 @@ namespace FastGithub.PacketIntercept.Dns
                 }
                 finally
                 {
-                    divert.Send(packet, ref addr);
+                    await divert.SendAsync(packet, addr);
                 }
             }
         }
@@ -96,7 +94,7 @@ namespace FastGithub.PacketIntercept.Dns
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="addr"></param>
-        unsafe private void ModifyDnsPacket(WinDivertPacket packet, ref WinDivertAddress addr)
+        unsafe private void ModifyDnsPacket(WinDivertPacket packet, WinDivertAddress addr)
         {
             var result = packet.GetParseResult();
             var requestPayload = result.DataSpan.ToArray();
@@ -162,9 +160,9 @@ namespace FastGithub.PacketIntercept.Dns
             else
             {
                 addr.Flags ^= WinDivertAddressFlag.Outbound;
-            } 
+            }
 
-            packet.CalcChecksums(ref addr);
+            packet.CalcChecksums(addr);
             this.logger.LogInformation($"{domain}->{loopback}");
         }
 
