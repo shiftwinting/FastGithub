@@ -61,19 +61,15 @@ namespace FastGithub.PacketIntercept.Dns
         public async Task InterceptAsync(CancellationToken cancellationToken)
         {
             using var divert = new WinDivert(filter, WinDivertLayer.Network);
-            cancellationToken.Register(d =>
-            {
-                ((WinDivert)d!).Dispose();
-                DnsFlushResolverCache();
-            }, divert);
-
             using var packet = new WinDivertPacket();
             using var addr = new WinDivertAddress();
 
             DnsFlushResolverCache();
+            cancellationToken.Register(DnsFlushResolverCache);
+
             while (cancellationToken.IsCancellationRequested == false)
             {
-                await divert.RecvAsync(packet, addr);
+                await divert.RecvAsync(packet, addr, cancellationToken);
                 try
                 {
                     this.ModifyDnsPacket(packet, addr);
@@ -84,7 +80,7 @@ namespace FastGithub.PacketIntercept.Dns
                 }
                 finally
                 {
-                    await divert.SendAsync(packet, addr);
+                    await divert.SendAsync(packet, addr, cancellationToken);
                 }
             }
         }
@@ -159,7 +155,7 @@ namespace FastGithub.PacketIntercept.Dns
             }
             else
             {
-                addr.Flags ^= WinDivertAddressFlag.Outbound;
+                addr.Flags &= ~WinDivertAddressFlag.Outbound;
             }
 
             packet.CalcChecksums(addr);

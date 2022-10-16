@@ -50,7 +50,10 @@ namespace FastGithub.PacketIntercept.Tcp
                 return;
             }
 
-            using var divert = new WinDivert(this.filter, WinDivertLayer.Network, 0, WinDivertFlag.None);
+            using var divert = new WinDivert(this.filter, WinDivertLayer.Network);
+            using var packet = new WinDivertPacket();
+            using var addr = new WinDivertAddress();
+
             if (Socket.OSSupportsIPv4)
             {
                 this.logger.LogInformation($"{IPAddress.Loopback}:{this.oldServerPort} <=> {IPAddress.Loopback}:{this.newServerPort}");
@@ -59,13 +62,10 @@ namespace FastGithub.PacketIntercept.Tcp
             {
                 this.logger.LogInformation($"{IPAddress.IPv6Loopback}:{this.oldServerPort} <=> {IPAddress.IPv6Loopback}:{this.newServerPort}");
             }
-            cancellationToken.Register(d => ((WinDivert)d!).Dispose(), divert);
 
-            using var packet = new WinDivertPacket();
-            using var addr = new WinDivertAddress();
             while (cancellationToken.IsCancellationRequested == false)
             {
-                await divert.RecvAsync(packet, addr);
+                await divert.RecvAsync(packet, addr, cancellationToken);
                 try
                 {
                     this.ModifyTcpPacket(packet, addr);
@@ -76,7 +76,7 @@ namespace FastGithub.PacketIntercept.Tcp
                 }
                 finally
                 {
-                    await divert.SendAsync(packet, addr);
+                    await divert.SendAsync(packet, addr, cancellationToken);
                 }
             }
         }
@@ -89,15 +89,6 @@ namespace FastGithub.PacketIntercept.Tcp
         unsafe private void ModifyTcpPacket(WinDivertPacket packet, WinDivertAddress addr)
         {
             var result = packet.GetParseResult();
-            if (result.IPV4Header != null && result.IPV4Header->SrcAddr.Equals(IPAddress.Loopback) == false)
-            {
-                return;
-            }
-            if (result.IPV6Header != null && result.IPV6Header->SrcAddr.Equals(IPAddress.IPv6Loopback) == false)
-            {
-                return;
-            }
-
             if (result.TcpHeader->DstPort == oldServerPort)
             {
                 result.TcpHeader->DstPort = this.newServerPort;
