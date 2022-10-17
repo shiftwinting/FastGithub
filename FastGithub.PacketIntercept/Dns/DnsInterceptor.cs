@@ -149,16 +149,9 @@ namespace FastGithub.PacketIntercept.Dns
             result.UdpHeader->Length = (ushort)(sizeof(UdpHeader) + responsePayload.Length);
 
             addr.Flags |= WinDivertAddressFlag.Impostor;
-            if (addr.Flags.HasFlag(WinDivertAddressFlag.Loopback))
-            {
-                addr.Flags |= WinDivertAddressFlag.Outbound;
-            }
-            else
-            {
-                addr.Flags &= ~WinDivertAddressFlag.Outbound;
-            }
-
+            packet.CalcOutboundFlag(addr);
             packet.CalcChecksums(addr);
+
             this.logger.LogInformation($"{domain}->{loopback}");
         }
 
