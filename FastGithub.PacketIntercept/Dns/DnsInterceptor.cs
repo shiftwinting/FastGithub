@@ -122,8 +122,7 @@ namespace FastGithub.PacketIntercept.Dns
             var responsePayload = response.ToArray();
 
             // 修改payload和包长 
-            responsePayload.CopyTo(new Span<byte>(result.Data, responsePayload.Length));
-            packet.Length = packet.Length + responsePayload.Length - requestPayload.Length;
+            packet.GetWriter(packet.Length - result.DataLength).Write(responsePayload);
 
             // 修改ip包
             IPAddress destAddress;
