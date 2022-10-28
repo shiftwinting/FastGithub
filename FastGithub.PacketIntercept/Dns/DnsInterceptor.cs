@@ -119,38 +119,17 @@ namespace FastGithub.PacketIntercept.Dns
             var loopback = question.Type == RecordType.A ? IPAddress.Loopback : IPAddress.IPv6Loopback;
             var record = new IPAddressResourceRecord(domain, loopback, this.ttl);
             response.AnswerRecords.Add(record);
-            var responsePayload = response.ToArray();
 
-            // 修改payload和包长 
-            packet.GetWriter(packet.Length - result.DataLength).Write(responsePayload);
+            // 修改payload
+            var writer = packet.GetWriter(packet.Length - result.DataLength);
+            writer.Write(response.ToArray());
 
-            // 修改ip包
-            IPAddress destAddress;
-            if (result.IPV4Header != null)
-            {
-                destAddress = result.IPV4Header->DstAddr;
-                result.IPV4Header->DstAddr = result.IPV4Header->SrcAddr;
-                result.IPV4Header->SrcAddr = destAddress;
-                result.IPV4Header->Length = (ushort)packet.Length;
-            }
-            else
-            {
-                destAddress = result.IPV6Header->DstAddr;
-                result.IPV6Header->DstAddr = result.IPV6Header->SrcAddr;
-                result.IPV6Header->SrcAddr = destAddress;
-                result.IPV6Header->Length = (ushort)(packet.Length - sizeof(IPV6Header));
-            }
-
-            // 修改udp包
-            var destPort = result.UdpHeader->DstPort;
-            result.UdpHeader->DstPort = result.UdpHeader->SrcPort;
-            result.UdpHeader->SrcPort = destPort;
-            result.UdpHeader->Length = (ushort)(sizeof(UdpHeader) + responsePayload.Length);
+            packet.ReverseEndPoint();
+            packet.ApplyLengthToHeaders();
+            packet.CalcChecksums(addr);
+            packet.CalcOutboundFlag(addr);
 
             addr.Flags |= WinDivertAddressFlag.Impostor;
-            packet.CalcOutboundFlag(addr);
-            packet.CalcChecksums(addr);
-
             this.logger.LogInformation($"{domain}->{loopback}");
         }
 
