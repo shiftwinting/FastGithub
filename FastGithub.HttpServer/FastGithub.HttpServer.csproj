@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Yarp.ReverseProxy" Version="1.1.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FastGithub.FlowAnalyze\FastGithub.FlowAnalyze.csproj" />
+		<ProjectReference Include="..\FastGithub.Http\FastGithub.Http.csproj" />
+	</ItemGroup>
+
+</Project>

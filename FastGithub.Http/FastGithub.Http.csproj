@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup> 
+		<ProjectReference Include="..\FastGithub.DomainResolve\FastGithub.DomainResolve.csproj" />
+	</ItemGroup>
+
+</Project>

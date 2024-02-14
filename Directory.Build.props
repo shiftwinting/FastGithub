@@ -1,0 +1,16 @@
+<Project>
+	<PropertyGroup>
+		<Version>2.1.5</Version>	
+		<Nullable>enable</Nullable>
+		<TargetFramework>net7.0</TargetFramework>
+		<IsWebConfigTransformDisabled>true</IsWebConfigTransformDisabled> 		
+		<Description>github加速神器</Description>
+		<Copyright>https://github.com/dotnetcore/FastGithub</Copyright>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>	
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+</Project>

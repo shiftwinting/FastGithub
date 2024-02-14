@@ -1,7 +1,10 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.Builder;
+using System;
+using System.IO;
 
 namespace FastGithub
 {
+
     class Program
     {
         /// <summary>
@@ -10,22 +13,37 @@ namespace FastGithub
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            ConsoleUtil.DisableQuickEdit();
+            var contentRoot = Path.GetDirectoryName(Environment.ProcessPath);
+            if (string.IsNullOrEmpty(contentRoot) == false)
+            {
+                Environment.CurrentDirectory = contentRoot;
+            }
+            var options = new WebApplicationOptions
+            {
+                Args = args,
+                ContentRootPath = contentRoot
+            };
+            CreateWebApplication(options).Run(singleton: true);
         }
 
         /// <summary>
         /// 创建host
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="options"></param>
         /// <returns></returns>
-        public static IHostBuilder CreateHostBuilder(string[] args)
+        private static WebApplication CreateWebApplication(WebApplicationOptions options)
         {
-            return Host
-                .CreateDefaultBuilder(args)
-                .ConfigureServices((ctx, services) =>
-                {
-                    services.AddGithubDns(ctx.Configuration);
-                });
+            var builder = WebApplication.CreateBuilder(options);
+            builder.ConfigureHost();
+            builder.ConfigureWebHost();
+            builder.ConfigureConfiguration();
+            builder.ConfigureServices();
+
+            var app = builder.Build();
+            app.ConfigureApp();
+            return app;
         }
+
     }
 }
